@@ -7157,10 +7157,10 @@ stack-utils@^1.0.1:
   resolved "https://registry.yarnpkg.com/stack-utils/-/stack-utils-1.0.2.tgz#33eba3897788558bebfc2db059dc158ec36cebb8"
   integrity sha512-MTX+MeG5U994cazkjd/9KNAapsHnibjMLnfXodlkXw76JEea0UiNzrqidzo1emMwk7w5Qhc9jd4Bn9TBb1MFwA==
 
-starkware-controller@1.7.0:
-  version "1.7.0"
-  resolved "https://registry.yarnpkg.com/starkware-controller/-/starkware-controller-1.7.0.tgz#27585553a21ca5aaae90a5a3707a3ddf7ae9cb18"
-  integrity sha512-goIv4YkgRpQxjizfQ2pfcr+Yc5ObMNs7a06hOcprRCHQPrQcpvvFkOy9SBpsdrGSpW/DQAs2KevhDbeS+K9yTQ==
+starkware-controller@1.7.3:
+  version "1.7.3"
+  resolved "https://registry.yarnpkg.com/starkware-controller/-/starkware-controller-1.7.3.tgz#f21c938dce9c105124c4de33e98c888072234c62"
+  integrity sha512-Ol0yKiIFXwEqVFyneImPjWbEYvVRR1MjymZwVJ+ec2goHr3R1kycY9apcy6/cB/5gamsmd+156SacAdT10blIw==
   dependencies:
     ethers "^5.0.5"
     starkware-crypto "^1.9.1"
