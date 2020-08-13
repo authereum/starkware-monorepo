@@ -2,11 +2,6 @@ import { Wallet, providers } from 'ethers';
 
 import StarkwareWallet from '../src';
 
-import * as DVF from './dvf';
-
-const ROPSTEN_TEST_MNEMONIC = '<INSERT_MNEMONIC>';
-const INFURA_PROJECT_ID = '<INSER_INFURA_PROJECT_ID>';
-
 const storage = {};
 
 const store = {
@@ -21,22 +16,23 @@ const store = {
   },
 };
 
-const mnemonic = ROPSTEN_TEST_MNEMONIC;
+const mnemonic =
+  'owner hover awake board copper fiber organ sudden nominee trick decline inflict';
 const layer = 'starkex';
 const application = 'starkexdvf';
 const index = '0';
 
 const provider = new providers.JsonRpcProvider(
-  `https://ropsten.infura.io/v3/${INFURA_PROJECT_ID}`
+  'https://ropsten-rpc.linkpool.io/'
 );
 
 const wallet = Wallet.fromMnemonic(mnemonic).connect(provider);
 
 const starkPublicKey =
-  '0x06ad1f685084cb89104c2df0351a2fff44faab58b2cd09b8a1bfb50c79bd0709';
+  '0x03a535c13f12c6a2c7e7c0dade3a68225988698687e396a321c12f5d393bea4a';
 
-// const starkSignature =
-//   '0x7130036cfee14ee468f84538da0b2c71f11908f3dcc4c0b7fb28c2e0c8504d1e4e3191d2adb180a2ec31eff2366381e2ec807426f232a6cae2387d6d7886e1c';
+const starkSignature =
+  '0x03e243c5b004c89cd9c66fd1c8361c2d42226816214ac113f441027f165c6a7800c7724575abe95602caac714cbc1e650ca3f2355e76dbb5ffb6065c194a38471b';
 
 async function request(starkWallet: StarkwareWallet, payload: any) {
   const res = await starkWallet.resolve(payload);
@@ -51,10 +47,10 @@ describe('starkware-wallet', () => {
   beforeEach(() => {
     starkWallet = new StarkwareWallet(wallet, store);
   });
-  it('should initiate successfully', async () => {
+  it('init', async () => {
     expect(starkWallet).toBeTruthy();
   });
-  it('should resolve successfully', async () => {
+  it('stark_account', async () => {
     const result = await request(starkWallet, {
       id: 1,
       jsonrpc: '2.0',
@@ -65,69 +61,38 @@ describe('starkware-wallet', () => {
     expect(result.starkPublicKey).toEqual(starkPublicKey);
   });
 
-  it('stark_account -> personal_sign -> stark_register -> stark_transfer', async () => {
+  it('stark_transfer', async () => {
     const { starkPublicKey } = await request(starkWallet, {
       id: 1,
       jsonrpc: '2.0',
       method: 'stark_account',
       params: { layer, application, index },
     });
-    console.log('starkPublicKey', starkPublicKey);
 
     expect(starkPublicKey).toBeTruthy();
 
-    const contractAddress = DVF.config.exchange.starkExContractAddress;
-    console.log('contractAddress', contractAddress);
-    const nonce = String(Date.now() / 1000);
-    console.log('nonce', nonce);
-    const userSignature = await wallet.signMessage(nonce);
-    console.log('userSignature', userSignature);
-    expect(userSignature).toBeTruthy();
-
-    const { deFiSignature: operatorSignature } = await DVF.registerUser(
-      starkPublicKey,
-      nonce,
-      userSignature
-    );
-    console.log('operatorSignature', operatorSignature);
-
-    const registerTxHash = await request(starkWallet, {
-      id: 1,
-      jsonrpc: '2.0',
-      method: 'stark_register',
-      params: {
-        contractAddress,
-        starkPublicKey,
-        operatorSignature,
-      },
-    });
-    console.log('registerTxHash', registerTxHash);
-
-    await provider.waitForTransaction(registerTxHash);
-    expect(registerTxHash).toBeTruthy();
-
-    const tokenType = 'ETH';
-    const quantum = String(DVF.config.tokenRegistry[tokenType].quantization);
-    const tempVaultId = String(DVF.config.exchange.tempStarkVaultId);
-    const starkVaultId = String(
-      await DVF.getVaultId(tokenType, nonce, userSignature)
-    );
     const transferSig = await request(starkWallet, {
-      id: 1,
+      id: 1597237100918037,
       jsonrpc: '2.0',
       method: 'stark_transfer',
       params: {
-        from: { starkPublicKey, vaultId: tempVaultId },
-        to: { starkPublicKey: starkPublicKey, vaultId: starkVaultId },
-        token: {
-          type: tokenType,
-          data: { quantum },
+        from: {
+          starkPublicKey:
+            '0x03a535c13f12c6a2c7e7c0dade3a68225988698687e396a321c12f5d393bea4a',
+          vaultId: '1',
         },
+        to: {
+          starkPublicKey:
+            '0x03a535c13f12c6a2c7e7c0dade3a68225988698687e396a321c12f5d393bea4a',
+          vaultId: '606138218',
+        },
+        token: { type: 'ETH', data: { quantum: '10000000000' } },
         quantizedAmount: '100000000',
-        nonce,
-        expirationTimestamp: Math.floor(Date.now() / (1000 * 3600)) + 720,
+        nonce: '1597237097',
+        expirationTimestamp: '444396',
       },
     });
     expect(transferSig);
+    expect(transferSig.starkSignature).toEqual(starkSignature);
   });
 });

@@ -37,7 +37,7 @@
     "prepare": "yarn lint && yarn build && yarn test"
   },
   "dependencies": {
-    "starkware-controller": "1.7.4"
+    "starkware-controller": "^1.7.5"
   },
   "devDependencies": {
     "@types/jest": "25.1.1",
