@@ -7187,19 +7187,19 @@ stack-utils@^1.0.1:
   resolved "https://registry.yarnpkg.com/stack-utils/-/stack-utils-1.0.2.tgz#33eba3897788558bebfc2db059dc158ec36cebb8"
   integrity sha512-MTX+MeG5U994cazkjd/9KNAapsHnibjMLnfXodlkXw76JEea0UiNzrqidzo1emMwk7w5Qhc9jd4Bn9TBb1MFwA==
 
-starkware-controller@^1.7.6:
-  version "1.7.6"
-  resolved "https://registry.yarnpkg.com/starkware-controller/-/starkware-controller-1.7.6.tgz#6b91ae2d921e1702db59e902fd50e978cbb15e89"
-  integrity sha512-aY5wedSBpxiGG8PoUc/4P0VY9Wto3JcckhawZFz+Wlopqf4UmVuFw1g058aTtQdBHK1vCZXq90Fx6FnUxBfQcQ==
+starkware-controller@^1.7.7:
+  version "1.7.7"
+  resolved "https://registry.yarnpkg.com/starkware-controller/-/starkware-controller-1.7.7.tgz#5409409afb1d00a0912a81e5eecca71cd9db7ad3"
+  integrity sha512-wdh5fggFAZps3qjARShHGz+EUWpBil85VFZ0jlLcpU34UFKMeXtIt/9n6ty9iM0gY0QLk02YR6K9NJwqBsCQ2w==
   dependencies:
     ethers "^5.0.8"
-    starkware-crypto "^1.9.6"
+    starkware-crypto "^1.9.7"
     starkware-types "^1.2.0"
 
-starkware-crypto@^1.9.6:
-  version "1.9.6"
-  resolved "https://registry.yarnpkg.com/starkware-crypto/-/starkware-crypto-1.9.6.tgz#68a4ee1ab92c4577554bb95cc62c612253df1cb1"
-  integrity sha512-Aq9dD5HjwZvf2B42Sm/+f7tAgA8J9DXRijgT2/bmPuwcSNIWwMLj3mWppsNiuM6OrqHZhJxummQwd5xTqspm0w==
+starkware-crypto@^1.9.7:
+  version "1.9.7"
+  resolved "https://registry.yarnpkg.com/starkware-crypto/-/starkware-crypto-1.9.7.tgz#bab43f6a548c150299edfc2ba67ca2352b33aa7d"
+  integrity sha512-KY8KIIh09wATGctKYhoHyaR3lIWVEO1+G6q+VJkvblhd66InHi2hZ3u1Ucp7rMVgijsSulCefVU7QLlE5QKtNw==
   dependencies:
     bip39 "^3.0.2"
     bn.js "^5.1.2"
