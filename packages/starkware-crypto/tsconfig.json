@@ -1,6 +1,7 @@
 {
   "include": ["./src/**/*"],
   "compilerOptions": {
+    "rootDir": "./src",
     "allowJs": false,
     "allowSyntheticDefaultImports": true,
     "alwaysStrict": true,

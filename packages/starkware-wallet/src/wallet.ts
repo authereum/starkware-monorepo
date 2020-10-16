@@ -22,7 +22,7 @@ export class StarkwareWallet {
   ) {
     this.controller = new StarkwareController(
       this.wallet.mnemonic.phrase,
-      this.wallet.provider,
+      <any>this.wallet.provider,
       this.store,
       accountMappingKey
     );
@@ -34,7 +34,7 @@ export class StarkwareWallet {
         ? new providers.JsonRpcProvider(provider)
         : provider
     );
-    this.controller.setProvider(this.wallet.provider);
+    this.controller.setProvider(<any>this.wallet.provider);
   }
 
   public setWalletIndex(walletIndex: number): void {

@@ -1,6 +1,7 @@
 {
   "include": ["./src/**/*", "./src/*.json"],
   "compilerOptions": {
+    "rootDir": "./src",
     "allowJs": false,
     "allowSyntheticDefaultImports": true,
     "alwaysStrict": true,
