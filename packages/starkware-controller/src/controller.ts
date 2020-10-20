@@ -160,7 +160,8 @@ export class StarkwareController {
     token: starkwareCrypto.Token,
     quantizedAmount: string,
     nonce: string,
-    expirationTimestamp: string
+    expirationTimestamp: string,
+    condition?: string
   ): Promise<string> {
     await this.assertStarkPublicKey(from.starkPublicKey);
     const senderVaultId = from.vaultId;
@@ -173,7 +174,8 @@ export class StarkwareController {
       token,
       receiverVaultId,
       receiverPublicKey,
-      expirationTimestamp
+      expirationTimestamp,
+      condition
     );
     const keyPair = await this.getActiveKeyPair();
     const signature = starkwareCrypto.sign(keyPair, msg);

@@ -77,4 +77,44 @@ describe('starkware-controller', () => {
     const sig = starkwareCrypto.deserializeSignature(result);
     expect(starkwareCrypto.verify(keyPair, msg, sig as any)).toBeTruthy();
   });
+  it('should resolve stark_transfer with condition', async () => {
+    const from = { starkPublicKey, vaultId: '1' };
+    const to = { starkPublicKey, vaultId: '606138218' };
+    const token = { type: 'ETH' as 'ETH', data: { quantum: '10000000000' } };
+    const quantizedAmount = '100000000';
+    const nonce = '1597237097';
+    const expirationTimestamp = '444396';
+    const condition =
+      '0x318ff6d26cf3175c77668cd6434ab34d31e59f806a6a7c06d08215bccb7eaf8';
+    const result = await controller.transfer(
+      from,
+      to,
+      token,
+      quantizedAmount,
+      nonce,
+      expirationTimestamp,
+      condition
+    );
+    expect(result).toBeTruthy();
+    expect(result).toEqual(
+      '0x0237f2ce312b9c30c9930b1b852f66cf69c19e08d60f664d2fcc41890e02b5600597bb50c7f44dcaa5193f7ead375b8efea280232590c5a95fb535a7dc33972a1c'
+    );
+
+    const senderVaultId = from.vaultId;
+    const receiverVaultId = to.vaultId;
+    const receiverPublicKey = to.starkPublicKey;
+    const msg = starkwareCrypto.getTransferMsg(
+      quantizedAmount,
+      nonce,
+      senderVaultId,
+      token,
+      receiverVaultId,
+      receiverPublicKey,
+      expirationTimestamp,
+      condition
+    );
+    const keyPair = await controller.getActiveKeyPair();
+    const sig = starkwareCrypto.deserializeSignature(result);
+    expect(starkwareCrypto.verify(keyPair, msg, sig as any)).toBeTruthy();
+  });
 });
