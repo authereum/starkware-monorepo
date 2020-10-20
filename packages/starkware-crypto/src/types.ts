@@ -22,3 +22,5 @@ export type MessageParams = {
   nonceBn: BN;
   expirationTimestampBn: BN;
 };
+
+export interface NestedArray<T> extends Array<T | NestedArray<T>> {}

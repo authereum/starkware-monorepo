@@ -75,6 +75,6 @@ describe('starkware-controller', () => {
     );
     const keyPair = await controller.getActiveKeyPair();
     const sig = starkwareCrypto.deserializeSignature(result);
-    expect(starkwareCrypto.verify(keyPair, msg, sig)).toBeTruthy();
+    expect(starkwareCrypto.verify(keyPair, msg, sig as any)).toBeTruthy();
   });
 });

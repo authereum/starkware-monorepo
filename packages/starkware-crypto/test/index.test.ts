@@ -119,6 +119,65 @@ describe('starkware-crypto', () => {
     ).toBeTruthy();
   });
 
+  it('sign eth transfer message (params from starkware python test)', () => {
+    const params = {
+      quantizedAmount: '2154549703648910716',
+      nonce: '1',
+      senderVaultId: '34',
+      token:
+        '0x3003a65651d3b9fb2eff934a4416db301afd112a8492aaf8d7297fc87dcd9f4',
+      targetVaultId: '21',
+      targetStarkPublicKey:
+        '0x5fa3383597691ea9d827a79e1a4f0f7949435ced18ca9619de8ab97e661020',
+      expirationTimestamp: '438953',
+    };
+
+    const messageHash = starkwareCrypto.getTransferMsg(
+      params.quantizedAmount,
+      params.nonce,
+      params.senderVaultId,
+      params.token,
+      params.targetVaultId,
+      params.targetStarkPublicKey,
+      params.expirationTimestamp
+    );
+
+    expect(messageHash).toBe(
+      '6366b00c218fb4c8a8b142ca482145e8513c78e00faa0de76298ba14fc37ae7'
+    );
+  });
+
+  it('sign eth conditional transfer message (params from starkware python test)', () => {
+    const params = {
+      quantizedAmount: '2154549703648910716',
+      nonce: '1',
+      senderVaultId: '34',
+      token:
+        '0x3003a65651d3b9fb2eff934a4416db301afd112a8492aaf8d7297fc87dcd9f4',
+      targetVaultId: '21',
+      targetStarkPublicKey:
+        '0x5fa3383597691ea9d827a79e1a4f0f7949435ced18ca9619de8ab97e661020',
+      expirationTimestamp: '438953',
+      condition:
+        '0x318ff6d26cf3175c77668cd6434ab34d31e59f806a6a7c06d08215bccb7eaf8',
+    };
+
+    const messageHash = starkwareCrypto.getTransferMsg(
+      params.quantizedAmount,
+      params.nonce,
+      params.senderVaultId,
+      params.token,
+      params.targetVaultId,
+      params.targetStarkPublicKey,
+      params.expirationTimestamp,
+      params.condition
+    );
+
+    expect(messageHash).toBe(
+      'fa5f0ad1ebff93c9e6474379a213ba1e1f9e42f5f1cb361b0327e073720384'
+    );
+  });
+
   it('sign erc20 transfer message', () => {
     const params = {
       from: {

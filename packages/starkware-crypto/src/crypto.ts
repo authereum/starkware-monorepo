@@ -16,6 +16,7 @@ import {
   MessageParams,
   Signature,
   SignatureInput,
+  NestedArray,
 } from './types';
 import { constantPointsHex } from './constants';
 
@@ -62,6 +63,7 @@ export const shiftPoint = constantPoints[0];
 
 const ZERO_BN = new BN('0');
 const ONE_BN = new BN('1');
+const TWO_BN = new BN('2');
 const TWO_POW_22_BN = new BN('400000', 16);
 const TWO_POW_31_BN = new BN('80000000', 16);
 const TWO_POW_63_BN = new BN('8000000000000000', 16);
@@ -259,8 +261,28 @@ export function hashTokenId(token: Token) {
   return encUtils.sanitizeHex(keccak_256(id).slice(2, 10));
 }
 
-export function hashMessage(w1: string, w2: string, w3: string) {
-  return pedersen([pedersen([w1, w2]), w3]);
+export function hashMessage(
+  wordsOrW1: NestedArray<string> | string[] | string,
+  w2?: string,
+  w3?: string
+) {
+  // method backward compatibility
+  if (typeof wordsOrW1 === 'string' && w2 && w3) {
+    return pedersen([pedersen([wordsOrW1, w2]), w3]);
+  }
+
+  let a: NestedArray<string> | string = wordsOrW1[0];
+  let b: NestedArray<string> | string = wordsOrW1[1];
+
+  if (Array.isArray(a)) {
+    a = hashMessage(a);
+  }
+
+  if (Array.isArray(b)) {
+    b = hashMessage(b);
+  }
+
+  return pedersen([a, b]);
 }
 
 export function deserializeMessage(serialized: string): MessageParams {
@@ -305,7 +327,7 @@ export function serializeMessage(
 }
 
 export function formatMessage(
-  instruction: 'transfer' | 'order',
+  instruction: 'transfer' | 'conditionalTransfer' | 'order',
   vault0: string,
   vault1: string,
   amount0: string,
@@ -313,7 +335,14 @@ export function formatMessage(
   nonce: string,
   expirationTimestamp: string
 ): string {
-  const isTransfer = instruction === 'transfer';
+  const instructionTypeBNs = {
+    order: ZERO_BN,
+    transfer: ONE_BN,
+    conditionalTransfer: TWO_BN,
+  };
+
+  const isTransfer =
+    instruction === 'transfer' || instruction === 'conditionalTransfer';
 
   const vault0Bn = new BN(vault0);
   const vault1Bn = new BN(vault1);
@@ -338,7 +367,7 @@ export function formatMessage(
   assert(nonceBn.lt(TWO_POW_31_BN));
   assert(expirationTimestampBn.lt(TWO_POW_22_BN));
 
-  const instructionTypeBn = isTransfer ? ONE_BN : ZERO_BN;
+  const instructionTypeBn = instructionTypeBNs[instruction];
 
   return serializeMessage(
     instructionTypeBn,
@@ -372,22 +401,26 @@ export function getLimitOrderMsg(
     nonce,
     expirationTimestamp
   );
-  return hashMessage(w1, w2, w3);
+
+  return hashMessage([[w1, w2], w3]);
 }
 
+// transfer: H(H(w1,w2),w3)
+// conditional transfer: H(H(H(w1,w2),w4),w3)
 export function getTransferMsg(
   amount: string,
   nonce: string,
   senderVaultId: string,
-  token: Token,
+  token: Token | string,
   receiverVaultId: string,
   receiverPublicKey: string,
-  expirationTimestamp: string
+  expirationTimestamp: string,
+  condition?: string
 ): string {
   const w1 = parseTokenInput(token);
   const w2 = parseTokenInput(receiverPublicKey);
   const w3 = formatMessage(
-    'transfer',
+    condition ? 'conditionalTransfer' : 'transfer',
     senderVaultId,
     receiverVaultId,
     amount,
@@ -395,7 +428,13 @@ export function getTransferMsg(
     nonce,
     expirationTimestamp
   );
-  return hashMessage(w1, w2, w3);
+
+  if (condition) {
+    const w4 = condition;
+    return hashMessage([[[w1, w2], w4], w3]);
+  }
+
+  return hashMessage([[w1, w2], w3]);
 }
 
 /*
