@@ -60,4 +60,20 @@ export interface IStarkwareProvider extends BasicProvider {
     token: Token,
     quantizedAmount: string
   ): Promise<string>;
+  depositNft(assetType: string, vaultId: string, token: Token): Promise<string>;
+  depositNftReclaim(
+    assetType: string,
+    vaultId: string,
+    token: Token
+  ): Promise<string>;
+  withdrawAndMint(
+    assetType: string,
+    mintingBlob: string | Buffer
+  ): Promise<string>;
+  withdrawNft(assetType: string, token: Token): Promise<string>;
+  withdrawNftTo(
+    assetType: string,
+    token: Token,
+    recipient: string
+  ): Promise<string>;
 }

@@ -121,7 +121,8 @@ export namespace MethodParams {
     contractAddress: string;
     starkPublicKey: string;
     assetType: string;
-    mintingBlob: string | Buffer;
+    vaultId: string;
+    token: Token;
   };
   export type StarkWithdrawAndMintParams = {
     contractAddress: string;

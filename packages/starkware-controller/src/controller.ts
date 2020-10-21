@@ -308,13 +308,16 @@ export class StarkwareController {
     contractAddress: string,
     starkPublicKey: string,
     assetType: string,
-    mintingBlob: string | Buffer
+    vaultId: string,
+    token: starkwareCrypto.Token
   ): Promise<PopulatedTransaction> {
     const exchangeContract = this.getExchangeContract(contractAddress);
+    const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.depositNftReclaim(
       encUtils.sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey)),
       assetType,
-      mintingBlob
+      vaultId,
+      tokenId
     );
 
     return unsignedTx;

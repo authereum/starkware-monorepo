@@ -276,6 +276,104 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
     });
     return txhash;
   }
+
+  public async depositNft(
+    assetType: string,
+    vaultId: string,
+    token: Token
+  ): Promise<string> {
+    const contractAddress = this.contractAddress;
+    const starkPublicKey = await this.getActiveAccount();
+    const { txhash } = await this.send<
+      MethodResults.StarkDepositNftResult,
+      MethodParams.StarkDepositNftParams
+    >('stark_depositNft', {
+      contractAddress,
+      starkPublicKey,
+      assetType,
+      vaultId,
+      token,
+    });
+
+    return txhash;
+  }
+
+  public async depositNftReclaim(
+    assetType: string,
+    vaultId: string,
+    token: Token
+  ): Promise<string> {
+    const contractAddress = this.contractAddress;
+    const starkPublicKey = await this.getActiveAccount();
+    const { txhash } = await this.send<
+      MethodResults.StarkDepositNftReclaimResult,
+      MethodParams.StarkDepositNftReclaimParams
+    >('stark_depositNftReclaim', {
+      contractAddress,
+      starkPublicKey,
+      assetType,
+      vaultId,
+      token,
+    });
+
+    return txhash;
+  }
+
+  public async withdrawAndMint(
+    assetType: string,
+    mintingBlob: string | Buffer
+  ): Promise<string> {
+    const contractAddress = this.contractAddress;
+    const starkPublicKey = await this.getActiveAccount();
+    const { txhash } = await this.send<
+      MethodResults.StarkWithdrawAndMintResult,
+      MethodParams.StarkWithdrawAndMintParams
+    >('stark_withdrawAndMint', {
+      contractAddress,
+      starkPublicKey,
+      assetType,
+      mintingBlob,
+    });
+
+    return txhash;
+  }
+
+  public async withdrawNft(assetType: string, token: Token): Promise<string> {
+    const contractAddress = this.contractAddress;
+    const starkPublicKey = await this.getActiveAccount();
+    const { txhash } = await this.send<
+      MethodResults.StarkWithdrawNftResult,
+      MethodParams.StarkWithdrawNftParams
+    >('stark_withdrawNft', {
+      contractAddress,
+      starkPublicKey,
+      assetType,
+      token,
+    });
+
+    return txhash;
+  }
+
+  public async withdrawNftTo(
+    assetType: string,
+    token: Token,
+    recipient: string
+  ): Promise<string> {
+    const contractAddress = this.contractAddress;
+    const starkPublicKey = await this.getActiveAccount();
+    const { txhash } = await this.send<
+      MethodResults.StarkWithdrawNftToResult,
+      MethodParams.StarkWithdrawNftToParams
+    >('stark_withdrawNftTo', {
+      contractAddress,
+      starkPublicKey,
+      assetType,
+      token,
+      recipient,
+    });
+
+    return txhash;
+  }
 }
 
 export default StarkwareProvider;
