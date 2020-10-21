@@ -285,6 +285,93 @@ export class StarkwareController {
     return unsignedTx;
   }
 
+  public async depositNft(
+    contractAddress: string,
+    starkPublicKey: string,
+    assetType: string,
+    vaultId: string,
+    token: starkwareCrypto.Token
+  ): Promise<PopulatedTransaction> {
+    const exchangeContract = this.getExchangeContract(contractAddress);
+    const tokenId = starkwareCrypto.hashTokenId(token);
+    const unsignedTx = await exchangeContract.populateTransaction.depositNft(
+      encUtils.sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey)),
+      assetType,
+      vaultId,
+      tokenId
+    );
+
+    return unsignedTx;
+  }
+
+  public async depositNftReclaim(
+    contractAddress: string,
+    starkPublicKey: string,
+    assetType: string,
+    mintingBlob: string | Buffer
+  ): Promise<PopulatedTransaction> {
+    const exchangeContract = this.getExchangeContract(contractAddress);
+    const unsignedTx = await exchangeContract.populateTransaction.depositNftReclaim(
+      encUtils.sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey)),
+      assetType,
+      mintingBlob
+    );
+
+    return unsignedTx;
+  }
+
+  public async withdrawAndMint(
+    contractAddress: string,
+    starkPublicKey: string,
+    assetType: string,
+    mintingBlob: string | Buffer
+  ): Promise<PopulatedTransaction> {
+    const exchangeContract = this.getExchangeContract(contractAddress);
+    const unsignedTx = await exchangeContract.populateTransaction.withdrawAndMint(
+      encUtils.sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey)),
+      assetType,
+      mintingBlob
+    );
+
+    return unsignedTx;
+  }
+
+  public async withdrawNft(
+    contractAddress: string,
+    starkPublicKey: string,
+    assetType: string,
+    token: starkwareCrypto.Token
+  ): Promise<PopulatedTransaction> {
+    const exchangeContract = this.getExchangeContract(contractAddress);
+    const tokenId = starkwareCrypto.hashTokenId(token);
+    const unsignedTx = await exchangeContract.populateTransaction.withdrawNft(
+      encUtils.sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey)),
+      assetType,
+      tokenId
+    );
+
+    return unsignedTx;
+  }
+
+  public async withdrawNftTo(
+    contractAddress: string,
+    starkPublicKey: string,
+    assetType: string,
+    token: starkwareCrypto.Token,
+    recipient: string
+  ): Promise<PopulatedTransaction> {
+    const exchangeContract = this.getExchangeContract(contractAddress);
+    const tokenId = starkwareCrypto.hashTokenId(token);
+    const unsignedTx = await exchangeContract.populateTransaction.withdrawNftTo(
+      encUtils.sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey)),
+      assetType,
+      tokenId,
+      recipient
+    );
+
+    return unsignedTx;
+  }
+
   // -- Private ------------------------------------------------------- //
 
   private async assertStarkPublicKey(starkPublicKey: string) {
