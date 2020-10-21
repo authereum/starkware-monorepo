@@ -22,7 +22,7 @@ export class StarkwareWallet {
   ) {
     this.controller = new StarkwareController(
       this.wallet.mnemonic.phrase,
-      <any>this.wallet.provider,
+      this.wallet.provider as any,
       this.store,
       accountMappingKey
     );
@@ -34,7 +34,7 @@ export class StarkwareWallet {
         ? new providers.JsonRpcProvider(provider)
         : provider
     );
-    this.controller.setProvider(<any>this.wallet.provider);
+    this.controller.setProvider(this.wallet.provider as any);
   }
 
   public setWalletIndex(walletIndex: number): void {
@@ -261,8 +261,102 @@ export class StarkwareWallet {
             result: escapeResult,
           };
           break;
-        default:
+        case 'stark_depositNft': {
+          const params = payload.params as MethodParams.StarkDepositNftParams;
+          const unsignedTx = await this.controller.depositNft(
+            params.contractAddress,
+            params.starkPublicKey,
+            params.assetType,
+            params.vaultId,
+            params.token
+          );
+          const tx = await this.wallet.sendTransaction(unsignedTx);
+          const result: MethodResults.StarkDepositNftResult = {
+            txhash: tx.hash,
+          };
+          response = {
+            id,
+            result,
+          };
+          break;
+        }
+        case 'stark_depositNftReclaim': {
+          const params = payload.params as MethodParams.StarkDepositNftReclaimParams;
+          const unsignedTx = await this.controller.depositNftReclaim(
+            params.contractAddress,
+            params.starkPublicKey,
+            params.assetType,
+            params.vaultId,
+            params.token
+          );
+          const tx = await this.wallet.sendTransaction(unsignedTx);
+          const result: MethodResults.StarkDepositNftReclaimResult = {
+            txhash: tx.hash,
+          };
+          response = {
+            id,
+            result,
+          };
+          break;
+        }
+        case 'stark_withdrawAndMint': {
+          const params = payload.params as MethodParams.StarkWithdrawAndMintParams;
+          const unsignedTx = await this.controller.withdrawAndMint(
+            params.contractAddress,
+            params.starkPublicKey,
+            params.assetType,
+            params.mintingBlob
+          );
+          const tx = await this.wallet.sendTransaction(unsignedTx);
+          const result: MethodResults.StarkWithdrawAndMintResult = {
+            txhash: tx.hash,
+          };
+          response = {
+            id,
+            result,
+          };
+          break;
+        }
+        case 'stark_withdrawNft': {
+          const params = payload.params as MethodParams.StarkWithdrawNftParams;
+          const unsignedTx = await this.controller.withdrawNft(
+            params.contractAddress,
+            params.starkPublicKey,
+            params.assetType,
+            params.token
+          );
+          const tx = await this.wallet.sendTransaction(unsignedTx);
+          const result: MethodResults.StarkWithdrawNftResult = {
+            txhash: tx.hash,
+          };
+          response = {
+            id,
+            result,
+          };
+          break;
+        }
+        case 'stark_withdrawNftTo': {
+          const params = payload.params as MethodParams.StarkWithdrawNftToParams;
+          const unsignedTx = await this.controller.withdrawNftTo(
+            params.contractAddress,
+            params.starkPublicKey,
+            params.assetType,
+            params.token,
+            params.recipient
+          );
+          const tx = await this.wallet.sendTransaction(unsignedTx);
+          const result: MethodResults.StarkWithdrawNftToResult = {
+            txhash: tx.hash,
+          };
+          response = {
+            id,
+            result,
+          };
+          break;
+        }
+        default: {
           throw new Error(`Unknown Starkware RPC Method: ${method}`);
+        }
       }
       return response;
     } catch (error) {
