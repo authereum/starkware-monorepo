@@ -93,14 +93,18 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
     return starkPublicKey;
   }
 
-  public async register(operatorSignature: string): Promise<string> {
+  public async registerUser(
+    ethKey: string,
+    operatorSignature: string
+  ): Promise<string> {
     const contractAddress = this.contractAddress;
     const starkPublicKey = await this.getActiveAccount();
     const { txhash } = await this.send<
-      MethodResults.StarkRegisterResult,
-      MethodParams.StarkRegisterParams
-    >('stark_register', {
+      MethodResults.StarkRegisterUserResult,
+      MethodParams.StarkRegisterUserParams
+    >('stark_registerUser', {
       contractAddress,
+      ethKey,
       starkPublicKey,
       operatorSignature,
     });
@@ -205,12 +209,27 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
     const contractAddress = this.contractAddress;
     const starkPublicKey = await this.getActiveAccount();
     const { txhash } = await this.send<
-      MethodResults.StarkWithdrawalResult,
-      MethodParams.StarkWithdrawalParams
-    >('stark_withdrawal', {
+      MethodResults.StarkWithdrawResult,
+      MethodParams.StarkWithdrawParams
+    >('stark_withdraw', {
       contractAddress,
       starkPublicKey,
       token,
+    });
+    return txhash;
+  }
+
+  public async withdrawTo(token: Token, recipient: string): Promise<string> {
+    const contractAddress = this.contractAddress;
+    const starkPublicKey = await this.getActiveAccount();
+    const { txhash } = await this.send<
+      MethodResults.StarkWithdrawToResult,
+      MethodParams.StarkWithdrawToParams
+    >('stark_withdrawTo', {
+      contractAddress,
+      starkPublicKey,
+      token,
+      recipient,
     });
     return txhash;
   }

@@ -50,217 +50,234 @@ export class StarkwareWallet {
     const { id, method } = payload;
     try {
       switch (method) {
-        case 'stark_account':
-          const accountParams = payload.params as MethodParams.StarkAccountParams;
-          const accountResult: MethodResults.StarkAccountResult = {
+        case 'stark_account': {
+          const params = payload.params as MethodParams.StarkAccountParams;
+          const result: MethodResults.StarkAccountResult = {
             starkPublicKey: await this.controller.account(
-              accountParams.layer,
-              accountParams.application,
-              accountParams.index
+              params.layer,
+              params.application,
+              params.index
             ),
           };
           response = {
             id,
-            result: accountResult,
+            result,
           };
           break;
-        case 'stark_register':
-          const registerParams = payload.params as MethodParams.StarkRegisterParams;
-          const registerUnsignedTx = await this.controller.register(
-            registerParams.contractAddress,
-            registerParams.starkPublicKey,
-            registerParams.operatorSignature
+        }
+        case 'stark_registerUser': {
+          const params = payload.params as MethodParams.StarkRegisterUserParams;
+          const unsignedTx = await this.controller.registerUser(
+            params.contractAddress,
+            params.ethKey,
+            params.starkPublicKey,
+            params.operatorSignature
           );
-          const registerTx = await this.wallet.sendTransaction(
-            registerUnsignedTx
-          );
-          const registerResult: MethodResults.StarkRegisterResult = {
-            txhash: registerTx.hash,
+          const tx = await this.wallet.sendTransaction(unsignedTx);
+          const result: MethodResults.StarkRegisterUserResult = {
+            txhash: tx.hash,
           };
           response = {
             id,
-            result: registerResult,
+            result,
           };
           break;
-        case 'stark_deposit':
-          const depositParams = payload.params as MethodParams.StarkDepositParams;
-          const depositUnsignedTx = await this.controller.deposit(
-            depositParams.contractAddress,
-            depositParams.starkPublicKey,
-            depositParams.quantizedAmount,
-            depositParams.token,
-            depositParams.vaultId
+        }
+        case 'stark_deposit': {
+          const params = payload.params as MethodParams.StarkDepositParams;
+          const unsignedTx = await this.controller.deposit(
+            params.contractAddress,
+            params.starkPublicKey,
+            params.quantizedAmount,
+            params.token,
+            params.vaultId
           );
-          const depositTx = await this.wallet.sendTransaction(
-            depositUnsignedTx
-          );
-          const depositResult: MethodResults.StarkDepositResult = {
-            txhash: depositTx.hash,
+          const tx = await this.wallet.sendTransaction(unsignedTx);
+          const result: MethodResults.StarkDepositResult = {
+            txhash: tx.hash,
           };
           response = {
             id,
-            result: depositResult,
+            result,
           };
           break;
-        case 'stark_depositCancel':
-          const depositCancelParams = payload.params as MethodParams.StarkDepositCancelParams;
-          const depositCancelUnsignedTx = await this.controller.depositCancel(
-            depositCancelParams.contractAddress,
-            depositCancelParams.starkPublicKey,
-            depositCancelParams.token,
-            depositCancelParams.vaultId
+        }
+        case 'stark_depositCancel': {
+          const params = payload.params as MethodParams.StarkDepositCancelParams;
+          const unsignedTx = await this.controller.depositCancel(
+            params.contractAddress,
+            params.starkPublicKey,
+            params.token,
+            params.vaultId
           );
-          const depositCancelTx = await this.wallet.sendTransaction(
-            depositCancelUnsignedTx
-          );
-          const depositCancelResult: MethodResults.StarkDepositCancelResult = {
-            txhash: depositCancelTx.hash,
+          const tx = await this.wallet.sendTransaction(unsignedTx);
+          const result: MethodResults.StarkDepositCancelResult = {
+            txhash: tx.hash,
           };
           response = {
             id,
-            result: depositCancelResult,
+            result,
           };
           break;
-        case 'stark_depositReclaim':
-          const depositReclaimParams = payload.params as MethodParams.StarkDepositReclaimParams;
-          const depositReclaimUnsignedTx = await this.controller.depositReclaim(
-            depositReclaimParams.contractAddress,
-            depositReclaimParams.starkPublicKey,
-            depositReclaimParams.token,
-            depositReclaimParams.vaultId
+        }
+        case 'stark_depositReclaim': {
+          const params = payload.params as MethodParams.StarkDepositReclaimParams;
+          const unsignedTx = await this.controller.depositReclaim(
+            params.contractAddress,
+            params.starkPublicKey,
+            params.token,
+            params.vaultId
           );
-          const depositReclaimTx = await this.wallet.sendTransaction(
-            depositReclaimUnsignedTx
-          );
-          const depositReclaimResult: MethodResults.StarkDepositReclaimResult = {
-            txhash: depositReclaimTx.hash,
+          const tx = await this.wallet.sendTransaction(unsignedTx);
+          const result: MethodResults.StarkDepositReclaimResult = {
+            txhash: tx.hash,
           };
           response = {
             id,
-            result: depositReclaimResult,
+            result,
           };
           break;
-        case 'stark_transfer':
-          const transferParams = payload.params as MethodParams.StarkTransferParams;
-          const transferResult: MethodResults.StarkTransferResult = {
+        }
+        case 'stark_transfer': {
+          const params = payload.params as MethodParams.StarkTransferParams;
+          const result: MethodResults.StarkTransferResult = {
             starkSignature: await this.controller.transfer(
-              transferParams.from,
-              transferParams.to,
-              transferParams.token,
-              transferParams.quantizedAmount,
-              transferParams.nonce,
-              transferParams.expirationTimestamp
+              params.from,
+              params.to,
+              params.token,
+              params.quantizedAmount,
+              params.nonce,
+              params.expirationTimestamp
             ),
           };
           response = {
             id,
-            result: transferResult,
+            result,
           };
           break;
-        case 'stark_createOrder':
-          const createOrderParams = payload.params as MethodParams.StarkCreateOrderParams;
-          const createOrderResult: MethodResults.StarkCreateOrderResult = {
+        }
+        case 'stark_createOrder': {
+          const params = payload.params as MethodParams.StarkCreateOrderParams;
+          const result: MethodResults.StarkCreateOrderResult = {
             starkSignature: await this.controller.createOrder(
-              createOrderParams.starkPublicKey,
-              createOrderParams.sell,
-              createOrderParams.buy,
-              createOrderParams.nonce,
-              createOrderParams.expirationTimestamp
+              params.starkPublicKey,
+              params.sell,
+              params.buy,
+              params.nonce,
+              params.expirationTimestamp
             ),
           };
           response = {
             id,
-            result: createOrderResult,
+            result,
           };
           break;
-        case 'stark_withdrawal':
-          const withdrawalParams = payload.params as MethodParams.StarkWithdrawalParams;
-          const withdrawalUnsignedTx = await this.controller.withdrawal(
-            withdrawalParams.contractAddress,
-            withdrawalParams.starkPublicKey,
-            withdrawalParams.token
+        }
+        case 'stark_withdraw': {
+          const params = payload.params as MethodParams.StarkWithdrawParams;
+          const unsignedTx = await this.controller.withdraw(
+            params.contractAddress,
+            params.starkPublicKey,
+            params.token
           );
-          const withdrawalTx = await this.wallet.sendTransaction(
-            withdrawalUnsignedTx
-          );
-          const withdrawalResult: MethodResults.StarkWithdrawalResult = {
-            txhash: withdrawalTx.hash,
+          const tx = await this.wallet.sendTransaction(unsignedTx);
+          const result: MethodResults.StarkWithdrawResult = {
+            txhash: tx.hash,
           };
           response = {
             id,
-            result: withdrawalResult,
+            result,
           };
           break;
-        case 'stark_fullWithdrawal':
-          const fullWithdrawalParams = payload.params as MethodParams.StarkFullWithdrawalParams;
-          const fullWithdrawalUnsignedTx = await this.controller.fullWithdrawal(
-            fullWithdrawalParams.contractAddress,
-            fullWithdrawalParams.starkPublicKey,
-            fullWithdrawalParams.vaultId
+        }
+        case 'stark_withdrawTo': {
+          const params = payload.params as MethodParams.StarkWithdrawToParams;
+          const unsignedTx = await this.controller.withdrawTo(
+            params.contractAddress,
+            params.starkPublicKey,
+            params.token,
+            params.recipient
           );
-          const fullWithdrawalTx = await this.wallet.sendTransaction(
-            fullWithdrawalUnsignedTx
-          );
-          const fullWithdrawalResult: MethodResults.StarkFullWithdrawalResult = {
-            txhash: fullWithdrawalTx.hash,
+          const tx = await this.wallet.sendTransaction(unsignedTx);
+          const result: MethodResults.StarkWithdrawToResult = {
+            txhash: tx.hash,
           };
           response = {
             id,
-            result: fullWithdrawalResult,
+            result,
           };
           break;
-        case 'stark_freeze':
-          const freezeParams = payload.params as MethodParams.StarkFreezeParams;
-          const freezeUnsignedTx = await this.controller.freeze(
-            freezeParams.contractAddress,
-            freezeParams.starkPublicKey,
-            freezeParams.vaultId
+        }
+        case 'stark_fullWithdrawal': {
+          const params = payload.params as MethodParams.StarkFullWithdrawalParams;
+          const unsignedTx = await this.controller.fullWithdrawal(
+            params.contractAddress,
+            params.starkPublicKey,
+            params.vaultId
           );
-          const freezeTx = await this.wallet.sendTransaction(freezeUnsignedTx);
-          const freezeResult: MethodResults.StarkFreezeResult = {
-            txhash: freezeTx.hash,
+          const tx = await this.wallet.sendTransaction(unsignedTx);
+          const result: MethodResults.StarkFullWithdrawalResult = {
+            txhash: tx.hash,
           };
           response = {
             id,
-            result: freezeResult,
+            result,
           };
           break;
-        case 'stark_verifyEscape':
-          const verifyEscapeParams = payload.params as MethodParams.StarkVerifyEscapeParams;
-          const verifyEscapeUnsignedTx = await this.controller.verifyEscape(
-            verifyEscapeParams.contractAddress,
-            verifyEscapeParams.starkPublicKey,
-            verifyEscapeParams.proof
+        }
+        case 'stark_freeze': {
+          const params = payload.params as MethodParams.StarkFreezeParams;
+          const unsignedTx = await this.controller.freeze(
+            params.contractAddress,
+            params.starkPublicKey,
+            params.vaultId
           );
-          const verifyEscapeTx = await this.wallet.sendTransaction(
-            verifyEscapeUnsignedTx
-          );
-          const verifyEscapeResult: MethodResults.StarkVerifyEscapeResult = {
-            txhash: verifyEscapeTx.hash,
+          const tx = await this.wallet.sendTransaction(unsignedTx);
+          const result: MethodResults.StarkFreezeResult = {
+            txhash: tx.hash,
           };
           response = {
             id,
-            result: verifyEscapeResult,
+            result,
           };
           break;
-        case 'stark_escape':
-          const escapeParams = payload.params as MethodParams.StarkEscapeParams;
-          const escapeUnsignedTx = await this.controller.escape(
-            escapeParams.contractAddress,
-            escapeParams.starkPublicKey,
-            escapeParams.vaultId,
-            escapeParams.token,
-            escapeParams.quantizedAmount
+        }
+        case 'stark_verifyEscape': {
+          const params = payload.params as MethodParams.StarkVerifyEscapeParams;
+          const unsignedTx = await this.controller.verifyEscape(
+            params.contractAddress,
+            params.starkPublicKey,
+            params.proof
           );
-          const escapeTx = await this.wallet.sendTransaction(escapeUnsignedTx);
-          const escapeResult: MethodResults.StarkEscapeResult = {
-            txhash: escapeTx.hash,
+          const tx = await this.wallet.sendTransaction(unsignedTx);
+          const result: MethodResults.StarkVerifyEscapeResult = {
+            txhash: tx.hash,
           };
           response = {
             id,
-            result: escapeResult,
+            result,
           };
           break;
+        }
+        case 'stark_escape': {
+          const params = payload.params as MethodParams.StarkEscapeParams;
+          const unsignedTx = await this.controller.escape(
+            params.contractAddress,
+            params.starkPublicKey,
+            params.vaultId,
+            params.token,
+            params.quantizedAmount
+          );
+          const tx = await this.wallet.sendTransaction(unsignedTx);
+          const result: MethodResults.StarkEscapeResult = {
+            txhash: tx.hash,
+          };
+          response = {
+            id,
+            result,
+          };
+          break;
+        }
         case 'stark_depositNft': {
           const params = payload.params as MethodParams.StarkDepositNftParams;
           const unsignedTx = await this.controller.depositNft(

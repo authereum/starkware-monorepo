@@ -29,7 +29,7 @@ export interface IStarkwareProvider extends BasicProvider {
     application: string,
     index: string
   ): Promise<string>;
-  register(operatorSignature: string): Promise<string>;
+  registerUser(ethKey: string, operatorSignature: string): Promise<string>;
   deposit(
     quantizedAmount: string,
     token: Token,
@@ -52,6 +52,7 @@ export interface IStarkwareProvider extends BasicProvider {
     expirationTimestamp: string
   ): Promise<string>;
   withdraw(token: Token): Promise<string>;
+  withdrawTo(token: Token, recipient: string): Promise<string>;
   withdrawFull(vaultId: string): Promise<string>;
   freezeVault(vaultId: string): Promise<string>;
   verifyEspace(proof: string[]): Promise<string>;

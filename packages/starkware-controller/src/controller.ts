@@ -91,16 +91,20 @@ export class StarkwareController {
     return starkPublicKey;
   }
 
-  public async register(
+  public async registerUser(
     contractAddress: string,
+    ethKey: string,
     starkPublicKey: string,
     operatorSignature: string
   ): Promise<PopulatedTransaction> {
+    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
-    const unsignedTx = await exchangeContract.populateTransaction.register(
-      encUtils.sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey)),
+    const unsignedTx = await exchangeContract.populateTransaction.registerUser(
+      ethKey,
+      this.starkPublicKeyX(starkPublicKey),
       operatorSignature
     );
+
     return unsignedTx;
   }
 
@@ -115,6 +119,7 @@ export class StarkwareController {
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.deposit(
+      this.starkPublicKeyX(starkPublicKey),
       tokenId,
       vaultId,
       quantizedAmount
@@ -132,6 +137,7 @@ export class StarkwareController {
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.depositCancel(
+      this.starkPublicKeyX(starkPublicKey),
       tokenId,
       vaultId
     );
@@ -148,6 +154,7 @@ export class StarkwareController {
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.depositReclaim(
+      this.starkPublicKeyX(starkPublicKey),
       tokenId,
       vaultId
     );
@@ -213,7 +220,7 @@ export class StarkwareController {
     return starkSignature;
   }
 
-  public async withdrawal(
+  public async withdraw(
     contractAddress: string,
     starkPublicKey: string,
     token: starkwareCrypto.Token
@@ -222,7 +229,25 @@ export class StarkwareController {
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.withdraw(
+      this.starkPublicKeyX(starkPublicKey),
       tokenId
+    );
+    return unsignedTx;
+  }
+
+  public async withdrawTo(
+    contractAddress: string,
+    starkPublicKey: string,
+    token: starkwareCrypto.Token,
+    recipient: string
+  ): Promise<PopulatedTransaction> {
+    await this.assertStarkPublicKey(starkPublicKey);
+    const exchangeContract = this.getExchangeContract(contractAddress);
+    const tokenId = starkwareCrypto.hashTokenId(token);
+    const unsignedTx = await exchangeContract.populateTransaction.withdrawTo(
+      this.starkPublicKeyX(starkPublicKey),
+      tokenId,
+      recipient
     );
     return unsignedTx;
   }
@@ -235,6 +260,7 @@ export class StarkwareController {
     await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const unsignedTx = await exchangeContract.populateTransaction.fullWithdrawalRequest(
+      this.starkPublicKeyX(starkPublicKey),
       vaultId
     );
     return unsignedTx;
@@ -248,6 +274,7 @@ export class StarkwareController {
     await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const unsignedTx = await exchangeContract.populateTransaction.freezeRequest(
+      this.starkPublicKeyX(starkPublicKey),
       vaultId
     );
     return unsignedTx;
@@ -277,7 +304,7 @@ export class StarkwareController {
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.escape(
-      encUtils.sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey)),
+      this.starkPublicKeyX(starkPublicKey),
       vaultId,
       tokenId,
       quantizedAmount
@@ -292,10 +319,11 @@ export class StarkwareController {
     vaultId: string,
     token: starkwareCrypto.Token
   ): Promise<PopulatedTransaction> {
+    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.depositNft(
-      encUtils.sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey)),
+      this.starkPublicKeyX(starkPublicKey),
       assetType,
       vaultId,
       tokenId
@@ -311,10 +339,11 @@ export class StarkwareController {
     vaultId: string,
     token: starkwareCrypto.Token
   ): Promise<PopulatedTransaction> {
+    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.depositNftReclaim(
-      encUtils.sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey)),
+      this.starkPublicKeyX(starkPublicKey),
       assetType,
       vaultId,
       tokenId
@@ -329,9 +358,10 @@ export class StarkwareController {
     assetType: string,
     mintingBlob: string | Buffer
   ): Promise<PopulatedTransaction> {
+    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const unsignedTx = await exchangeContract.populateTransaction.withdrawAndMint(
-      encUtils.sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey)),
+      this.starkPublicKeyX(starkPublicKey),
       assetType,
       mintingBlob
     );
@@ -345,10 +375,11 @@ export class StarkwareController {
     assetType: string,
     token: starkwareCrypto.Token
   ): Promise<PopulatedTransaction> {
+    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.withdrawNft(
-      encUtils.sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey)),
+      this.starkPublicKeyX(starkPublicKey),
       assetType,
       tokenId
     );
@@ -363,10 +394,11 @@ export class StarkwareController {
     token: starkwareCrypto.Token,
     recipient: string
   ): Promise<PopulatedTransaction> {
+    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.withdrawNftTo(
-      encUtils.sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey)),
+      this.starkPublicKeyX(starkPublicKey),
       assetType,
       tokenId,
       recipient
@@ -433,6 +465,10 @@ export class StarkwareController {
       );
     }
     return accountMapping;
+  }
+
+  private async starkPublicKeyX(starkPublicKey: string): Promise<string> {
+    return encUtils.sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey));
   }
 }
 
