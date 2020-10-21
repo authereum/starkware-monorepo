@@ -110,6 +110,38 @@ export namespace MethodParams {
     token: Token;
     quantizedAmount: string;
   };
+  export type StarkDepositNftParams = {
+    contractAddress: string;
+    starkPublicKey: string;
+    assetType: string;
+    vaultId: string;
+    token: Token;
+  };
+  export type StarkDepositNftReclaimParams = {
+    contractAddress: string;
+    starkPublicKey: string;
+    assetType: string;
+    mintingBlob: string | Buffer;
+  };
+  export type StarkWithdrawAndMintParams = {
+    contractAddress: string;
+    starkPublicKey: string;
+    assetType: string;
+    mintingBlob: string | Buffer;
+  };
+  export type StarkWithdrawNftParams = {
+    contractAddress: string;
+    starkPublicKey: string;
+    assetType: string;
+    token: Token;
+  };
+  export type StarkWithdrawNftToParams = {
+    contractAddress: string;
+    starkPublicKey: string;
+    assetType: string;
+    token: Token;
+    recipient: string;
+  };
 }
 
 export namespace MethodResults {
@@ -125,4 +157,9 @@ export namespace MethodResults {
   export type StarkFreezeResult = { txhash: string };
   export type StarkVerifyEscapeResult = { txhash: string };
   export type StarkEscapeResult = { txhash: string };
+  export type StarkDepositNftResult = { txhash: string };
+  export type StarkDepositNftReclaimResult = { txhash: string };
+  export type StarkWithdrawAndMintResult = { txhash: string };
+  export type StarkWithdrawNftResult = { txhash: string };
+  export type StarkWithdrawNftToResult = { txhash: string };
 }
