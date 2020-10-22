@@ -174,7 +174,7 @@ export class StarkwareController {
     const senderVaultId = from.vaultId;
     const receiverVaultId = to.vaultId;
     const receiverPublicKey = to.starkPublicKey;
-    const msg = starkwareCrypto.getTransferMsg(
+    const msg = starkwareCrypto.getTransferMsgHash(
       quantizedAmount,
       nonce,
       senderVaultId,
@@ -204,7 +204,7 @@ export class StarkwareController {
     const amountBuy = buy.quantizedAmount;
     const tokenSell = sell.token;
     const tokenBuy = buy.token;
-    const msg = starkwareCrypto.getLimitOrderMsg(
+    const msg = starkwareCrypto.getLimitOrderMsgHash(
       vaultSell,
       vaultBuy,
       amountSell,

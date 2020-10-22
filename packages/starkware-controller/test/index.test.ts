@@ -64,7 +64,7 @@ describe('starkware-controller', () => {
     const senderVaultId = from.vaultId;
     const receiverVaultId = to.vaultId;
     const receiverPublicKey = to.starkPublicKey;
-    const msg = starkwareCrypto.getTransferMsg(
+    const msg = starkwareCrypto.getTransferMsgHash(
       quantizedAmount,
       nonce,
       senderVaultId,
@@ -103,7 +103,7 @@ describe('starkware-controller', () => {
     const senderVaultId = from.vaultId;
     const receiverVaultId = to.vaultId;
     const receiverPublicKey = to.starkPublicKey;
-    const msg = starkwareCrypto.getTransferMsg(
+    const msg = starkwareCrypto.getTransferMsgHash(
       quantizedAmount,
       nonce,
       senderVaultId,

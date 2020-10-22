@@ -22,8 +22,15 @@ import { constantPointsHex } from './constants';
 
 /* --------------------------- ELLIPTIC ---------------------------------- */
 
-export const prime = new BN(
+// Equals 2**251 + 17 * 2**192 + 1.
+export const PRIME = new BN(
   '800000000000011000000000000000000000000000000000000000000000001',
+  16
+);
+
+// Equals 2**251. This value limits msgHash and the signature parts.
+export const maxEcdsaVal = new BN(
+  '800000000000000000000000000000000000000000000000000000000000000',
   16
 );
 
@@ -41,7 +48,7 @@ const starkEc = new elliptic.ec(
   new elliptic.curves.PresetCurve({
     type: 'short',
     prime: null,
-    p: prime as any,
+    p: PRIME as any,
     a:
       '00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001',
     b:
@@ -76,11 +83,11 @@ function isHexPrefixed(str: string) {
   return str.substring(0, 2) === '0x';
 }
 
-function pedersen(input) {
+export function pedersen(input: any) {
   let point = shiftPoint;
   for (let i = 0; i < input.length; i++) {
     let x = new BN(encUtils.removeHexPrefix(input[i]), 16);
-    assert(x.gte(ZERO_BN) && x.lt(prime), 'Invalid input: ' + input[i]);
+    assert(x.gte(ZERO_BN) && x.lt(PRIME), 'Invalid input: ' + input[i]);
     for (let j = 0; j < 252; j++) {
       const pt = constantPoints[2 + i * 252 + j];
       assert(!point.getX().eq(pt.getX()));
@@ -102,7 +109,7 @@ function checkHexValue(hex: string) {
   assert(isHexPrefixed(hex), MISSING_HEX_PREFIX);
   const hexBn = new BN(encUtils.removeHexPrefix(hex), 16);
   assert(hexBn.gte(ZERO_BN));
-  assert(hexBn.lt(prime));
+  assert(hexBn.lt(PRIME));
 }
 
 function parseTokenInput(input: Token | string) {
@@ -380,7 +387,7 @@ export function formatMessage(
   );
 }
 
-export function getLimitOrderMsg(
+export function getLimitOrderMsgHash(
   vaultSell: string,
   vaultBuy: string,
   amountSell: string,
@@ -402,12 +409,32 @@ export function getLimitOrderMsg(
     expirationTimestamp
   );
 
-  return hashMessage([[w1, w2], w3]);
+  const vaultSellBn = new BN(vaultSell);
+  const vaultBuyBn = new BN(vaultBuy);
+  const amountSellBn = new BN(amountSell, 10);
+  const amountBuyBn = new BN(amountBuy, 10);
+  const tokenSellBn = new BN(w1.substring(2), 16);
+  const tokenBuyBn = new BN(w2.substring(2), 16);
+  const nonceBn = new BN(nonce);
+  const expirationTimestampBn = new BN(expirationTimestamp);
+  assertInRange(vaultSellBn, ZERO_BN, TWO_POW_31_BN);
+  assertInRange(vaultBuyBn, ZERO_BN, TWO_POW_31_BN);
+  assertInRange(amountSellBn, ZERO_BN, TWO_POW_63_BN);
+  assertInRange(amountBuyBn, ZERO_BN, TWO_POW_63_BN);
+  assertInRange(tokenSellBn, ZERO_BN, PRIME);
+  assertInRange(tokenBuyBn, ZERO_BN, PRIME);
+  assertInRange(nonceBn, ZERO_BN, TWO_POW_31_BN);
+  assertInRange(expirationTimestampBn, ZERO_BN, TWO_POW_22_BN);
+
+  const msgHash = hashMessage([[w1, w2], w3]);
+  const msgHashBN = new BN(msgHash, 16);
+  assertInRange(msgHashBN, ZERO_BN, maxEcdsaVal, 'msgHash');
+  return msgHash;
 }
 
 // transfer: H(H(w1,w2),w3)
 // conditional transfer: H(H(H(w1,w2),w4),w3)
-export function getTransferMsg(
+export function getTransferMsgHash(
   amount: string,
   nonce: string,
   senderVaultId: string,
@@ -415,8 +442,14 @@ export function getTransferMsg(
   receiverVaultId: string,
   receiverPublicKey: string,
   expirationTimestamp: string,
-  condition?: string
+  condition: string | null = null
 ): string {
+  assert(
+    hasHexPrefix(receiverPublicKey) &&
+      (condition === null || hasHexPrefix(condition)),
+    'Hex strings expected to be prefixed with 0x.'
+  );
+
   const w1 = parseTokenInput(token);
   const w2 = parseTokenInput(receiverPublicKey);
   const w3 = formatMessage(
@@ -429,12 +462,34 @@ export function getTransferMsg(
     expirationTimestamp
   );
 
+  const amountBn = new BN(amount, 10);
+  const nonceBn = new BN(nonce);
+  const senderVaultIdBn = new BN(senderVaultId);
+  const tokenBn = new BN(w1.substring(2), 16);
+  const receiverVaultIdBn = new BN(receiverVaultId);
+  const receiverPublicKeyBn = new BN(receiverPublicKey.substring(2), 16);
+  const expirationTimestampBn = new BN(expirationTimestamp);
+
+  assertInRange(amountBn, ZERO_BN, TWO_POW_63_BN);
+  assertInRange(nonceBn, ZERO_BN, TWO_POW_31_BN);
+  assertInRange(senderVaultIdBn, ZERO_BN, TWO_POW_31_BN);
+  assertInRange(tokenBn, ZERO_BN, PRIME);
+  assertInRange(receiverVaultIdBn, ZERO_BN, TWO_POW_31_BN);
+  assertInRange(receiverPublicKeyBn, ZERO_BN, PRIME);
+  assertInRange(expirationTimestampBn, ZERO_BN, TWO_POW_22_BN);
+
   if (condition) {
     const w4 = condition;
-    return hashMessage([[[w1, w2], w4], w3]);
+    const msgHash = hashMessage([[[w1, w2], w4], w3]);
+    const msgHashBN = new BN(msgHash, 16);
+    assertInRange(msgHashBN, ZERO_BN, maxEcdsaVal, 'msgHash');
+    return msgHash;
   }
 
-  return hashMessage([[w1, w2], w3]);
+  const msgHash = hashMessage([[w1, w2], w3]);
+  const msgHashBN = new BN(msgHash, 16);
+  assertInRange(msgHashBN, ZERO_BN, maxEcdsaVal, 'msgHash');
+  return msgHash;
 }
 
 /*
@@ -442,8 +497,18 @@ export function getTransferMsg(
  key should be an KeyPair with a valid private key.
  Returns an Signature.
 */
-export function sign(keyPair: KeyPair, msg: string): Signature {
-  return keyPair.sign(fixMessage(msg));
+export function sign(keyPair: KeyPair, msgHash: string): Signature {
+  const msgHashBN = new BN(msgHash, 16);
+  // Verify message hash has valid length.
+  assertInRange(msgHashBN, ZERO_BN, maxEcdsaVal, 'msgHash');
+  const msgSignature = keyPair.sign(fixMessage(msgHash));
+  const { r, s } = msgSignature;
+  const w = s.invm((starkEc as any).n);
+  // Verify signature has valid length.
+  assertInRange(r, ONE_BN, maxEcdsaVal, 'r');
+  assertInRange(s, ONE_BN, (starkEc as any).n, 's');
+  assertInRange(w, ONE_BN, maxEcdsaVal, 'w');
+  return msgSignature;
 }
 
 /*
@@ -454,10 +519,19 @@ export function sign(keyPair: KeyPair, msg: string): Signature {
 */
 export function verify(
   keyPair: KeyPair,
-  msg: string,
+  msgHash: string,
   sig: SignatureInput
 ): boolean {
-  return keyPair.verify(fixMessage(msg), sig);
+  const msgHashBN = new BN(msgHash, 16);
+  assertInRange(msgHashBN, ZERO_BN, maxEcdsaVal, 'msgHash');
+  const { r, s } = sig as any;
+  const w = s.invm(starkEc.n);
+  // Verify signature has valid length.
+  assertInRange(r, ONE_BN, maxEcdsaVal, 'r');
+  assertInRange(s, ONE_BN, (starkEc as any).n, 's');
+  assertInRange(w, ONE_BN, maxEcdsaVal, 'w');
+
+  return keyPair.verify(fixMessage(msgHash), sig);
 }
 
 export function compress(publicKey: string): string {
@@ -484,3 +558,30 @@ export const importRecoveryParam = RSV.importRecoveryParam;
 export const serializeSignature = RSV.serializeSignature;
 
 export const deserializeSignature = RSV.deserializeSignature;
+
+/*
+ Asserts input is equal to or greater then lowerBound and lower then upperBound.
+ Assert message specifies inputName.
+ input, lowerBound, and upperBound should be of type BN.
+ inputName should be a string.
+*/
+function assertInRange(
+  input: BN,
+  lowerBound: BN,
+  upperBound: BN,
+  inputName = ''
+) {
+  const messageSuffix =
+    inputName === '' ? 'invalid length' : `invalid ${inputName} length`;
+  assert(
+    input.gte(lowerBound) && input.lt(upperBound),
+    `Message not signable, ${messageSuffix}.`
+  );
+}
+
+/*
+  Checks that the string str start with '0x'.
+*/
+function hasHexPrefix(str: string) {
+  return str.substring(0, 2) === '0x';
+}

@@ -43,7 +43,7 @@ const msgParams = {
   expirationTimestamp: '438953',
 };
 
-const message = starkwareCrypto.getTransferMsg(
+const message = starkwareCrypto.getTransferMsgHash(
   msgParams.amount,
   msgParams.nonce,
   msgParams.senderVaultId,
@@ -111,7 +111,7 @@ interface StarkwareCrypto {
     expirationTimestamp: string
   ): string;
 
-  getLimitOrderMsg(
+  getLimitOrderMsgHash(
     vaultSell: string,
     vaultBuy: string,
     amountSell: string,
@@ -122,7 +122,7 @@ interface StarkwareCrypto {
     expirationTimestamp: string
   ): string;
 
-  getTransferMsg(
+  getTransferMsgHash(
     amount: string,
     nonce: string,
     senderVaultId: string,
