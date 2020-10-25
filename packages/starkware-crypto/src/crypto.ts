@@ -223,6 +223,13 @@ export function getKeyPairFromPublicKey(publicKey: string): KeyPair {
   return starkEc.keyFromPublic(encUtils.hexToArray(publicKey));
 }
 
+export function getKeyPairFromStarkPublicKey(starkPublicKey: string): KeyPair {
+  const compressedPublicKey = encUtils.hexToArray(
+    '02' + starkPublicKey.slice(2)
+  );
+  return starkEc.keyFromPublic(compressedPublicKey);
+}
+
 export function getPrivate(keyPair: KeyPair): string {
   return keyPair.getPrivate('hex');
 }
@@ -232,7 +239,12 @@ export function getPublic(keyPair: KeyPair, compressed = false): string {
 }
 
 export function getStarkPublicKey(keyPair: KeyPair): string {
-  return getPublic(keyPair, true);
+  // drop first byte
+  return encUtils.sanitizeHex(getPublic(keyPair, true).slice(2));
+}
+
+export function getStarkKey(keyPair: KeyPair): string {
+  return encUtils.sanitizeBytes((keyPair as any).pub.getX().toString(16), 2);
 }
 
 export function getXCoordinate(publicKey: string): string {
@@ -417,14 +429,19 @@ export function getLimitOrderMsgHash(
   const tokenBuyBn = new BN(w2.substring(2), 16);
   const nonceBn = new BN(nonce);
   const expirationTimestampBn = new BN(expirationTimestamp);
-  assertInRange(vaultSellBn, ZERO_BN, TWO_POW_31_BN);
-  assertInRange(vaultBuyBn, ZERO_BN, TWO_POW_31_BN);
-  assertInRange(amountSellBn, ZERO_BN, TWO_POW_63_BN);
-  assertInRange(amountBuyBn, ZERO_BN, TWO_POW_63_BN);
-  assertInRange(tokenSellBn, ZERO_BN, PRIME);
-  assertInRange(tokenBuyBn, ZERO_BN, PRIME);
-  assertInRange(nonceBn, ZERO_BN, TWO_POW_31_BN);
-  assertInRange(expirationTimestampBn, ZERO_BN, TWO_POW_22_BN);
+  assertInRange(vaultSellBn, ZERO_BN, TWO_POW_31_BN, 'vaultSell');
+  assertInRange(vaultBuyBn, ZERO_BN, TWO_POW_31_BN, 'vaultBuy');
+  assertInRange(amountSellBn, ZERO_BN, TWO_POW_63_BN, 'amountSell');
+  assertInRange(amountBuyBn, ZERO_BN, TWO_POW_63_BN, 'amountBuy');
+  assertInRange(tokenSellBn, ZERO_BN, PRIME, 'tokenSell');
+  assertInRange(tokenBuyBn, ZERO_BN, PRIME, 'tokenBuy');
+  assertInRange(nonceBn, ZERO_BN, TWO_POW_31_BN, 'nonce');
+  assertInRange(
+    expirationTimestampBn,
+    ZERO_BN,
+    TWO_POW_22_BN,
+    'expirationTimestamp'
+  );
 
   const msgHash = hashMessage([[w1, w2], w3]);
   const msgHashBN = new BN(msgHash, 16);
@@ -470,13 +487,18 @@ export function getTransferMsgHash(
   const receiverPublicKeyBn = new BN(receiverPublicKey.substring(2), 16);
   const expirationTimestampBn = new BN(expirationTimestamp);
 
-  assertInRange(amountBn, ZERO_BN, TWO_POW_63_BN);
-  assertInRange(nonceBn, ZERO_BN, TWO_POW_31_BN);
-  assertInRange(senderVaultIdBn, ZERO_BN, TWO_POW_31_BN);
-  assertInRange(tokenBn, ZERO_BN, PRIME);
-  assertInRange(receiverVaultIdBn, ZERO_BN, TWO_POW_31_BN);
-  assertInRange(receiverPublicKeyBn, ZERO_BN, PRIME);
-  assertInRange(expirationTimestampBn, ZERO_BN, TWO_POW_22_BN);
+  assertInRange(amountBn, ZERO_BN, TWO_POW_63_BN, 'amount');
+  assertInRange(nonceBn, ZERO_BN, TWO_POW_31_BN, 'nonce');
+  assertInRange(senderVaultIdBn, ZERO_BN, TWO_POW_31_BN, 'senderVault');
+  assertInRange(tokenBn, ZERO_BN, PRIME, 'token');
+  assertInRange(receiverVaultIdBn, ZERO_BN, TWO_POW_31_BN, 'receiverVaultId');
+  assertInRange(receiverPublicKeyBn, ZERO_BN, PRIME, 'receiverPublicKey');
+  assertInRange(
+    expirationTimestampBn,
+    ZERO_BN,
+    TWO_POW_22_BN,
+    'expirationTimestamp'
+  );
 
   if (condition) {
     const w4 = condition;
@@ -547,7 +569,7 @@ export function verifyStarkPublicKey(
   msg: string,
   sig: SignatureInput
 ): boolean {
-  const keyPair = getKeyPairFromPublicKey(starkPublicKey);
+  const keyPair = getKeyPairFromStarkPublicKey(starkPublicKey);
   return verify(keyPair, msg, sig);
 }
 

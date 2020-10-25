@@ -29,7 +29,7 @@ const provider = new providers.JsonRpcProvider(
 const wallet = Wallet.fromMnemonic(mnemonic).connect(provider);
 
 const starkPublicKey =
-  '0303a535c13f12c6a2c7e7c0dade3a68225988698687e396a321c12f5d393bea4a';
+  '0x03a535c13f12c6a2c7e7c0dade3a68225988698687e396a321c12f5d393bea4a';
 
 const starkSignature =
   '0x03e243c5b004c89cd9c66fd1c8361c2d42226816214ac113f441027f165c6a7800c7724575abe95602caac714cbc1e650ca3f2355e76dbb5ffb6065c194a38471b';
@@ -78,12 +78,12 @@ describe('starkware-wallet', () => {
       params: {
         from: {
           starkPublicKey:
-            '0303a535c13f12c6a2c7e7c0dade3a68225988698687e396a321c12f5d393bea4a',
+            '0x03a535c13f12c6a2c7e7c0dade3a68225988698687e396a321c12f5d393bea4a',
           vaultId: '1',
         },
         to: {
           starkPublicKey:
-            '0303a535c13f12c6a2c7e7c0dade3a68225988698687e396a321c12f5d393bea4a',
+            '0x03a535c13f12c6a2c7e7c0dade3a68225988698687e396a321c12f5d393bea4a',
           vaultId: '606138218',
         },
         token: { type: 'ETH', data: { quantum: '10000000000' } },
