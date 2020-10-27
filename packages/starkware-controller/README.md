@@ -92,6 +92,12 @@ interface StarkwareController {
     starkPublicKey: string,
     token: starkwareCrypto.Token
   ): Promise<PopulatedTransaction>;
+  withdrawalTo(
+    contractAddress: string,
+    starkPublicKey: string,
+    token: starkwareCrypto.Token,
+    recipient: string
+  ): Promise<PopulatedTransaction>;
   fullWithdrawal(
     contractAddress: string,
     starkPublicKey: string,
@@ -113,6 +119,39 @@ interface StarkwareController {
     vaultId: string,
     token: starkwareCrypto.Token,
     quantizedAmount: string
+  ): Promise<PopulatedTransaction>;
+  depositNft(
+    contractAddress: string,
+    starkPublicKey: string,
+    assetType: string,
+    vaultId: string,
+    token: starkwareCrypto.Token
+  ): Promise<PopulatedTransaction>;
+  depositNftReclaim(
+    contractAddress: string,
+    starkPublicKey: string,
+    assetType: string,
+    vaultId: string,
+    token: starkwareCrypto.Token
+  ): Promise<PopulatedTransaction>;
+  withdrawAndMint(
+    contractAddress: string,
+    starkPublicKey: string,
+    assetType: string,
+    mintingBlob: string | Buffer
+  ): Promise<PopulatedTransaction>;
+  withdrawNft(
+    contractAddress: string,
+    starkPublicKey: string,
+    assetType: string,
+    token: starkwareCrypto.Token
+  ): Promise<PopulatedTransaction>;
+  withdrawNftTo(
+    contractAddress: string,
+    starkPublicKey: string,
+    assetType: string,
+    token: starkwareCrypto.Token,
+    recipient: string
   ): Promise<PopulatedTransaction>;
 }
 
