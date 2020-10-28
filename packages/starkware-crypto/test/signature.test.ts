@@ -21,7 +21,6 @@ describe('starkware-crypto', () => {
     '03b73cdb07f399130ea38ee860c3b708c92165df37b1690d7e0af1678ecdaff8';
   const PUBLIC_KEY = '04' + X_COORDINATE + Y_COORDINATE;
   const PUBLIC_KEY_COMPRESSED = '02' + X_COORDINATE;
-  const STARK_PUBLIC_KEY = '0x' + PUBLIC_KEY_COMPRESSED.slice(2);
   const STARK_SIGNATURE_ETH =
     '0x01df4e7bbad23da5e5266c2d724b5c892c9cc25cdb8a5c3371bac53013f3d5270715136cb5e9bf1f2733885d98cebded918e80f130ec85506e2779d364dd83a81c';
   const STARK_SIGNATURE_ERC20 =
@@ -55,7 +54,7 @@ describe('starkware-crypto', () => {
 
   it('match starkPublicKey to public key compressed', () => {
     const starkPublicKey = starkwareCrypto.getStarkPublicKey(keyPair);
-    expect(starkPublicKey).toEqual(STARK_PUBLIC_KEY);
+    expect(starkPublicKey).toEqual(PUBLIC_KEY_COMPRESSED);
   });
 
   it('match x coordinate', () => {
@@ -81,12 +80,12 @@ describe('starkware-crypto', () => {
   it('sign eth transfer message', () => {
     const params = {
       from: {
-        starkPublicKey:
+        starkKey:
           '0x03a535c13f12c6a2c7e7c0dade3a68225988698687e396a321c12f5d393bea4a',
         vaultId: '1',
       },
       to: {
-        starkPublicKey:
+        starkKey:
           '0x03a535c13f12c6a2c7e7c0dade3a68225988698687e396a321c12f5d393bea4a',
         vaultId: '606138218',
       },
@@ -102,7 +101,7 @@ describe('starkware-crypto', () => {
       params.from.vaultId,
       params.token,
       params.to.vaultId,
-      params.to.starkPublicKey,
+      params.to.starkKey,
       params.expirationTimestamp
     );
 
@@ -124,12 +123,12 @@ describe('starkware-crypto', () => {
     const params = {
       from: {
         vaultId: '34',
-        starkPublicKey:
+        starkKey:
           '0x03a535c13f12c6a2c7e7c0dade3a68225988698687e396a321c12f5d393bea4a',
       },
       to: {
         vaultId: '21',
-        starkPublicKey:
+        starkKey:
           '0x03a535c13f12c6a2c7e7c0dade3a68225988698687e396a321c12f5d393bea4a',
       },
       token: {
@@ -150,7 +149,7 @@ describe('starkware-crypto', () => {
       params.from.vaultId,
       params.token,
       params.to.vaultId,
-      params.to.starkPublicKey,
+      params.to.starkKey,
       params.expirationTimestamp
     );
 

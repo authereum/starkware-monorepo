@@ -47,7 +47,7 @@
     "@types/node": "13.7.0",
     "ethers": "5.0.5",
     "husky": "4.2.1",
-    "starkware-controller": "1.4.5",
+    "starkware-wallet": "1.2.2",
     "tsdx": "0.12.3",
     "tslib": "1.10.0",
     "typescript": "3.7.5",

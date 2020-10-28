@@ -53,7 +53,7 @@ export class StarkwareWallet {
         case 'stark_account': {
           const params = payload.params as MethodParams.StarkAccountParams;
           const result: MethodResults.StarkAccountResult = {
-            starkPublicKey: await this.controller.account(
+            starkKey: await this.controller.account(
               params.layer,
               params.application,
               params.index
@@ -70,7 +70,7 @@ export class StarkwareWallet {
           const unsignedTx = await this.controller.registerUser(
             params.contractAddress,
             params.ethKey,
-            params.starkPublicKey,
+            params.starkKey,
             params.operatorSignature
           );
           const tx = await this.wallet.sendTransaction(unsignedTx);
@@ -87,7 +87,7 @@ export class StarkwareWallet {
           const params = payload.params as MethodParams.StarkDepositParams;
           const unsignedTx = await this.controller.deposit(
             params.contractAddress,
-            params.starkPublicKey,
+            params.starkKey,
             params.quantizedAmount,
             params.token,
             params.vaultId
@@ -106,7 +106,7 @@ export class StarkwareWallet {
           const params = payload.params as MethodParams.StarkDepositCancelParams;
           const unsignedTx = await this.controller.depositCancel(
             params.contractAddress,
-            params.starkPublicKey,
+            params.starkKey,
             params.token,
             params.vaultId
           );
@@ -124,7 +124,7 @@ export class StarkwareWallet {
           const params = payload.params as MethodParams.StarkDepositReclaimParams;
           const unsignedTx = await this.controller.depositReclaim(
             params.contractAddress,
-            params.starkPublicKey,
+            params.starkKey,
             params.token,
             params.vaultId
           );
@@ -160,7 +160,7 @@ export class StarkwareWallet {
           const params = payload.params as MethodParams.StarkCreateOrderParams;
           const result: MethodResults.StarkCreateOrderResult = {
             starkSignature: await this.controller.createOrder(
-              params.starkPublicKey,
+              params.starkKey,
               params.sell,
               params.buy,
               params.nonce,
@@ -177,7 +177,7 @@ export class StarkwareWallet {
           const params = payload.params as MethodParams.StarkWithdrawParams;
           const unsignedTx = await this.controller.withdraw(
             params.contractAddress,
-            params.starkPublicKey,
+            params.starkKey,
             params.token
           );
           const tx = await this.wallet.sendTransaction(unsignedTx);
@@ -194,7 +194,7 @@ export class StarkwareWallet {
           const params = payload.params as MethodParams.StarkWithdrawToParams;
           const unsignedTx = await this.controller.withdrawTo(
             params.contractAddress,
-            params.starkPublicKey,
+            params.starkKey,
             params.token,
             params.recipient
           );
@@ -212,7 +212,7 @@ export class StarkwareWallet {
           const params = payload.params as MethodParams.StarkFullWithdrawalParams;
           const unsignedTx = await this.controller.fullWithdrawal(
             params.contractAddress,
-            params.starkPublicKey,
+            params.starkKey,
             params.vaultId
           );
           const tx = await this.wallet.sendTransaction(unsignedTx);
@@ -229,7 +229,7 @@ export class StarkwareWallet {
           const params = payload.params as MethodParams.StarkFreezeParams;
           const unsignedTx = await this.controller.freeze(
             params.contractAddress,
-            params.starkPublicKey,
+            params.starkKey,
             params.vaultId
           );
           const tx = await this.wallet.sendTransaction(unsignedTx);
@@ -246,7 +246,7 @@ export class StarkwareWallet {
           const params = payload.params as MethodParams.StarkVerifyEscapeParams;
           const unsignedTx = await this.controller.verifyEscape(
             params.contractAddress,
-            params.starkPublicKey,
+            params.starkKey,
             params.proof
           );
           const tx = await this.wallet.sendTransaction(unsignedTx);
@@ -263,7 +263,7 @@ export class StarkwareWallet {
           const params = payload.params as MethodParams.StarkEscapeParams;
           const unsignedTx = await this.controller.escape(
             params.contractAddress,
-            params.starkPublicKey,
+            params.starkKey,
             params.vaultId,
             params.token,
             params.quantizedAmount
@@ -282,7 +282,7 @@ export class StarkwareWallet {
           const params = payload.params as MethodParams.StarkDepositNftParams;
           const unsignedTx = await this.controller.depositNft(
             params.contractAddress,
-            params.starkPublicKey,
+            params.starkKey,
             params.assetType,
             params.vaultId,
             params.token
@@ -301,7 +301,7 @@ export class StarkwareWallet {
           const params = payload.params as MethodParams.StarkDepositNftReclaimParams;
           const unsignedTx = await this.controller.depositNftReclaim(
             params.contractAddress,
-            params.starkPublicKey,
+            params.starkKey,
             params.assetType,
             params.vaultId,
             params.token
@@ -320,7 +320,7 @@ export class StarkwareWallet {
           const params = payload.params as MethodParams.StarkWithdrawAndMintParams;
           const unsignedTx = await this.controller.withdrawAndMint(
             params.contractAddress,
-            params.starkPublicKey,
+            params.starkKey,
             params.assetType,
             params.mintingBlob
           );
@@ -338,7 +338,7 @@ export class StarkwareWallet {
           const params = payload.params as MethodParams.StarkWithdrawNftParams;
           const unsignedTx = await this.controller.withdrawNft(
             params.contractAddress,
-            params.starkPublicKey,
+            params.starkKey,
             params.assetType,
             params.token
           );
@@ -356,7 +356,7 @@ export class StarkwareWallet {
           const params = payload.params as MethodParams.StarkWithdrawNftToParams;
           const unsignedTx = await this.controller.withdrawNftTo(
             params.contractAddress,
-            params.starkPublicKey,
+            params.starkKey,
             params.assetType,
             params.token,
             params.recipient

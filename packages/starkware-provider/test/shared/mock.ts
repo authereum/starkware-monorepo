@@ -1,4 +1,4 @@
-import StarkwareController from 'starkware-controller';
+import StarkwareWallet from 'starkware-wallet';
 import { Wallet } from 'ethers';
 
 import { EventEmitter } from 'events';
@@ -20,10 +20,10 @@ const store = {
 };
 
 export class MockWalletController {
-  private starkwareController: StarkwareController;
+  private starkwareController: StarkwareWallet;
   constructor(mnemonic: string) {
     const wallet = Wallet.fromMnemonic(mnemonic);
-    this.starkwareController = new StarkwareController(wallet, store);
+    this.starkwareController = new StarkwareWallet(wallet, store);
   }
   resolve(payload: any) {
     return this.starkwareController.resolve(payload);

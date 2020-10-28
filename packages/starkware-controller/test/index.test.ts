@@ -24,7 +24,7 @@ const index = '0';
 
 const provider = 'https://ropsten-rpc.linkpool.io/';
 
-const starkPublicKey =
+const starkKey =
   '0x03a535c13f12c6a2c7e7c0dade3a68225988698687e396a321c12f5d393bea4a';
 
 const starkSignature =
@@ -41,11 +41,11 @@ describe('starkware-controller', () => {
   it('should resolve stark_account', async () => {
     const result = await controller.account(layer, application, index);
     expect(result).toBeTruthy();
-    expect(result).toEqual(starkPublicKey);
+    expect(result).toEqual(starkKey);
   });
   it('should resolve stark_transfer', async () => {
-    const from = { starkPublicKey, vaultId: '1' };
-    const to = { starkPublicKey, vaultId: '606138218' };
+    const from = { starkKey, vaultId: '1' };
+    const to = { starkKey, vaultId: '606138218' };
     const token = { type: 'ETH' as 'ETH', data: { quantum: '10000000000' } };
     const quantizedAmount = '100000000';
     const nonce = '1597237097';
@@ -63,14 +63,14 @@ describe('starkware-controller', () => {
 
     const senderVaultId = from.vaultId;
     const receiverVaultId = to.vaultId;
-    const receiverPublicKey = to.starkPublicKey;
+    const receiverKey = to.starkKey;
     const msg = starkwareCrypto.getTransferMsgHash(
       quantizedAmount,
       nonce,
       senderVaultId,
       token,
       receiverVaultId,
-      receiverPublicKey,
+      receiverKey,
       expirationTimestamp
     );
     const keyPair = await controller.getActiveKeyPair();
@@ -78,8 +78,8 @@ describe('starkware-controller', () => {
     expect(starkwareCrypto.verify(keyPair, msg, sig as any)).toBeTruthy();
   });
   it('should resolve stark_transfer with condition', async () => {
-    const from = { starkPublicKey, vaultId: '1' };
-    const to = { starkPublicKey, vaultId: '606138218' };
+    const from = { starkKey, vaultId: '1' };
+    const to = { starkKey, vaultId: '606138218' };
     const token = { type: 'ETH' as 'ETH', data: { quantum: '10000000000' } };
     const quantizedAmount = '100000000';
     const nonce = '1597237097';
@@ -102,14 +102,14 @@ describe('starkware-controller', () => {
 
     const senderVaultId = from.vaultId;
     const receiverVaultId = to.vaultId;
-    const receiverPublicKey = to.starkPublicKey;
+    const receiverKey = to.starkKey;
     const msg = starkwareCrypto.getTransferMsgHash(
       quantizedAmount,
       nonce,
       senderVaultId,
       token,
       receiverVaultId,
-      receiverPublicKey,
+      receiverKey,
       expirationTimestamp,
       condition
     );

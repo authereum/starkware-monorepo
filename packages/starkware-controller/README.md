@@ -50,25 +50,25 @@ interface StarkwareController {
   account(layer: string, application: string, index: string): Promise<string>;
   register(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     operatorSignature: string
   ): Promise<PopulatedTransaction>;
   deposit(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     quantizedAmount: string,
     token: starkwareCrypto.Token,
     vaultId: string
   ): Promise<PopulatedTransaction>;
   depositCancel(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     token: starkwareCrypto.Token,
     vaultId: string
   ): Promise<PopulatedTransaction>;
   depositReclaim(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     token: starkwareCrypto.Token,
     vaultId: string
   ): Promise<PopulatedTransaction>;
@@ -81,7 +81,7 @@ interface StarkwareController {
     expirationTimestamp: string
   ): Promise<string>;
   createOrder(
-    starkPublicKey: string,
+    starkKey: string,
     sell: starkwareCrypto.OrderParams,
     buy: starkwareCrypto.OrderParams,
     nonce: string,
@@ -89,66 +89,66 @@ interface StarkwareController {
   ): Promise<string>;
   withdrawal(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     token: starkwareCrypto.Token
   ): Promise<PopulatedTransaction>;
   withdrawalTo(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     token: starkwareCrypto.Token,
     recipient: string
   ): Promise<PopulatedTransaction>;
   fullWithdrawal(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     vaultId: string
   ): Promise<PopulatedTransaction>;
   freeze(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     vaultId: string
   ): Promise<PopulatedTransaction>;
   verifyEscape(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     proof: string[]
   ): Promise<PopulatedTransaction>;
   escape(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     vaultId: string,
     token: starkwareCrypto.Token,
     quantizedAmount: string
   ): Promise<PopulatedTransaction>;
   depositNft(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     assetType: string,
     vaultId: string,
     token: starkwareCrypto.Token
   ): Promise<PopulatedTransaction>;
   depositNftReclaim(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     assetType: string,
     vaultId: string,
     token: starkwareCrypto.Token
   ): Promise<PopulatedTransaction>;
   withdrawAndMint(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     assetType: string,
     mintingBlob: string | Buffer
   ): Promise<PopulatedTransaction>;
   withdrawNft(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     assetType: string,
     token: starkwareCrypto.Token
   ): Promise<PopulatedTransaction>;
   withdrawNftTo(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     assetType: string,
     token: starkwareCrypto.Token,
     recipient: string

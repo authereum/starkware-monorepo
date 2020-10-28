@@ -8,7 +8,7 @@ const layer = 'starkex';
 const application = 'starkexdvf';
 const index = '0';
 
-const starkPublicKey =
+const starkKey =
   '0x017e159e246999ee9ce7d1103d5d0d52c468bcb385d202ef362de2f878162c48';
 
 describe('starkware-provider', () => {
@@ -23,7 +23,7 @@ describe('starkware-provider', () => {
   it('should enable successfully', async () => {
     const result = await provider.enable(layer, application, index);
     expect(result).toBeTruthy();
-    expect(result).toEqual(starkPublicKey);
+    expect(result).toEqual(starkKey);
   });
   it('should send successfully', async () => {
     const result = await provider.send('stark_account', {
@@ -32,6 +32,6 @@ describe('starkware-provider', () => {
       index,
     });
     expect(result).toBeTruthy();
-    expect(result.starkPublicKey).toEqual(starkPublicKey);
+    expect(result.starkKey).toEqual(starkKey);
   });
 });

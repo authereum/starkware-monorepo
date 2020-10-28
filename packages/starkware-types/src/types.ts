@@ -28,7 +28,7 @@ export interface Token {
 }
 
 export interface TransferParams {
-  starkPublicKey: string;
+  starkKey: string;
   vaultId: string;
 }
 
@@ -47,25 +47,25 @@ export namespace MethodParams {
   export type StarkRegisterUserParams = {
     contractAddress: string;
     ethKey: string;
-    starkPublicKey: string;
+    starkKey: string;
     operatorSignature: string;
   };
   export type StarkDepositParams = {
     contractAddress: string;
-    starkPublicKey: string;
+    starkKey: string;
     quantizedAmount: string;
     token: Token;
     vaultId: string;
   };
   export type StarkDepositCancelParams = {
     contractAddress: string;
-    starkPublicKey: string;
+    starkKey: string;
     token: Token;
     vaultId: string;
   };
   export type StarkDepositReclaimParams = {
     contractAddress: string;
-    starkPublicKey: string;
+    starkKey: string;
     token: Token;
     vaultId: string;
   };
@@ -78,7 +78,7 @@ export namespace MethodParams {
     expirationTimestamp: string;
   };
   export type StarkCreateOrderParams = {
-    starkPublicKey: string;
+    starkKey: string;
     sell: OrderParams;
     buy: OrderParams;
     nonce: string;
@@ -86,66 +86,66 @@ export namespace MethodParams {
   };
   export type StarkWithdrawParams = {
     contractAddress: string;
-    starkPublicKey: string;
+    starkKey: string;
     token: Token;
   };
   export type StarkWithdrawToParams = {
     contractAddress: string;
-    starkPublicKey: string;
+    starkKey: string;
     token: Token;
     recipient: string;
   };
   export type StarkFullWithdrawalParams = {
     contractAddress: string;
-    starkPublicKey: string;
+    starkKey: string;
     vaultId: string;
   };
   export type StarkFreezeParams = {
     contractAddress: string;
-    starkPublicKey: string;
+    starkKey: string;
     vaultId: string;
   };
   export type StarkVerifyEscapeParams = {
     contractAddress: string;
-    starkPublicKey: string;
+    starkKey: string;
     proof: string[];
   };
   export type StarkEscapeParams = {
     contractAddress: string;
-    starkPublicKey: string;
+    starkKey: string;
     vaultId: string;
     token: Token;
     quantizedAmount: string;
   };
   export type StarkDepositNftParams = {
     contractAddress: string;
-    starkPublicKey: string;
+    starkKey: string;
     assetType: string;
     vaultId: string;
     token: Token;
   };
   export type StarkDepositNftReclaimParams = {
     contractAddress: string;
-    starkPublicKey: string;
+    starkKey: string;
     assetType: string;
     vaultId: string;
     token: Token;
   };
   export type StarkWithdrawAndMintParams = {
     contractAddress: string;
-    starkPublicKey: string;
+    starkKey: string;
     assetType: string;
     mintingBlob: string | Buffer;
   };
   export type StarkWithdrawNftParams = {
     contractAddress: string;
-    starkPublicKey: string;
+    starkKey: string;
     assetType: string;
     token: Token;
   };
   export type StarkWithdrawNftToParams = {
     contractAddress: string;
-    starkPublicKey: string;
+    starkKey: string;
     assetType: string;
     token: Token;
     recipient: string;
@@ -153,7 +153,7 @@ export namespace MethodParams {
 }
 
 export namespace MethodResults {
-  export type StarkAccountResult = { starkPublicKey: string };
+  export type StarkAccountResult = { starkKey: string };
   export type StarkRegisterUserResult = { txhash: string };
   export type StarkDepositResult = { txhash: string };
   export type StarkDepositCancelResult = { txhash: string };

@@ -19,7 +19,7 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
   private accountParams: AccountParams | undefined;
 
   public contractAddress: string;
-  public starkPublicKey: string | undefined;
+  public starkKey: string | undefined;
 
   constructor(connection: IRpcConnection, contractAddress: string) {
     super(connection);
@@ -35,13 +35,9 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
   ): Promise<string> {
     try {
       await this.open();
-      const starkPublicKey = await this.updateAccount(
-        layer,
-        application,
-        index
-      );
+      const starkKey = await this.updateAccount(layer, application, index);
       this.emit('enable');
-      return starkPublicKey;
+      return starkKey;
     } catch (err) {
       await this.close();
       throw err;
@@ -54,25 +50,23 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
     index: string
   ): Promise<string> {
     const accountParams: AccountParams = { layer, application, index };
-    if (this.starkPublicKey && matches(this.accountParams, accountParams)) {
-      return this.starkPublicKey;
+    if (this.starkKey && matches(this.accountParams, accountParams)) {
+      return this.starkKey;
     }
-    const starkPublicKey = await this.getAccount(layer, application, index);
-    return starkPublicKey;
+
+    return this.getAccount(layer, application, index);
   }
 
   public async getActiveAccount(): Promise<string> {
     if (!this.accountParams) {
-      throw new Error(
-        'No StarkPublicKey available - please call provider.enable()'
-      );
+      throw new Error('No StarkKey available - please call provider.enable()');
     }
-    if (this.starkPublicKey) {
-      return this.starkPublicKey;
+    if (this.starkKey) {
+      return this.starkKey;
     }
+
     const { layer, application, index } = this.accountParams;
-    const starkPublicKey = await this.getAccount(layer, application, index);
-    return starkPublicKey;
+    return this.getAccount(layer, application, index);
   }
 
   public async getAccount(
@@ -81,7 +75,7 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
     index: string
   ): Promise<string> {
     this.accountParams = { layer, application, index };
-    const { starkPublicKey } = await this.send<
+    const { starkKey } = await this.send<
       MethodResults.StarkAccountResult,
       MethodParams.StarkAccountParams
     >('stark_account', {
@@ -89,8 +83,9 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
       application,
       index,
     });
-    this.starkPublicKey = starkPublicKey;
-    return starkPublicKey;
+
+    this.starkKey = starkKey;
+    return starkKey;
   }
 
   public async registerUser(
@@ -98,14 +93,14 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
     operatorSignature: string
   ): Promise<string> {
     const contractAddress = this.contractAddress;
-    const starkPublicKey = await this.getActiveAccount();
+    const starkKey = await this.getActiveAccount();
     const { txhash } = await this.send<
       MethodResults.StarkRegisterUserResult,
       MethodParams.StarkRegisterUserParams
     >('stark_registerUser', {
       contractAddress,
       ethKey,
-      starkPublicKey,
+      starkKey,
       operatorSignature,
     });
     return txhash;
@@ -117,13 +112,13 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
     vaultId: string
   ): Promise<string> {
     const contractAddress = this.contractAddress;
-    const starkPublicKey = await this.getActiveAccount();
+    const starkKey = await this.getActiveAccount();
     const { txhash } = await this.send<
       MethodResults.StarkDepositResult,
       MethodParams.StarkDepositParams
     >('stark_deposit', {
       contractAddress,
-      starkPublicKey,
+      starkKey,
       quantizedAmount,
       token,
       vaultId,
@@ -133,13 +128,13 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
 
   public async depositCancel(token: Token, vaultId: string): Promise<string> {
     const contractAddress = this.contractAddress;
-    const starkPublicKey = await this.getActiveAccount();
+    const starkKey = await this.getActiveAccount();
     const { txhash } = await this.send<
       MethodResults.StarkDepositCancelResult,
       MethodParams.StarkDepositCancelParams
     >('stark_depositCancel', {
       contractAddress,
-      starkPublicKey,
+      starkKey,
       token,
       vaultId,
     });
@@ -148,13 +143,13 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
 
   public async depositReclaim(token: Token, vaultId: string): Promise<string> {
     const contractAddress = this.contractAddress;
-    const starkPublicKey = await this.getActiveAccount();
+    const starkKey = await this.getActiveAccount();
     const { txhash } = await this.send<
       MethodResults.StarkDepositReclaimResult,
       MethodParams.StarkDepositReclaimParams
     >('stark_depositReclaim', {
       contractAddress,
-      starkPublicKey,
+      starkKey,
       token,
       vaultId,
     });
@@ -169,8 +164,8 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
     nonce: string,
     expirationTimestamp: string
   ): Promise<string> {
-    const starkPublicKey = await this.getActiveAccount();
-    const from = { starkPublicKey, vaultId };
+    const starkKey = await this.getActiveAccount();
+    const from = { starkKey, vaultId };
     const { starkSignature } = await this.send<
       MethodResults.StarkTransferResult,
       MethodParams.StarkTransferParams
@@ -191,12 +186,12 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
     nonce: string,
     expirationTimestamp: string
   ): Promise<string> {
-    const starkPublicKey = await this.getActiveAccount();
+    const starkKey = await this.getActiveAccount();
     const { starkSignature } = await this.send<
       MethodResults.StarkCreateOrderResult,
       MethodParams.StarkCreateOrderParams
     >('stark_createOrder', {
-      starkPublicKey,
+      starkKey,
       sell,
       buy,
       nonce,
@@ -207,13 +202,13 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
 
   public async withdraw(token: Token): Promise<string> {
     const contractAddress = this.contractAddress;
-    const starkPublicKey = await this.getActiveAccount();
+    const starkKey = await this.getActiveAccount();
     const { txhash } = await this.send<
       MethodResults.StarkWithdrawResult,
       MethodParams.StarkWithdrawParams
     >('stark_withdraw', {
       contractAddress,
-      starkPublicKey,
+      starkKey,
       token,
     });
     return txhash;
@@ -221,13 +216,13 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
 
   public async withdrawTo(token: Token, recipient: string): Promise<string> {
     const contractAddress = this.contractAddress;
-    const starkPublicKey = await this.getActiveAccount();
+    const starkKey = await this.getActiveAccount();
     const { txhash } = await this.send<
       MethodResults.StarkWithdrawToResult,
       MethodParams.StarkWithdrawToParams
     >('stark_withdrawTo', {
       contractAddress,
-      starkPublicKey,
+      starkKey,
       token,
       recipient,
     });
@@ -236,13 +231,13 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
 
   public async withdrawFull(vaultId: string): Promise<string> {
     const contractAddress = this.contractAddress;
-    const starkPublicKey = await this.getActiveAccount();
+    const starkKey = await this.getActiveAccount();
     const { txhash } = await this.send<
       MethodResults.StarkFullWithdrawalResult,
       MethodParams.StarkFullWithdrawalParams
     >('stark_fullWithdrawal', {
       contractAddress,
-      starkPublicKey,
+      starkKey,
       vaultId,
     });
     return txhash;
@@ -250,13 +245,13 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
 
   public async freezeVault(vaultId: string): Promise<string> {
     const contractAddress = this.contractAddress;
-    const starkPublicKey = await this.getActiveAccount();
+    const starkKey = await this.getActiveAccount();
     const { txhash } = await this.send<
       MethodResults.StarkFreezeResult,
       MethodParams.StarkFreezeParams
     >('stark_freeze', {
       contractAddress,
-      starkPublicKey,
+      starkKey,
       vaultId,
     });
     return txhash;
@@ -264,13 +259,13 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
 
   public async verifyEspace(proof: string[]): Promise<string> {
     const contractAddress = this.contractAddress;
-    const starkPublicKey = await this.getActiveAccount();
+    const starkKey = await this.getActiveAccount();
     const { txhash } = await this.send<
       MethodResults.StarkVerifyEscapeResult,
       MethodParams.StarkVerifyEscapeParams
     >('stark_verifyEscape', {
       contractAddress,
-      starkPublicKey,
+      starkKey,
       proof,
     });
     return txhash;
@@ -282,13 +277,13 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
     quantizedAmount: string
   ): Promise<string> {
     const contractAddress = this.contractAddress;
-    const starkPublicKey = await this.getActiveAccount();
+    const starkKey = await this.getActiveAccount();
     const { txhash } = await this.send<
       MethodResults.StarkEscapeResult,
       MethodParams.StarkEscapeParams
     >('stark_escape', {
       contractAddress,
-      starkPublicKey,
+      starkKey,
       vaultId,
       token,
       quantizedAmount,
@@ -302,13 +297,13 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
     token: Token
   ): Promise<string> {
     const contractAddress = this.contractAddress;
-    const starkPublicKey = await this.getActiveAccount();
+    const starkKey = await this.getActiveAccount();
     const { txhash } = await this.send<
       MethodResults.StarkDepositNftResult,
       MethodParams.StarkDepositNftParams
     >('stark_depositNft', {
       contractAddress,
-      starkPublicKey,
+      starkKey,
       assetType,
       vaultId,
       token,
@@ -323,13 +318,13 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
     token: Token
   ): Promise<string> {
     const contractAddress = this.contractAddress;
-    const starkPublicKey = await this.getActiveAccount();
+    const starkKey = await this.getActiveAccount();
     const { txhash } = await this.send<
       MethodResults.StarkDepositNftReclaimResult,
       MethodParams.StarkDepositNftReclaimParams
     >('stark_depositNftReclaim', {
       contractAddress,
-      starkPublicKey,
+      starkKey,
       assetType,
       vaultId,
       token,
@@ -343,13 +338,13 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
     mintingBlob: string | Buffer
   ): Promise<string> {
     const contractAddress = this.contractAddress;
-    const starkPublicKey = await this.getActiveAccount();
+    const starkKey = await this.getActiveAccount();
     const { txhash } = await this.send<
       MethodResults.StarkWithdrawAndMintResult,
       MethodParams.StarkWithdrawAndMintParams
     >('stark_withdrawAndMint', {
       contractAddress,
-      starkPublicKey,
+      starkKey,
       assetType,
       mintingBlob,
     });
@@ -359,13 +354,13 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
 
   public async withdrawNft(assetType: string, token: Token): Promise<string> {
     const contractAddress = this.contractAddress;
-    const starkPublicKey = await this.getActiveAccount();
+    const starkKey = await this.getActiveAccount();
     const { txhash } = await this.send<
       MethodResults.StarkWithdrawNftResult,
       MethodParams.StarkWithdrawNftParams
     >('stark_withdrawNft', {
       contractAddress,
-      starkPublicKey,
+      starkKey,
       assetType,
       token,
     });
@@ -379,13 +374,13 @@ class StarkwareProvider extends BasicProvider implements IStarkwareProvider {
     recipient: string
   ): Promise<string> {
     const contractAddress = this.contractAddress;
-    const starkPublicKey = await this.getActiveAccount();
+    const starkKey = await this.getActiveAccount();
     const { txhash } = await this.send<
       MethodResults.StarkWithdrawNftToResult,
       MethodParams.StarkWithdrawNftToParams
     >('stark_withdrawNftTo', {
       contractAddress,
-      starkPublicKey,
+      starkKey,
       assetType,
       token,
       recipient,

@@ -28,7 +28,7 @@ const provider = new providers.JsonRpcProvider(
 
 const wallet = Wallet.fromMnemonic(mnemonic).connect(provider);
 
-const starkPublicKey =
+const starkKey =
   '0x03a535c13f12c6a2c7e7c0dade3a68225988698687e396a321c12f5d393bea4a';
 
 const starkSignature =
@@ -58,18 +58,18 @@ describe('starkware-wallet', () => {
       params: { layer, application, index },
     });
     expect(result).toBeTruthy();
-    expect(result.starkPublicKey).toEqual(starkPublicKey);
+    expect(result.starkKey).toEqual(starkKey);
   });
 
   it('stark_transfer', async () => {
-    const { starkPublicKey } = await request(starkWallet, {
+    const { starkKey } = await request(starkWallet, {
       id: 1,
       jsonrpc: '2.0',
       method: 'stark_account',
       params: { layer, application, index },
     });
 
-    expect(starkPublicKey).toBeTruthy();
+    expect(starkKey).toBeTruthy();
 
     const transferSig = await request(starkWallet, {
       id: 1597237100918037,
@@ -77,12 +77,12 @@ describe('starkware-wallet', () => {
       method: 'stark_transfer',
       params: {
         from: {
-          starkPublicKey:
+          starkKey:
             '0x03a535c13f12c6a2c7e7c0dade3a68225988698687e396a321c12f5d393bea4a',
           vaultId: '1',
         },
         to: {
-          starkPublicKey:
+          starkKey:
             '0x03a535c13f12c6a2c7e7c0dade3a68225988698687e396a321c12f5d393bea4a',
           vaultId: '606138218',
         },

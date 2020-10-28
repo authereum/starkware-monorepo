@@ -87,21 +87,20 @@ export class StarkwareController {
       this.getEthereumAddress(),
       index
     );
-    const starkPublicKey = await this.getStarkPublicKey(path);
-    return starkPublicKey;
+
+    return this.getStarkKey(path);
   }
 
   public async registerUser(
     contractAddress: string,
     ethKey: string,
-    starkPublicKey: string,
+    starkKey: string,
     operatorSignature: string
   ): Promise<PopulatedTransaction> {
-    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const unsignedTx = await exchangeContract.populateTransaction.registerUser(
       ethKey,
-      this.getStarkKey(starkPublicKey),
+      starkKey,
       operatorSignature
     );
 
@@ -110,16 +109,15 @@ export class StarkwareController {
 
   public async deposit(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     quantizedAmount: string,
     token: starkwareCrypto.Token,
     vaultId: string
   ): Promise<PopulatedTransaction> {
-    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.deposit(
-      this.getStarkKey(starkPublicKey),
+      starkKey,
       tokenId,
       vaultId,
       quantizedAmount
@@ -129,15 +127,14 @@ export class StarkwareController {
 
   public async depositCancel(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     token: starkwareCrypto.Token,
     vaultId: string
   ): Promise<PopulatedTransaction> {
-    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.depositCancel(
-      this.getStarkKey(starkPublicKey),
+      starkKey,
       tokenId,
       vaultId
     );
@@ -146,15 +143,14 @@ export class StarkwareController {
 
   public async depositReclaim(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     token: starkwareCrypto.Token,
     vaultId: string
   ): Promise<PopulatedTransaction> {
-    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.depositReclaim(
-      this.getStarkKey(starkPublicKey),
+      starkKey,
       tokenId,
       vaultId
     );
@@ -170,17 +166,16 @@ export class StarkwareController {
     expirationTimestamp: string,
     condition?: string
   ): Promise<string> {
-    await this.assertStarkPublicKey(from.starkPublicKey);
     const senderVaultId = from.vaultId;
     const receiverVaultId = to.vaultId;
-    const receiverPublicKey = to.starkPublicKey;
+    const receiverKey = to.starkKey;
     const msg = starkwareCrypto.getTransferMsgHash(
       quantizedAmount,
       nonce,
       senderVaultId,
       token,
       receiverVaultId,
-      receiverPublicKey,
+      receiverKey,
       expirationTimestamp,
       condition
     );
@@ -191,13 +186,12 @@ export class StarkwareController {
   }
 
   public async createOrder(
-    starkPublicKey: string,
+    starkKey: string,
     sell: starkwareCrypto.OrderParams,
     buy: starkwareCrypto.OrderParams,
     nonce: string,
     expirationTimestamp: string
   ): Promise<string> {
-    await this.assertStarkPublicKey(starkPublicKey);
     const vaultSell = sell.vaultId;
     const vaultBuy = buy.vaultId;
     const amountSell = sell.quantizedAmount;
@@ -222,14 +216,13 @@ export class StarkwareController {
 
   public async withdraw(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     token: starkwareCrypto.Token
   ): Promise<PopulatedTransaction> {
-    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.withdraw(
-      this.getStarkKey(starkPublicKey),
+      starkKey,
       tokenId
     );
     return unsignedTx;
@@ -237,15 +230,14 @@ export class StarkwareController {
 
   public async withdrawTo(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     token: starkwareCrypto.Token,
     recipient: string
   ): Promise<PopulatedTransaction> {
-    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.withdrawTo(
-      this.getStarkKey(starkPublicKey),
+      starkKey,
       tokenId,
       recipient
     );
@@ -254,13 +246,12 @@ export class StarkwareController {
 
   public async fullWithdrawal(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     vaultId: string
   ): Promise<PopulatedTransaction> {
-    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const unsignedTx = await exchangeContract.populateTransaction.fullWithdrawalRequest(
-      this.getStarkKey(starkPublicKey),
+      starkKey,
       vaultId
     );
     return unsignedTx;
@@ -268,13 +259,12 @@ export class StarkwareController {
 
   public async freeze(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     vaultId: string
   ): Promise<PopulatedTransaction> {
-    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const unsignedTx = await exchangeContract.populateTransaction.freezeRequest(
-      this.getStarkKey(starkPublicKey),
+      starkKey,
       vaultId
     );
     return unsignedTx;
@@ -282,10 +272,9 @@ export class StarkwareController {
 
   public async verifyEscape(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     proof: string[]
   ): Promise<PopulatedTransaction> {
-    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const unsignedTx = await exchangeContract.populateTransaction.verifyEscape(
       proof
@@ -295,16 +284,15 @@ export class StarkwareController {
 
   public async escape(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     vaultId: string,
     token: starkwareCrypto.Token,
     quantizedAmount: string
   ): Promise<PopulatedTransaction> {
-    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.escape(
-      this.getStarkKey(starkPublicKey),
+      starkKey,
       vaultId,
       tokenId,
       quantizedAmount
@@ -314,16 +302,15 @@ export class StarkwareController {
 
   public async depositNft(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     assetType: string,
     vaultId: string,
     token: starkwareCrypto.Token
   ): Promise<PopulatedTransaction> {
-    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.depositNft(
-      this.getStarkKey(starkPublicKey),
+      starkKey,
       assetType,
       vaultId,
       tokenId
@@ -334,16 +321,15 @@ export class StarkwareController {
 
   public async depositNftReclaim(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     assetType: string,
     vaultId: string,
     token: starkwareCrypto.Token
   ): Promise<PopulatedTransaction> {
-    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.depositNftReclaim(
-      this.getStarkKey(starkPublicKey),
+      starkKey,
       assetType,
       vaultId,
       tokenId
@@ -354,14 +340,13 @@ export class StarkwareController {
 
   public async withdrawAndMint(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     assetType: string,
     mintingBlob: string | Buffer
   ): Promise<PopulatedTransaction> {
-    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const unsignedTx = await exchangeContract.populateTransaction.withdrawAndMint(
-      this.getStarkKey(starkPublicKey),
+      starkKey,
       assetType,
       mintingBlob
     );
@@ -371,15 +356,14 @@ export class StarkwareController {
 
   public async withdrawNft(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     assetType: string,
     token: starkwareCrypto.Token
   ): Promise<PopulatedTransaction> {
-    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.withdrawNft(
-      this.getStarkKey(starkPublicKey),
+      starkKey,
       assetType,
       tokenId
     );
@@ -389,16 +373,15 @@ export class StarkwareController {
 
   public async withdrawNftTo(
     contractAddress: string,
-    starkPublicKey: string,
+    starkKey: string,
     assetType: string,
     token: starkwareCrypto.Token,
     recipient: string
   ): Promise<PopulatedTransaction> {
-    await this.assertStarkPublicKey(starkPublicKey);
     const exchangeContract = this.getExchangeContract(contractAddress);
     const tokenId = starkwareCrypto.hashTokenId(token);
     const unsignedTx = await exchangeContract.populateTransaction.withdrawNftTo(
-      this.getStarkKey(starkPublicKey),
+      starkKey,
       assetType,
       tokenId,
       recipient
@@ -408,12 +391,6 @@ export class StarkwareController {
   }
 
   // -- Private ------------------------------------------------------- //
-
-  private async assertStarkPublicKey(starkPublicKey: string) {
-    if ((await this.getStarkPublicKey()) !== starkPublicKey) {
-      throw new Error('StarkPublicKey request does not match active key');
-    }
-  }
 
   private async getKeyPairFromPath(
     path?: string
@@ -467,7 +444,9 @@ export class StarkwareController {
     return accountMapping;
   }
 
-  private async getStarkKey(starkPublicKey: string): Promise<string> {
+  private async getStarkKey(path?: string): Promise<string> {
+    const starkPublicKey = await this.getStarkPublicKey(path);
+
     return encUtils.sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey));
   }
 }

@@ -224,10 +224,7 @@ export function getKeyPairFromPublicKey(publicKey: string): KeyPair {
 }
 
 export function getKeyPairFromStarkPublicKey(starkPublicKey: string): KeyPair {
-  const compressedPublicKey = encUtils.hexToArray(
-    '02' + starkPublicKey.slice(2)
-  );
-  return starkEc.keyFromPublic(compressedPublicKey);
+  return starkEc.keyFromPublic(encUtils.hexToArray(starkPublicKey));
 }
 
 export function getPrivate(keyPair: KeyPair): string {
@@ -239,8 +236,7 @@ export function getPublic(keyPair: KeyPair, compressed = false): string {
 }
 
 export function getStarkPublicKey(keyPair: KeyPair): string {
-  // drop first byte
-  return encUtils.sanitizeHex(getPublic(keyPair, true).slice(2));
+  return getPublic(keyPair, true);
 }
 
 export function getStarkKey(keyPair: KeyPair): string {
