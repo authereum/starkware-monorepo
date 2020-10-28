@@ -5,8 +5,10 @@ import * as RSV from 'rsv-signature';
 import * as bip39 from 'bip39';
 import * as elliptic from 'elliptic';
 import * as encUtils from 'enc-utils';
-import { keccak_256 } from 'js-sha3';
+import keccak256 from 'keccak256';
 import { hdkey } from 'ethereumjs-wallet';
+import * as web3utils from 'web3-utils';
+import { checkAddressChecksum } from 'ethereum-checksum-address';
 
 import {
   Token,
@@ -19,6 +21,25 @@ import {
   NestedArray,
 } from './types';
 import { constantPointsHex } from './constants';
+
+const solidityKeccak = (types: string[], values: any[]) => {
+  const input = types.map((type: string, i: number) => {
+    let value = values[i];
+    if (Buffer.isBuffer(value)) {
+      value = encUtils.sanitizeHex(value.toString('hex'));
+    }
+
+    return {
+      type,
+      value,
+    };
+  });
+
+  return Buffer.from(
+    (web3utils.soliditySha3(...input) as string).slice(2),
+    'hex'
+  );
+};
 
 /* --------------------------- ELLIPTIC ---------------------------------- */
 
@@ -120,7 +141,7 @@ function parseTokenInput(input: Token | string) {
     checkHexValue(input);
     return input;
   }
-  return hashTokenId(input);
+  return hashAssetId(input);
 }
 
 /*
@@ -253,7 +274,152 @@ export function getYCoordinate(publicKey: string): string {
   return encUtils.sanitizeBytes((keyPair as any).pub.getY().toString(16), 2);
 }
 
-export function hashTokenId(token: Token) {
+// Asset ID calculation --------------------------------------------------
+
+const hashSelector = (selector: string): string => {
+  return encUtils.sanitizeHex(
+    keccak256(selector)
+      .toString('hex')
+      .slice(0, 8)
+  );
+};
+
+export const ETH_SELECTOR = hashSelector('ETH()');
+export const ERC20_SELECTOR = hashSelector('ERC20Token(address)');
+export const ERC721_SELECTOR = hashSelector('ERC721Token(address,uint256)');
+export const MINTABLE_ERC20_SELECTOR = hashSelector(
+  'MintableERC20Token(address)'
+);
+export const MINTABLE_ERC721_SELECTOR = hashSelector(
+  'MintableERC721Token(address,uint256)'
+);
+export const NFT_ASSET_ID_PREFIX = 'NFT:';
+export const MINTABLE_ASSET_ID_PREFIX = 'MINTABLE:';
+export const MASK_250_BITS_BN = new BN(
+  '03FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',
+  16
+);
+export const MASK_240_BITS_BN = new BN(
+  'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',
+  16
+);
+export const MINTABLE_ASSET_ID_FLAG = new BN(
+  '400000000000000000000000000000000000000000000000000000000000000',
+  16
+); // 1 << 250
+
+export function getAssetInfo(
+  contractAddress: string,
+  tokenSelector: string
+): string {
+  assert(checkAddressChecksum(contractAddress), 'Expected checksummed address');
+  return getAssetInfoFromAddress(contractAddress, tokenSelector);
+}
+
+export function getAssetInfoFromAddress(
+  tokenAddress: string,
+  selector: string
+): string {
+  const buf = Buffer.alloc(32);
+  const addrBuf = Buffer.from(encUtils.removeHexPrefix(tokenAddress), 'hex');
+  addrBuf.copy(buf, buf.length - addrBuf.length);
+  const assetInfo = selector + buf.toString('hex');
+  return assetInfo;
+}
+
+export function calculateAssetType(
+  assetInfo: string,
+  quantum: string = '1'
+): string {
+  const h = solidityKeccak(['bytes', 'uint256'], [assetInfo, quantum]);
+  const bn = new BN(h.toString('hex'), 16);
+  return encUtils.sanitizeHex(bn.and(MASK_250_BITS_BN).toString(16));
+}
+
+export function calculateMintableAssetId(
+  mintableContractAddress: string,
+  selector: string,
+  mintingBlob: string | Buffer,
+  quantum: string = '1'
+): string {
+  const assetInfo = getAssetInfo(mintableContractAddress, selector);
+  const assetType = calculateAssetType(assetInfo, quantum);
+  const blobHash = solidityKeccak(['bytes'], [mintingBlob]);
+  const interimHash = solidityKeccak(
+    ['string', 'uint256', 'uint256'],
+    [MINTABLE_ASSET_ID_PREFIX, assetType, blobHash]
+  );
+  const bn = new BN(interimHash.toString('hex'), 16);
+  return encUtils.sanitizeHex(
+    bn
+      .and(MASK_240_BITS_BN)
+      .or(MINTABLE_ASSET_ID_FLAG)
+      .toString(16)
+  );
+}
+
+export function getAddressFromAssetInfo(
+  assetInfo: string,
+  selector = ERC20_SELECTOR
+): string {
+  const assetInfoBuf = Buffer.from(encUtils.removeHexPrefix(assetInfo), 'hex');
+  const selectorBuf = Buffer.from(encUtils.removeHexPrefix(selector), 'hex');
+  assert(selectorBuf.byteLength === 4);
+  const addressLength = 20;
+  const paddingLength = 32 - addressLength;
+  assert(
+    Buffer.compare(
+      assetInfoBuf.slice(0, 4 + paddingLength),
+      Buffer.concat([selectorBuf, Buffer.alloc(paddingLength)])
+    ) === 0
+  );
+  return encUtils.sanitizeHex(
+    assetInfoBuf.slice(4 + paddingLength).toString('hex')
+  );
+}
+
+// AssetType definition for each tokenType
+
+export function getEthAssetType(quantum: string) {
+  const assetInfo = ETH_SELECTOR;
+  return calculateAssetType(assetInfo, quantum);
+}
+
+export function getErc20AssetType(
+  erc20ContractAddress: string,
+  quantum: string
+) {
+  const assetInfo = getAssetInfo(erc20ContractAddress, ERC20_SELECTOR);
+  return calculateAssetType(assetInfo, quantum);
+}
+
+export function getErc721AssetType(erc721ContractAddress: string) {
+  const assetInfo = getAssetInfo(erc721ContractAddress, ERC721_SELECTOR);
+  return calculateAssetType(assetInfo, '1');
+}
+
+export function getMintableErc20AssetType(
+  mintableErc20ContractAddress: string,
+  quantum: string
+) {
+  const assetInfo = getAssetInfo(
+    mintableErc20ContractAddress,
+    MINTABLE_ERC20_SELECTOR
+  );
+  return calculateAssetType(assetInfo, quantum);
+}
+
+export function getMintableErc721AssetType(
+  mintableErc721ContractAddress: string
+) {
+  const assetInfo = getAssetInfo(
+    mintableErc721ContractAddress,
+    MINTABLE_ERC721_SELECTOR
+  );
+  return calculateAssetType(assetInfo, '1');
+}
+
+export function hashAssetId(token: Token) {
   let id: string;
   let tokenAddress: string;
   switch (token.type.toUpperCase()) {
@@ -273,8 +439,14 @@ export function hashTokenId(token: Token) {
     default:
       throw new Error(`Unknown token type: ${token.type}`);
   }
-  return encUtils.sanitizeHex(keccak_256(id).slice(2, 10));
+  return encUtils.sanitizeHex(
+    keccak256(id)
+      .toString('hex')
+      .slice(0, 8)
+  );
 }
+
+// Message hashing --------------------------------------------------
 
 export function hashMessage(
   wordsOrW1: NestedArray<string> | string[] | string,

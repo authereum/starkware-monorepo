@@ -169,7 +169,7 @@ describe('starkware-crypto', () => {
   });
 });
 
-describe('library examples', () => {
+describe.only('library examples', () => {
   const testData = require('./signature_test_data.json');
 
   test('Signing a StarkEx Order', () => {
@@ -325,7 +325,7 @@ describe('library examples', () => {
     console.log(transfer);
   });
 
-  test('Adding a matching order to create a settlement', () => {
+  test.only('Adding a matching order to create a settlement', () => {
     const privateKey = testData.meta_data.party_b_order.private_key.substring(
       2
     );
@@ -629,5 +629,95 @@ describe('signature tests', () => {
         expect(s.toString(10)).toEqual(rfc6979TestData.messages[i].s);
       }
     });
+  });
+});
+
+describe('Asset ID calculation', () => {
+  it('selectors', () => {
+    expect(starkwareCrypto.ETH_SELECTOR).toBe('0x8322fff2');
+    expect(starkwareCrypto.ERC20_SELECTOR).toBe('0xf47261b0');
+    expect(starkwareCrypto.ERC721_SELECTOR).toBe('0x02571792');
+    expect(starkwareCrypto.MINTABLE_ERC20_SELECTOR).toBe('0x68646e2d');
+    expect(starkwareCrypto.MINTABLE_ERC721_SELECTOR).toBe('0xb8b86672');
+  });
+  it('asset info', () => {
+    const tokenAddress = '0x0d9c8723b343a8368bebe0b5e89273ff8d712e3c';
+    const selector = starkwareCrypto.ERC20_SELECTOR;
+    expect(
+      starkwareCrypto.getAssetInfoFromAddress(tokenAddress, selector)
+    ).toBe(
+      '0xf47261b00000000000000000000000000d9c8723b343a8368bebe0b5e89273ff8d712e3c'
+    );
+  });
+  it('asset type', () => {
+    const tokenAddress = '0x0d9c8723b343a8368bebe0b5e89273ff8d712e3c'; // Ropsten USDC from Compound
+    const selector = starkwareCrypto.ERC20_SELECTOR;
+    const assetInfo = starkwareCrypto.getAssetInfoFromAddress(
+      tokenAddress,
+      selector
+    );
+    const quantum = '1000';
+    expect(starkwareCrypto.calculateAssetType(assetInfo, quantum)).toBe(
+      '0x4b744eda38322858d42ba43046badd5bd91e94844c0b7c47a4975d8b5b77b5'
+    );
+  });
+  it('mintable asset id', () => {
+    const mintableContractAddress =
+      '0x6B5E013ba22F08ED46d33Fa6d483Fd60e001262e'; // Ropsten ERC721
+    const selector = starkwareCrypto.MINTABLE_ERC721_SELECTOR;
+    const mintingBlob = '0x00';
+    expect(
+      starkwareCrypto.calculateMintableAssetId(
+        mintableContractAddress,
+        selector,
+        mintingBlob
+      )
+    ).toBe(
+      '0x0400082c617b3f734bbf7bd4b2affd6edba18065bfa203ca1cebf74d5c4e6c75'
+    );
+  });
+  it('address from asset info', () => {
+    const tokenAddress = '0x0d9c8723b343a8368bebe0b5e89273ff8d712e3c'; // Ropsten USDC from Compound
+    const selector = starkwareCrypto.ERC20_SELECTOR;
+    const assetInfo = starkwareCrypto.getAssetInfoFromAddress(
+      tokenAddress,
+      selector
+    );
+    expect(starkwareCrypto.getAddressFromAssetInfo(assetInfo, selector)).toBe(
+      '0x0d9c8723b343a8368bebe0b5e89273ff8d712e3c'
+    );
+  });
+  it('eth asset type', () => {
+    expect(starkwareCrypto.getEthAssetType('1')).toBe(
+      '0x01142460171646987f20c714eda4b92812b22b811f56f27130937c267e29bd9e'
+    );
+  });
+  it('erc20 asset type', () => {
+    const tokenAddress = '0x0d9c8723b343a8368bebe0b5e89273ff8d712e3c'; // Ropsten USDC from Compound
+    const quantum = '1000';
+    expect(starkwareCrypto.getErc20AssetType(tokenAddress, quantum)).toBe(
+      '0x4b744eda38322858d42ba43046badd5bd91e94844c0b7c47a4975d8b5b77b5'
+    );
+  });
+  it('erc721 asset type', () => {
+    const erc721ContractAddress = '0x6B5E013ba22F08ED46d33Fa6d483Fd60e001262e'; // Ropsten ERC721
+    expect(starkwareCrypto.getErc721AssetType(erc721ContractAddress)).toBe(
+      '0x01f6d8eecef9a4b7f7bf5c92dfdfcc9892f114ae611b4783ba67dc1b2adce36a'
+    );
+  });
+  it('mintable erc20 asset type', () => {
+    const tokenAddress = '0x0d9c8723b343a8368bebe0b5e89273ff8d712e3c'; // Ropsten USDC from Compound
+    const quantum = '1000';
+    expect(
+      starkwareCrypto.getMintableErc20AssetType(tokenAddress, quantum)
+    ).toBe('0x471cdc2c5357c3a06385c69e3fb7f8b8412368d7641f81890bc62e4f14ea64');
+  });
+  it('mintable erc721 asset type', () => {
+    const erc721ContractAddress = '0x6B5E013ba22F08ED46d33Fa6d483Fd60e001262e'; // Ropsten ERC721
+    expect(
+      starkwareCrypto.getMintableErc721AssetType(erc721ContractAddress)
+    ).toBe(
+      '0x012388a6c5c9703afc0d1bc876dd3d29f373950ad4f02a0ac0ab10ab7d9c48e5'
+    );
   });
 });
