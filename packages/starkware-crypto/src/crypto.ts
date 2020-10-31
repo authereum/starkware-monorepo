@@ -1,15 +1,22 @@
-import BN from 'bn.js';
-import hashJS from 'hash.js';
-import assert from 'assert';
-import * as RSV from 'rsv-signature';
-import * as bip39 from 'bip39';
-import * as elliptic from 'elliptic';
-import * as encUtils from 'enc-utils';
-import keccak256 from 'keccak256';
-import { hdkey } from 'ethereumjs-wallet';
-import * as web3utils from 'web3-utils';
-import { checkAddressChecksum } from 'ethereum-checksum-address';
-
+import BN from 'bn.js'
+import hashJS from 'hash.js'
+import assert from 'assert'
+import * as RSV from 'rsv-signature'
+import { mnemonicToSeedSync } from 'bip39'
+import * as elliptic from 'elliptic'
+import keccak256 from 'keccak256'
+import { hdkey } from 'ethereumjs-wallet'
+import { soliditySha3 } from 'web3-utils'
+import {
+  hexToBuffer,
+  hexToArray,
+  hexToBinary,
+  removeHexPrefix,
+  sanitizeBytes,
+  sanitizeHex,
+  numberToHex,
+  binaryToNumber,
+} from 'enc-utils'
 import {
   Token,
   ERC20TokenData,
@@ -19,51 +26,62 @@ import {
   Signature,
   SignatureInput,
   NestedArray,
-} from './types';
-import { constantPointsHex } from './constants';
+} from './types'
+import { constantPointsHex } from './constants'
 
-const solidityKeccak = (types: string[], values: any[]) => {
+/* --------------------------- UTILS ---------------------------------- */
+
+function solidityKeccak (types: string[], values: any[]) {
   const input = types.map((type: string, i: number) => {
-    let value = values[i];
+    let value = values[i]
     if (Buffer.isBuffer(value)) {
-      value = encUtils.sanitizeHex(value.toString('hex'));
+      value = sanitizeHex(value.toString('hex'))
     }
 
     return {
       type,
       value,
-    };
-  });
+    }
+  })
 
-  return Buffer.from(
-    (web3utils.soliditySha3(...input) as string).slice(2),
-    'hex'
-  );
-};
+  return hexToBuffer((soliditySha3(...input) as string).slice(2))
+}
+
+function intToBN (value: string): BN {
+  return new BN(value, 10)
+}
+
+function hexToBN (value: string): BN {
+  return new BN(removeHexPrefix(value), 16)
+}
+
+function isHexPrefixed (str: string): boolean {
+  return str.substring(0, 2) === '0x'
+}
+
+function hasHexPrefix (str: string) {
+  return str.substring(0, 2) === '0x'
+}
 
 /* --------------------------- ELLIPTIC ---------------------------------- */
 
 // Equals 2**251 + 17 * 2**192 + 1.
-export const PRIME = new BN(
-  '800000000000011000000000000000000000000000000000000000000000001',
-  16
-);
+export const PRIME = hexToBN(
+  '800000000000011000000000000000000000000000000000000000000000001'
+)
 
 // Equals 2**251. This value limits msgHash and the signature parts.
-export const maxEcdsaVal = new BN(
-  '800000000000000000000000000000000000000000000000000000000000000',
-  16
-);
+export const maxEcdsaVal = hexToBN(
+  '800000000000000000000000000000000000000000000000000000000000000'
+)
 
-export const order = new BN(
-  '08000000 00000010 ffffffff ffffffff b781126d cae7b232 1e66a241 adc64d2f',
-  16
-);
+export const order = hexToBN(
+  '08000000 00000010 ffffffff ffffffff b781126d cae7b232 1e66a241 adc64d2f'
+)
 
-export const secpOrder = new BN(
-  'FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE BAAEDCE6 AF48A03B BFD25E8C D0364141',
-  16
-);
+export const secpOrder = hexToBN(
+  'FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE BAAEDCE6 AF48A03B BFD25E8C D0364141'
+)
 
 const starkEc = new elliptic.ec(
   new elliptic.curves.PresetCurve({
@@ -79,69 +97,65 @@ const starkEc = new elliptic.ec(
     gRed: false,
     g: constantPointsHex[1],
   })
-);
-export const ec = starkEc;
+)
+export const ec = starkEc
 
 /* --------------------------- CONSTANTS ---------------------------------- */
 
 export const constantPoints = constantPointsHex.map((coords: string[]) =>
-  starkEc.curve.point(new BN(coords[0], 16), new BN(coords[1], 16))
-);
-export const shiftPoint = constantPoints[0];
+  starkEc.curve.point(hexToBN(coords[0]), hexToBN(coords[1]))
+)
+export const shiftPoint = constantPoints[0]
 
-const ZERO_BN = new BN('0');
-const ONE_BN = new BN('1');
-const TWO_BN = new BN('2');
-const TWO_POW_22_BN = new BN('400000', 16);
-const TWO_POW_31_BN = new BN('80000000', 16);
-const TWO_POW_63_BN = new BN('8000000000000000', 16);
+const ZERO_BN = intToBN('0')
+const ONE_BN = intToBN('1')
+const TWO_BN = intToBN('2')
+const TWO_POW_22_BN = hexToBN('400000')
+const TWO_POW_31_BN = hexToBN('80000000')
+const TWO_POW_63_BN = hexToBN('8000000000000000')
 
-const MISSING_HEX_PREFIX = 'Hex strings expected to be prefixed with 0x.';
+const MISSING_HEX_PREFIX = 'Hex strings expected to be prefixed with 0x.'
 
 /* --------------------------- PRIVATE ---------------------------------- */
 
-function isHexPrefixed(str: string) {
-  return str.substring(0, 2) === '0x';
-}
-
-export function pedersen(input: any) {
-  let point = shiftPoint;
+export function pedersen (input: any) {
+  let point = shiftPoint
   for (let i = 0; i < input.length; i++) {
-    let x = new BN(encUtils.removeHexPrefix(input[i]), 16);
-    assert(x.gte(ZERO_BN) && x.lt(PRIME), 'Invalid input: ' + input[i]);
+    let x = hexToBN(input[i])
+    assert(x.gte(ZERO_BN) && x.lt(PRIME), 'Invalid input: ' + input[i])
     for (let j = 0; j < 252; j++) {
-      const pt = constantPoints[2 + i * 252 + j];
-      assert(!point.getX().eq(pt.getX()));
+      const pt = constantPoints[2 + i * 252 + j]
+      assert(!point.getX().eq(pt.getX()))
       if (x.and(ONE_BN).toNumber() !== 0) {
-        point = point.add(pt);
+        point = point.add(pt)
       }
-      x = x.shrn(1);
+      x = x.shrn(1)
     }
   }
-  return point.getX().toString(16);
+  return point.getX().toString(16)
 }
 
-function isCompressedPublicKey(hex: string) {
-  hex = encUtils.removeHexPrefix(hex);
-  return hex.length === 66 && (hex.startsWith('03') || hex.startsWith('02'));
+function isCompressedPublicKey (hex: string) {
+  hex = removeHexPrefix(hex)
+  return hex.length === 66 && (hex.startsWith('03') || hex.startsWith('02'))
 }
 
-function checkHexValue(hex: string) {
-  assert(isHexPrefixed(hex), MISSING_HEX_PREFIX);
-  const hexBn = new BN(encUtils.removeHexPrefix(hex), 16);
-  assert(hexBn.gte(ZERO_BN));
-  assert(hexBn.lt(PRIME));
+function checkHexValue (hex: string) {
+  assert(isHexPrefixed(hex), MISSING_HEX_PREFIX)
+  const hexBn = hexToBN(hex)
+  assert(hexBn.gte(ZERO_BN))
+  assert(hexBn.lt(PRIME))
 }
 
-function parseTokenInput(input: Token | string) {
+function parseTokenInput (input: Token | string) {
   if (typeof input === 'string') {
     if (isCompressedPublicKey(input)) {
-      return getXCoordinate(input);
+      return getXCoordinate(input)
     }
-    checkHexValue(input);
-    return input;
+    checkHexValue(input)
+    return input
   }
-  return hashAssetId(input);
+  return hashAssetId(input)
 }
 
 /*
@@ -149,63 +163,87 @@ function parseTokenInput(input: Token | string) {
  in some cases. This function does the opposite operation so that
    _truncateToN(fixMessage(msg)) == msg.
 */
-function fixMessage(msg: string) {
+function fixMessage (msg: string) {
   // remove hex prefix
-  msg = encUtils.removeHexPrefix(msg);
+  msg = removeHexPrefix(msg)
 
   // Convert to BN to remove leading zeros.
-  msg = new BN(msg, 16).toString(16);
+  msg = hexToBN(msg).toString(16)
 
   if (msg.length <= 62) {
     // In this case, msg should not be transformed, as the byteLength() is at most 31,
     // so delta < 0 (see _truncateToN).
-    return msg;
+    return msg
   }
-  assert(msg.length === 63);
+  assert(msg.length === 63)
   // In this case delta will be 4 so we perform a shift-left of 4 bits by adding a ZERO_BN.
-  return msg + '0';
+  return msg + '0'
 }
 
-function hashKeyWithIndex(key: string, index: number): BN {
-  return new BN(
+function hashKeyWithIndex (key: string, index: number): BN {
+  return hexToBN(
     hashJS
       .sha256()
       .update(
-        encUtils.hexToBuffer(
-          encUtils.removeHexPrefix(key) +
-            encUtils.sanitizeBytes(encUtils.numberToHex(index), 2)
-        )
+        hexToBuffer(removeHexPrefix(key) + sanitizeBytes(numberToHex(index), 2))
       )
-      .digest('hex'),
-    16
-  );
+      .digest('hex')
+  )
 }
 
-function grindKey(privateKey: string): string {
-  let i = 0;
-  let key: BN = hashKeyWithIndex(privateKey, i);
+function grindKey (privateKey: string): string {
+  let i = 0
+  let key: BN = hashKeyWithIndex(privateKey, i)
 
   while (!key.lt(secpOrder.sub(secpOrder.mod(order)))) {
-    key = hashKeyWithIndex(key.toString(16), i);
-    i = i++;
+    key = hashKeyWithIndex(key.toString(16), i)
+    i = i++
   }
-  return key.mod(order).toString('hex');
+  return key.mod(order).toString('hex')
 }
 
-function getIntFromBits(
+function getIntFromBits (
   hex: string,
   start: number,
   end: number | undefined = undefined
 ): number {
-  let bin = encUtils.hexToBinary(hex);
-  let bits = bin.slice(start, end);
-  let int = encUtils.binaryToNumber(bits);
-  return int;
+  let bin = hexToBinary(hex)
+  let bits = bin.slice(start, end)
+  let int = binaryToNumber(bits)
+  return int
+}
+
+function hashSelector (selector: string): string {
+  return sanitizeHex(
+    keccak256(selector)
+      .toString('hex')
+      .slice(0, 8)
+  )
+}
+
+/*
+ Asserts input is equal to or greater then lowerBound and lower then upperBound.
+ Assert message specifies inputName.
+ input, lowerBound, and upperBound should be of type BN.
+ inputName should be a string.
+*/
+function assertInRange (
+  input: BN,
+  lowerBound: BN,
+  upperBound: BN,
+  inputName = ''
+) {
+  const messageSuffix =
+    inputName === '' ? 'invalid length' : `invalid ${inputName} length`
+  assert(
+    input.gte(lowerBound) && input.lt(upperBound),
+    `Message not signable, ${messageSuffix}.`
+  )
 }
 
 /* --------------------------- PUBLIC ---------------------------------- */
 
-export function getAccountPath(
+export function getAccountPath (
   layer: string,
   application: string,
   ethereumAddress: string,
@@ -214,287 +252,273 @@ export function getAccountPath(
   const layerHash = hashJS
     .sha256()
     .update(layer)
-    .digest('hex');
+    .digest('hex')
   const applicationHash = hashJS
     .sha256()
     .update(application)
-    .digest('hex');
-  const layerInt = getIntFromBits(layerHash, -31);
-  const applicationInt = getIntFromBits(applicationHash, -31);
-  const ethAddressInt1 = getIntFromBits(ethereumAddress, -31);
-  const ethAddressInt2 = getIntFromBits(ethereumAddress, -62, -31);
-  return `m/2645'/${layerInt}'/${applicationInt}'/${ethAddressInt1}'/${ethAddressInt2}'/${index}`;
+    .digest('hex')
+  const layerInt = getIntFromBits(layerHash, -31)
+  const applicationInt = getIntFromBits(applicationHash, -31)
+  const ethAddressInt1 = getIntFromBits(ethereumAddress, -31)
+  const ethAddressInt2 = getIntFromBits(ethereumAddress, -62, -31)
+  return `m/2645'/${layerInt}'/${applicationInt}'/${ethAddressInt1}'/${ethAddressInt2}'/${index}`
 }
 
-export function getKeyPairFromPath(mnemonic: string, path: string): KeyPair {
-  const seed = bip39.mnemonicToSeedSync(mnemonic).toString('hex');
+export function getKeyPairFromPath (mnemonic: string, path: string): KeyPair {
+  const seed = mnemonicToSeedSync(mnemonic).toString('hex')
   const privateKey = hdkey
-    .fromMasterSeed(Buffer.from(seed, 'hex'))
+    .fromMasterSeed(hexToBuffer(seed))
     .derivePath(path)
     .getWallet()
-    .getPrivateKeyString();
-  return getKeyPair(grindKey(privateKey));
+    .getPrivateKeyString()
+  return getKeyPair(grindKey(privateKey))
 }
 
-export function getKeyPair(privateKey: string): KeyPair {
-  return starkEc.keyFromPrivate(privateKey, 'hex');
+export function getKeyPair (privateKey: string): KeyPair {
+  return starkEc.keyFromPrivate(privateKey, 'hex')
 }
 
-export function getKeyPairFromPublicKey(publicKey: string): KeyPair {
-  return starkEc.keyFromPublic(encUtils.hexToArray(publicKey));
+export function getKeyPairFromPublicKey (publicKey: string): KeyPair {
+  return starkEc.keyFromPublic(hexToArray(publicKey))
 }
 
-export function getKeyPairFromStarkPublicKey(starkPublicKey: string): KeyPair {
-  return starkEc.keyFromPublic(encUtils.hexToArray(starkPublicKey));
+export function getKeyPairFromStarkPublicKey (starkPublicKey: string): KeyPair {
+  return starkEc.keyFromPublic(hexToArray(starkPublicKey))
 }
 
-export function getPrivate(keyPair: KeyPair): string {
-  return keyPair.getPrivate('hex');
+export function getPrivate (keyPair: KeyPair): string {
+  return keyPair.getPrivate('hex')
 }
 
-export function getPublic(keyPair: KeyPair, compressed = false): string {
-  return keyPair.getPublic(compressed, 'hex');
+export function getPublic (keyPair: KeyPair, compressed = false): string {
+  return keyPair.getPublic(compressed, 'hex')
 }
 
-export function getStarkPublicKey(keyPair: KeyPair): string {
-  return getPublic(keyPair, true);
+export function getStarkPublicKey (keyPair: KeyPair): string {
+  return getPublic(keyPair, true)
 }
 
-export function getStarkKey(keyPair: KeyPair): string {
-  return encUtils.sanitizeBytes((keyPair as any).pub.getX().toString(16), 2);
+export function getStarkKey (keyPair: KeyPair): string {
+  return sanitizeBytes((keyPair as any).pub.getX().toString(16), 2)
 }
 
-export function getXCoordinate(publicKey: string): string {
-  const keyPair = getKeyPairFromPublicKey(publicKey);
-  return encUtils.sanitizeBytes((keyPair as any).pub.getX().toString(16), 2);
+export function getXCoordinate (publicKey: string): string {
+  const keyPair = getKeyPairFromPublicKey(publicKey)
+  return sanitizeBytes((keyPair as any).pub.getX().toString(16), 2)
 }
 
-export function getYCoordinate(publicKey: string): string {
-  const keyPair = getKeyPairFromPublicKey(publicKey);
-  return encUtils.sanitizeBytes((keyPair as any).pub.getY().toString(16), 2);
+export function getYCoordinate (publicKey: string): string {
+  const keyPair = getKeyPairFromPublicKey(publicKey)
+  return sanitizeBytes((keyPair as any).pub.getY().toString(16), 2)
 }
 
 // Asset ID calculation --------------------------------------------------
 
-const hashSelector = (selector: string): string => {
-  return encUtils.sanitizeHex(
-    keccak256(selector)
-      .toString('hex')
-      .slice(0, 8)
-  );
-};
-
-export const ETH_SELECTOR = hashSelector('ETH()');
-export const ERC20_SELECTOR = hashSelector('ERC20Token(address)');
-export const ERC721_SELECTOR = hashSelector('ERC721Token(address,uint256)');
+export const ETH_SELECTOR = hashSelector('ETH()')
+export const ERC20_SELECTOR = hashSelector('ERC20Token(address)')
+export const ERC721_SELECTOR = hashSelector('ERC721Token(address,uint256)')
 export const MINTABLE_ERC20_SELECTOR = hashSelector(
   'MintableERC20Token(address)'
-);
+)
 export const MINTABLE_ERC721_SELECTOR = hashSelector(
   'MintableERC721Token(address,uint256)'
-);
-export const NFT_ASSET_ID_PREFIX = 'NFT:';
-export const MINTABLE_ASSET_ID_PREFIX = 'MINTABLE:';
-export const MASK_250_BITS_BN = new BN(
-  '03FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',
-  16
-);
-export const MASK_240_BITS_BN = new BN(
-  'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',
-  16
-);
-export const MINTABLE_ASSET_ID_FLAG = new BN(
-  '400000000000000000000000000000000000000000000000000000000000000',
-  16
-); // 1 << 250
+)
+export const NFT_ASSET_ID_PREFIX = 'NFT:'
+export const MINTABLE_ASSET_ID_PREFIX = 'MINTABLE:'
+export const MASK_250_BITS_BN = hexToBN(
+  '03FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+)
+export const MASK_240_BITS_BN = hexToBN(
+  'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+)
+export const MINTABLE_ASSET_ID_FLAG = hexToBN(
+  '400000000000000000000000000000000000000000000000000000000000000'
+) // 1 << 250
 
-export function getAssetInfo(
+export function getAssetInfo (
   contractAddress: string,
   tokenSelector: string
 ): string {
-  assert(checkAddressChecksum(contractAddress), 'Expected checksummed address');
-  return getAssetInfoFromAddress(contractAddress, tokenSelector);
+  return getAssetInfoFromAddress(contractAddress, tokenSelector)
 }
 
-export function getAssetInfoFromAddress(
+export function getAssetInfoFromAddress (
   tokenAddress: string,
   selector: string
 ): string {
-  const buf = Buffer.alloc(32);
-  const addrBuf = Buffer.from(encUtils.removeHexPrefix(tokenAddress), 'hex');
-  addrBuf.copy(buf, buf.length - addrBuf.length);
-  const assetInfo = selector + buf.toString('hex');
-  return assetInfo;
+  const buf = Buffer.alloc(32)
+  const addrBuf = hexToBuffer(tokenAddress)
+  addrBuf.copy(buf, buf.length - addrBuf.length)
+  const assetInfo = selector + buf.toString('hex')
+  return assetInfo
 }
 
-export function calculateAssetType(
+export function calculateAssetType (
   assetInfo: string,
   quantum: string = '1'
 ): string {
-  const h = solidityKeccak(['bytes', 'uint256'], [assetInfo, quantum]);
-  const bn = new BN(h.toString('hex'), 16);
-  return encUtils.sanitizeHex(bn.and(MASK_250_BITS_BN).toString(16));
+  const h = solidityKeccak(['bytes', 'uint256'], [assetInfo, quantum])
+  const bn = hexToBN(h.toString('hex'))
+  return sanitizeHex(bn.and(MASK_250_BITS_BN).toString(16))
 }
 
-export function calculateMintableAssetId(
+export function calculateMintableAssetId (
   mintableContractAddress: string,
   selector: string,
   mintingBlob: string | Buffer,
   quantum: string = '1'
 ): string {
-  const assetInfo = getAssetInfo(mintableContractAddress, selector);
-  const assetType = calculateAssetType(assetInfo, quantum);
-  const blobHash = solidityKeccak(['bytes'], [mintingBlob]);
+  const assetInfo = getAssetInfo(mintableContractAddress, selector)
+  const assetType = calculateAssetType(assetInfo, quantum)
+  const blobHash = solidityKeccak(['bytes'], [mintingBlob])
   const interimHash = solidityKeccak(
     ['string', 'uint256', 'uint256'],
     [MINTABLE_ASSET_ID_PREFIX, assetType, blobHash]
-  );
-  const bn = new BN(interimHash.toString('hex'), 16);
-  return encUtils.sanitizeHex(
+  )
+  const bn = hexToBN(interimHash.toString('hex'))
+  return sanitizeHex(
     bn
       .and(MASK_240_BITS_BN)
       .or(MINTABLE_ASSET_ID_FLAG)
       .toString(16)
-  );
+  )
 }
 
-export function getAddressFromAssetInfo(
+export function getAddressFromAssetInfo (
   assetInfo: string,
   selector = ERC20_SELECTOR
 ): string {
-  const assetInfoBuf = Buffer.from(encUtils.removeHexPrefix(assetInfo), 'hex');
-  const selectorBuf = Buffer.from(encUtils.removeHexPrefix(selector), 'hex');
-  assert(selectorBuf.byteLength === 4);
-  const addressLength = 20;
-  const paddingLength = 32 - addressLength;
+  const assetInfoBuf = hexToBuffer(assetInfo)
+  const selectorBuf = hexToBuffer(selector)
+  assert(selectorBuf.byteLength === 4)
+  const addressLength = 20
+  const paddingLength = 32 - addressLength
   assert(
     Buffer.compare(
       assetInfoBuf.slice(0, 4 + paddingLength),
       Buffer.concat([selectorBuf, Buffer.alloc(paddingLength)])
     ) === 0
-  );
-  return encUtils.sanitizeHex(
-    assetInfoBuf.slice(4 + paddingLength).toString('hex')
-  );
+  )
+  return sanitizeHex(assetInfoBuf.slice(4 + paddingLength).toString('hex'))
 }
 
 // AssetType definition for each tokenType
 
-export function getEthAssetType(quantum: string) {
-  const assetInfo = ETH_SELECTOR;
-  return calculateAssetType(assetInfo, quantum);
+export function getEthAssetType (quantum: string) {
+  const assetInfo = ETH_SELECTOR
+  return calculateAssetType(assetInfo, quantum)
 }
 
-export function getErc20AssetType(
+export function getErc20AssetType (
   erc20ContractAddress: string,
   quantum: string
 ) {
-  const assetInfo = getAssetInfo(erc20ContractAddress, ERC20_SELECTOR);
-  return calculateAssetType(assetInfo, quantum);
+  const assetInfo = getAssetInfo(erc20ContractAddress, ERC20_SELECTOR)
+  return calculateAssetType(assetInfo, quantum)
 }
 
-export function getErc721AssetType(erc721ContractAddress: string) {
-  const assetInfo = getAssetInfo(erc721ContractAddress, ERC721_SELECTOR);
-  return calculateAssetType(assetInfo, '1');
+export function getErc721AssetType (erc721ContractAddress: string) {
+  const assetInfo = getAssetInfo(erc721ContractAddress, ERC721_SELECTOR)
+  return calculateAssetType(assetInfo, '1')
 }
 
-export function getMintableErc20AssetType(
+export function getMintableErc20AssetType (
   mintableErc20ContractAddress: string,
   quantum: string
 ) {
   const assetInfo = getAssetInfo(
     mintableErc20ContractAddress,
     MINTABLE_ERC20_SELECTOR
-  );
-  return calculateAssetType(assetInfo, quantum);
+  )
+  return calculateAssetType(assetInfo, quantum)
 }
 
-export function getMintableErc721AssetType(
+export function getMintableErc721AssetType (
   mintableErc721ContractAddress: string
 ) {
   const assetInfo = getAssetInfo(
     mintableErc721ContractAddress,
     MINTABLE_ERC721_SELECTOR
-  );
-  return calculateAssetType(assetInfo, '1');
+  )
+  return calculateAssetType(assetInfo, '1')
 }
 
-export function hashAssetId(token: Token) {
-  let id: string;
-  let tokenAddress: string;
+export function hashAssetId (token: Token) {
+  let id: string
+  let tokenAddress: string
   switch (token.type.toUpperCase()) {
     case 'ETH':
-      id = 'ETH()';
-      break;
+      id = 'ETH()'
+      break
     case 'ERC20':
-      tokenAddress = (token.data as ERC20TokenData).tokenAddress;
-      checkHexValue(tokenAddress);
-      id = `ERC20Token(${tokenAddress})`;
-      break;
+      tokenAddress = (token.data as ERC20TokenData).tokenAddress
+      checkHexValue(tokenAddress)
+      id = `ERC20Token(${tokenAddress})`
+      break
     case 'ERC721':
-      tokenAddress = (token.data as ERC721TokenData).tokenAddress;
-      checkHexValue(tokenAddress);
-      id = `ERC721Token(${tokenAddress})`;
-      break;
+      tokenAddress = (token.data as ERC721TokenData).tokenAddress
+      checkHexValue(tokenAddress)
+      id = `ERC721Token(${tokenAddress})`
+      break
     default:
-      throw new Error(`Unknown token type: ${token.type}`);
+      throw new Error(`Unknown token type: ${token.type}`)
   }
-  return encUtils.sanitizeHex(
+  return sanitizeHex(
     keccak256(id)
       .toString('hex')
       .slice(0, 8)
-  );
+  )
 }
 
 // Message hashing --------------------------------------------------
 
-export function hashMessage(
+export function hashMessage (
   wordsOrW1: NestedArray<string> | string[] | string,
   w2?: string,
   w3?: string
 ) {
   // method backward compatibility
   if (typeof wordsOrW1 === 'string' && w2 && w3) {
-    return pedersen([pedersen([wordsOrW1, w2]), w3]);
+    return pedersen([pedersen([wordsOrW1, w2]), w3])
   }
 
-  let a: NestedArray<string> | string = wordsOrW1[0];
-  let b: NestedArray<string> | string = wordsOrW1[1];
+  let a: NestedArray<string> | string = wordsOrW1[0]
+  let b: NestedArray<string> | string = wordsOrW1[1]
 
   if (Array.isArray(a)) {
-    a = hashMessage(a);
+    a = hashMessage(a)
   }
 
   if (Array.isArray(b)) {
-    b = hashMessage(b);
+    b = hashMessage(b)
   }
 
-  return pedersen([a, b]);
+  return pedersen([a, b])
 }
 
-export function deserializeMessage(serialized: string): MessageParams {
-  serialized = encUtils.removeHexPrefix(serialized);
-  const slice0 = 0;
-  const slice1 = slice0 + 1;
-  const slice2 = slice1 + 31;
-  const slice3 = slice2 + 31;
-  const slice4 = slice3 + 63;
-  const slice5 = slice4 + 63;
-  const slice6 = slice5 + 31;
-  const slice7 = slice6 + 22;
+export function deserializeMessage (serialized: string): MessageParams {
+  serialized = removeHexPrefix(serialized)
+  const slice0 = 0
+  const slice1 = slice0 + 1
+  const slice2 = slice1 + 31
+  const slice3 = slice2 + 31
+  const slice4 = slice3 + 63
+  const slice5 = slice4 + 63
+  const slice6 = slice5 + 31
+  const slice7 = slice6 + 22
 
   return {
-    instructionTypeBn: new BN(serialized.substring(slice0, slice1), 16),
-    vault0Bn: new BN(serialized.substring(slice1, slice2), 16),
-    vault1Bn: new BN(serialized.substring(slice2, slice3), 16),
-    amount0Bn: new BN(serialized.substring(slice3, slice4), 16),
-    amount1Bn: new BN(serialized.substring(slice4, slice5), 16),
-    nonceBn: new BN(serialized.substring(slice5, slice6), 16),
-    expirationTimestampBn: new BN(serialized.substring(slice6, slice7), 16),
-  };
+    instructionTypeBn: hexToBN(serialized.substring(slice0, slice1)),
+    vault0Bn: hexToBN(serialized.substring(slice1, slice2)),
+    vault1Bn: hexToBN(serialized.substring(slice2, slice3)),
+    amount0Bn: hexToBN(serialized.substring(slice3, slice4)),
+    amount1Bn: hexToBN(serialized.substring(slice4, slice5)),
+    nonceBn: hexToBN(serialized.substring(slice5, slice6)),
+    expirationTimestampBn: intToBN(serialized.substring(slice6, slice7)),
+  }
 }
 
-export function serializeMessage(
+export function serializeMessage (
   instructionTypeBn: BN,
   vault0Bn: BN,
   vault1Bn: BN,
@@ -503,17 +527,17 @@ export function serializeMessage(
   nonceBn: BN,
   expirationTimestampBn: BN
 ): string {
-  let serialized = instructionTypeBn;
-  serialized = serialized.ushln(31).add(vault0Bn);
-  serialized = serialized.ushln(31).add(vault1Bn);
-  serialized = serialized.ushln(63).add(amount0Bn);
-  serialized = serialized.ushln(63).add(amount1Bn);
-  serialized = serialized.ushln(31).add(nonceBn);
-  serialized = serialized.ushln(22).add(expirationTimestampBn);
-  return encUtils.sanitizeHex(serialized.toString(16));
+  let serialized = instructionTypeBn
+  serialized = serialized.ushln(31).add(vault0Bn)
+  serialized = serialized.ushln(31).add(vault1Bn)
+  serialized = serialized.ushln(63).add(amount0Bn)
+  serialized = serialized.ushln(63).add(amount1Bn)
+  serialized = serialized.ushln(31).add(nonceBn)
+  serialized = serialized.ushln(22).add(expirationTimestampBn)
+  return sanitizeHex(serialized.toString(16))
 }
 
-export function formatMessage(
+export function formatMessage (
   instruction: 'transfer' | 'conditionalTransfer' | 'order',
   vault0: string,
   vault1: string,
@@ -526,35 +550,35 @@ export function formatMessage(
     order: ZERO_BN,
     transfer: ONE_BN,
     conditionalTransfer: TWO_BN,
-  };
+  }
 
   const isTransfer =
-    instruction === 'transfer' || instruction === 'conditionalTransfer';
+    instruction === 'transfer' || instruction === 'conditionalTransfer'
 
-  const vault0Bn = new BN(vault0);
-  const vault1Bn = new BN(vault1);
-  const amount0Bn = new BN(amount0, 10);
-  const amount1Bn = new BN(amount1, 10);
-  const nonceBn = new BN(nonce);
-  const expirationTimestampBn = new BN(expirationTimestamp);
+  const vault0Bn = intToBN(vault0)
+  const vault1Bn = intToBN(vault1)
+  const amount0Bn = intToBN(amount0)
+  const amount1Bn = intToBN(amount1)
+  const nonceBn = intToBN(nonce)
+  const expirationTimestampBn = intToBN(expirationTimestamp)
 
-  assert(vault0Bn.gte(ZERO_BN));
-  assert(vault1Bn.gte(ZERO_BN));
-  assert(amount0Bn.gte(ZERO_BN));
+  assert(vault0Bn.gte(ZERO_BN))
+  assert(vault1Bn.gte(ZERO_BN))
+  assert(amount0Bn.gte(ZERO_BN))
   if (!isTransfer) {
-    assert(amount1Bn.gte(ZERO_BN));
+    assert(amount1Bn.gte(ZERO_BN))
   }
-  assert(nonceBn.gte(ZERO_BN));
-  assert(expirationTimestampBn.gte(ZERO_BN));
+  assert(nonceBn.gte(ZERO_BN))
+  assert(expirationTimestampBn.gte(ZERO_BN))
 
-  assert(vault0Bn.lt(TWO_POW_31_BN));
-  assert(vault1Bn.lt(TWO_POW_31_BN));
-  assert(amount0Bn.lt(TWO_POW_63_BN));
-  assert(amount1Bn.lt(TWO_POW_63_BN));
-  assert(nonceBn.lt(TWO_POW_31_BN));
-  assert(expirationTimestampBn.lt(TWO_POW_22_BN));
+  assert(vault0Bn.lt(TWO_POW_31_BN))
+  assert(vault1Bn.lt(TWO_POW_31_BN))
+  assert(amount0Bn.lt(TWO_POW_63_BN))
+  assert(amount1Bn.lt(TWO_POW_63_BN))
+  assert(nonceBn.lt(TWO_POW_31_BN))
+  assert(expirationTimestampBn.lt(TWO_POW_22_BN))
 
-  const instructionTypeBn = instructionTypeBNs[instruction];
+  const instructionTypeBn = instructionTypeBNs[instruction]
 
   return serializeMessage(
     instructionTypeBn,
@@ -564,21 +588,21 @@ export function formatMessage(
     amount1Bn,
     nonceBn,
     expirationTimestampBn
-  );
+  )
 }
 
-export function getLimitOrderMsgHash(
+export function getLimitOrderMsgHash (
   vaultSell: string,
   vaultBuy: string,
   amountSell: string,
   amountBuy: string,
-  tokenSell: Token,
-  tokenBuy: Token,
+  tokenSell: Token | string,
+  tokenBuy: Token | string,
   nonce: string,
   expirationTimestamp: string
 ): string {
-  const w1 = parseTokenInput(tokenSell);
-  const w2 = parseTokenInput(tokenBuy);
+  const w1 = parseTokenInput(tokenSell)
+  const w2 = parseTokenInput(tokenBuy)
   const w3 = formatMessage(
     'order',
     vaultSell,
@@ -587,39 +611,39 @@ export function getLimitOrderMsgHash(
     amountBuy,
     nonce,
     expirationTimestamp
-  );
+  )
 
-  const vaultSellBn = new BN(vaultSell);
-  const vaultBuyBn = new BN(vaultBuy);
-  const amountSellBn = new BN(amountSell, 10);
-  const amountBuyBn = new BN(amountBuy, 10);
-  const tokenSellBn = new BN(w1.substring(2), 16);
-  const tokenBuyBn = new BN(w2.substring(2), 16);
-  const nonceBn = new BN(nonce);
-  const expirationTimestampBn = new BN(expirationTimestamp);
-  assertInRange(vaultSellBn, ZERO_BN, TWO_POW_31_BN, 'vaultSell');
-  assertInRange(vaultBuyBn, ZERO_BN, TWO_POW_31_BN, 'vaultBuy');
-  assertInRange(amountSellBn, ZERO_BN, TWO_POW_63_BN, 'amountSell');
-  assertInRange(amountBuyBn, ZERO_BN, TWO_POW_63_BN, 'amountBuy');
-  assertInRange(tokenSellBn, ZERO_BN, PRIME, 'tokenSell');
-  assertInRange(tokenBuyBn, ZERO_BN, PRIME, 'tokenBuy');
-  assertInRange(nonceBn, ZERO_BN, TWO_POW_31_BN, 'nonce');
+  const vaultSellBn = intToBN(vaultSell)
+  const vaultBuyBn = intToBN(vaultBuy)
+  const amountSellBn = intToBN(amountSell)
+  const amountBuyBn = intToBN(amountBuy)
+  const tokenSellBn = hexToBN(w1.substring(2))
+  const tokenBuyBn = hexToBN(w2.substring(2))
+  const nonceBn = intToBN(nonce)
+  const expirationTimestampBn = intToBN(expirationTimestamp)
+  assertInRange(vaultSellBn, ZERO_BN, TWO_POW_31_BN, 'vaultSell')
+  assertInRange(vaultBuyBn, ZERO_BN, TWO_POW_31_BN, 'vaultBuy')
+  assertInRange(amountSellBn, ZERO_BN, TWO_POW_63_BN, 'amountSell')
+  assertInRange(amountBuyBn, ZERO_BN, TWO_POW_63_BN, 'amountBuy')
+  assertInRange(tokenSellBn, ZERO_BN, PRIME, 'tokenSell')
+  assertInRange(tokenBuyBn, ZERO_BN, PRIME, 'tokenBuy')
+  assertInRange(nonceBn, ZERO_BN, TWO_POW_31_BN, 'nonce')
   assertInRange(
     expirationTimestampBn,
     ZERO_BN,
     TWO_POW_22_BN,
     'expirationTimestamp'
-  );
+  )
 
-  const msgHash = hashMessage([[w1, w2], w3]);
-  const msgHashBN = new BN(msgHash, 16);
-  assertInRange(msgHashBN, ZERO_BN, maxEcdsaVal, 'msgHash');
-  return msgHash;
+  const msgHash = hashMessage([[w1, w2], w3])
+  const msgHashBN = hexToBN(msgHash)
+  assertInRange(msgHashBN, ZERO_BN, maxEcdsaVal, 'msgHash')
+  return sanitizeHex(msgHash)
 }
 
 // transfer: H(H(w1,w2),w3)
 // conditional transfer: H(H(H(w1,w2),w4),w3)
-export function getTransferMsgHash(
+export function getTransferMsgHash (
   amount: string,
   nonce: string,
   senderVaultId: string,
@@ -633,10 +657,10 @@ export function getTransferMsgHash(
     hasHexPrefix(receiverPublicKey) &&
       (condition === null || hasHexPrefix(condition)),
     'Hex strings expected to be prefixed with 0x.'
-  );
+  )
 
-  const w1 = parseTokenInput(token);
-  const w2 = parseTokenInput(receiverPublicKey);
+  const w1 = parseTokenInput(token)
+  const w2 = parseTokenInput(receiverPublicKey)
   const w3 = formatMessage(
     condition ? 'conditionalTransfer' : 'transfer',
     senderVaultId,
@@ -645,41 +669,41 @@ export function getTransferMsgHash(
     ZERO_BN.toString(),
     nonce,
     expirationTimestamp
-  );
+  )
 
-  const amountBn = new BN(amount, 10);
-  const nonceBn = new BN(nonce);
-  const senderVaultIdBn = new BN(senderVaultId);
-  const tokenBn = new BN(w1.substring(2), 16);
-  const receiverVaultIdBn = new BN(receiverVaultId);
-  const receiverPublicKeyBn = new BN(receiverPublicKey.substring(2), 16);
-  const expirationTimestampBn = new BN(expirationTimestamp);
+  const amountBn = intToBN(amount)
+  const nonceBn = intToBN(nonce)
+  const senderVaultIdBn = intToBN(senderVaultId)
+  const tokenBn = hexToBN(w1.substring(2))
+  const receiverVaultIdBn = intToBN(receiverVaultId)
+  const receiverPublicKeyBn = hexToBN(receiverPublicKey.substring(2))
+  const expirationTimestampBn = intToBN(expirationTimestamp)
 
-  assertInRange(amountBn, ZERO_BN, TWO_POW_63_BN, 'amount');
-  assertInRange(nonceBn, ZERO_BN, TWO_POW_31_BN, 'nonce');
-  assertInRange(senderVaultIdBn, ZERO_BN, TWO_POW_31_BN, 'senderVault');
-  assertInRange(tokenBn, ZERO_BN, PRIME, 'token');
-  assertInRange(receiverVaultIdBn, ZERO_BN, TWO_POW_31_BN, 'receiverVaultId');
-  assertInRange(receiverPublicKeyBn, ZERO_BN, PRIME, 'receiverPublicKey');
+  assertInRange(amountBn, ZERO_BN, TWO_POW_63_BN, 'amount')
+  assertInRange(nonceBn, ZERO_BN, TWO_POW_31_BN, 'nonce')
+  assertInRange(senderVaultIdBn, ZERO_BN, TWO_POW_31_BN, 'senderVault')
+  assertInRange(tokenBn, ZERO_BN, PRIME, 'token')
+  assertInRange(receiverVaultIdBn, ZERO_BN, TWO_POW_31_BN, 'receiverVaultId')
+  assertInRange(receiverPublicKeyBn, ZERO_BN, PRIME, 'receiverPublicKey')
   assertInRange(
     expirationTimestampBn,
     ZERO_BN,
     TWO_POW_22_BN,
     'expirationTimestamp'
-  );
+  )
 
   if (condition) {
-    const w4 = condition;
-    const msgHash = hashMessage([[[w1, w2], w4], w3]);
-    const msgHashBN = new BN(msgHash, 16);
-    assertInRange(msgHashBN, ZERO_BN, maxEcdsaVal, 'msgHash');
-    return msgHash;
+    const w4 = condition
+    const msgHash = hashMessage([[[w1, w2], w4], w3])
+    const msgHashBN = hexToBN(msgHash)
+    assertInRange(msgHashBN, ZERO_BN, maxEcdsaVal, 'msgHash')
+    return sanitizeHex(msgHash)
   }
 
-  const msgHash = hashMessage([[w1, w2], w3]);
-  const msgHashBN = new BN(msgHash, 16);
-  assertInRange(msgHashBN, ZERO_BN, maxEcdsaVal, 'msgHash');
-  return msgHash;
+  const msgHash = hashMessage([[w1, w2], w3])
+  const msgHashBN = hexToBN(msgHash)
+  assertInRange(msgHashBN, ZERO_BN, maxEcdsaVal, 'msgHash')
+  return sanitizeHex(msgHash)
 }
 
 /*
@@ -687,18 +711,18 @@ export function getTransferMsgHash(
  key should be an KeyPair with a valid private key.
  Returns an Signature.
 */
-export function sign(keyPair: KeyPair, msgHash: string): Signature {
-  const msgHashBN = new BN(msgHash, 16);
+export function sign (keyPair: KeyPair, msgHash: string): Signature {
+  const msgHashBN = hexToBN(msgHash)
   // Verify message hash has valid length.
-  assertInRange(msgHashBN, ZERO_BN, maxEcdsaVal, 'msgHash');
-  const msgSignature = keyPair.sign(fixMessage(msgHash));
-  const { r, s } = msgSignature;
-  const w = s.invm((starkEc as any).n);
+  assertInRange(msgHashBN, ZERO_BN, maxEcdsaVal, 'msgHash')
+  const msgSignature = keyPair.sign(fixMessage(msgHash))
+  const { r, s } = msgSignature
+  const w = s.invm((starkEc as any).n)
   // Verify signature has valid length.
-  assertInRange(r, ONE_BN, maxEcdsaVal, 'r');
-  assertInRange(s, ONE_BN, (starkEc as any).n, 's');
-  assertInRange(w, ONE_BN, maxEcdsaVal, 'w');
-  return msgSignature;
+  assertInRange(r, ONE_BN, maxEcdsaVal, 'r')
+  assertInRange(s, ONE_BN, (starkEc as any).n, 's')
+  assertInRange(w, ONE_BN, maxEcdsaVal, 'w')
+  return msgSignature
 }
 
 /*
@@ -707,71 +731,66 @@ export function sign(keyPair: KeyPair, msgHash: string): Signature {
  msgSignature should be an Signature.
  Returns a boolean true if the verification succeeds.
 */
-export function verify(
+export function verify (
   keyPair: KeyPair,
   msgHash: string,
   sig: SignatureInput
 ): boolean {
-  const msgHashBN = new BN(msgHash, 16);
-  assertInRange(msgHashBN, ZERO_BN, maxEcdsaVal, 'msgHash');
-  const { r, s } = sig as any;
-  const w = s.invm(starkEc.n);
+  const msgHashBN = hexToBN(msgHash)
+  assertInRange(msgHashBN, ZERO_BN, maxEcdsaVal, 'msgHash')
+  const { r, s } = sig as any
+  const w = s.invm(starkEc.n)
   // Verify signature has valid length.
-  assertInRange(r, ONE_BN, maxEcdsaVal, 'r');
-  assertInRange(s, ONE_BN, (starkEc as any).n, 's');
-  assertInRange(w, ONE_BN, maxEcdsaVal, 'w');
+  assertInRange(r, ONE_BN, maxEcdsaVal, 'r')
+  assertInRange(s, ONE_BN, (starkEc as any).n, 's')
+  assertInRange(w, ONE_BN, maxEcdsaVal, 'w')
 
-  return keyPair.verify(fixMessage(msgHash), sig);
+  return keyPair.verify(fixMessage(msgHash), sig)
 }
 
-export function compress(publicKey: string): string {
-  return getKeyPairFromPublicKey(publicKey).getPublic(true, 'hex');
+export function compress (publicKey: string): string {
+  return getKeyPairFromPublicKey(publicKey).getPublic(true, 'hex')
 }
 
-export function decompress(publicKey: string): string {
-  return getKeyPairFromPublicKey(publicKey).getPublic(false, 'hex');
+export function decompress (publicKey: string): string {
+  return getKeyPairFromPublicKey(publicKey).getPublic(false, 'hex')
 }
 
-export function verifyStarkPublicKey(
+export function verifyStarkPublicKey (
   starkPublicKey: string,
   msg: string,
   sig: SignatureInput
 ): boolean {
-  const keyPair = getKeyPairFromStarkPublicKey(starkPublicKey);
-  return verify(keyPair, msg, sig);
+  const keyPair = getKeyPairFromStarkPublicKey(starkPublicKey)
+  return verify(keyPair, msg, sig)
 }
 
-export const exportRecoveryParam = RSV.exportRecoveryParam;
+export const exportRecoveryParam = RSV.exportRecoveryParam
 
-export const importRecoveryParam = RSV.importRecoveryParam;
+export const importRecoveryParam = RSV.importRecoveryParam
 
-export const serializeSignature = RSV.serializeSignature;
+export const serializeSignature = RSV.serializeSignature
 
-export const deserializeSignature = RSV.deserializeSignature;
+export const deserializeSignature = RSV.deserializeSignature
 
-/*
- Asserts input is equal to or greater then lowerBound and lower then upperBound.
- Assert message specifies inputName.
- input, lowerBound, and upperBound should be of type BN.
- inputName should be a string.
-*/
-function assertInRange(
-  input: BN,
-  lowerBound: BN,
-  upperBound: BN,
-  inputName = ''
-) {
-  const messageSuffix =
-    inputName === '' ? 'invalid length' : `invalid ${inputName} length`;
-  assert(
-    input.gte(lowerBound) && input.lt(upperBound),
-    `Message not signable, ${messageSuffix}.`
-  );
+export const REGISTRATION_PREFIX = 'UserRegistration'
+
+export function createUserRegistrationSig (
+  address: string,
+  starkKey: string,
+  signerKey: string
+): string {
+  const msgHash = solidityKeccak(
+    ['string', 'address', 'uint256'],
+    [REGISTRATION_PREFIX, address, starkKey]
+  ).toString('hex')
+
+  const keyPair = getKeyPair(signerKey)
+  const sig = keyPair.sign(msgHash)
+  return serializeSignature(sig)
 }
 
-/*
-  Checks that the string str start with '0x'.
-*/
-function hasHexPrefix(str: string) {
-  return str.substring(0, 2) === '0x';
+export const quantizeAmount = (amount: string, quantum: string): string => {
+  const quantizedAmount = intToBN(amount).div(intToBN(quantum))
+  return quantizedAmount.toString()
 }

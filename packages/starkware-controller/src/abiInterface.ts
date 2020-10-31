@@ -15,4 +15,4 @@ export default [
   'function withdrawAndMint( uint256 starkKey, uint256 assetType, bytes calldata mintingBlob) external isSenderStarkKey(starkKey)',
   'function withdrawNft(uint256 starkKey, uint256 assetType, uint256 tokenId) external isSenderStarkKey(starkKey)',
   'function withdrawNftTo(uint256 starkKey, uint256 assetType, uint256 tokenId, address recipient) public isSenderStarkKey(starkKey)',
-];
+]

@@ -1,454 +1,378 @@
-import { Wallet, Contract, providers, PopulatedTransaction } from 'ethers';
-import * as encUtils from 'enc-utils';
+import * as ethers from 'ethers'
+import * as encUtils from 'enc-utils'
+import * as starkwareCrypto from '@authereum/starkware-crypto'
+import starkExchangeAbi from './StarkExchangeABI'
 
-import abi from './abi';
-import * as starkwareCrypto from './crypto';
-import { Store, StarkwareAccountMapping } from './types';
+// -- Types --------------------------------------------- //
 
-const DEFAULT_ACCOUNT_MAPPING_KEY = 'STARKWARE_ACCOUNT_MAPPING';
-
-function getJsonRpcProvider(
-  provider: string | providers.Provider
-): providers.Provider {
-  return typeof provider === 'string'
-    ? new providers.JsonRpcProvider(provider)
-    : provider;
+export interface IRegisterUserInput {
+  starkKey: string
+  ethKey: string
+  operatorSignature: string
 }
 
-const ETH_STANDARD_PATH = "m/44'/60'/0'/0";
+export interface IDepositInput {
+  starkKey: string
+  assetType: string
+  vaultId: string
+  quantizedAmount?: string | null
+}
 
-function getPath(index = 0) {
-  return `${ETH_STANDARD_PATH}/${index}`;
+export interface IDepositCancelInput {
+  starkKey: string
+  assetType: string
+  vaultId: string
+}
+
+export interface IDepositReclaimInput {
+  starkKey: string
+  assetType: string
+  vaultId: string
+}
+
+export interface IWithdrawInput {
+  starkKey: string
+  assetType: string
+}
+
+export interface IWithdrawToInput {
+  starkKey: string
+  assetType: string
+  recipient: string
+}
+
+export interface IFullWithdrawalRequestInput {
+  starkKey: string
+  vaultId: string
+}
+
+export interface IFreezeRequestInput {
+  starkKey: string
+  vaultId: string
+}
+
+export interface IEscapeInput {
+  starkKey: string
+  vaultId: string
+  assetType: string
+  quantizedAmount: string
+}
+
+export interface IDepositNftInput {
+  starkKey: string
+  vaultId: string
+  assetType: string
+  tokenId: string
+}
+
+export interface IDepositNftReclaimInput {
+  starkKey: string
+  assetType: string
+  vaultId: string
+  tokenId: string
+}
+
+export interface IWithdrawAndMintInput {
+  starkKey: string
+  assetType: string
+  mintableBlob: string
+}
+
+export interface IWithdrawNftInput {
+  starkKey: string
+  assetType: string
+  tokenId: string
+}
+
+export interface IWithdrawNftToInput {
+  starkKey: string
+  assetType: string
+  tokenId: string
+  recipient: string
+}
+
+export interface ITransferInput {
+  quantizedAmount: string
+  nonce: string
+  senderVaultId: string
+  assetType: string
+  receiverVaultId: string
+  receiverKey: string
+  expirationTimestamp: string
+  condition?: string
+}
+
+export interface ICreateOrderInput {
+  vaultSell: string
+  vaultBuy: string
+  amountSell: string
+  amountBuy: string
+  tokenSellAssetType: string
+  tokenBuyAssetType: string
+  nonce: string
+  expirationTimestamp: string
 }
 
 // -- StarkwareController --------------------------------------------- //
 
 export class StarkwareController {
-  private accountMapping: StarkwareAccountMapping | undefined;
-  private activeKeyPair: starkwareCrypto.KeyPair | undefined;
+  private _encoder: ethers.utils.Interface
 
-  public provider: providers.Provider;
-  public walletIndex: number = 0;
-
-  constructor(
-    private mnemonic: string,
-    provider: string | providers.Provider,
-    private store: Store,
-    private accountMappingKey: string = DEFAULT_ACCOUNT_MAPPING_KEY
-  ) {
-    this.provider = getJsonRpcProvider(provider);
+  constructor () {
+    this._encoder = new ethers.utils.Interface(starkExchangeAbi)
   }
 
-  // -- Get / Set ----------------------------------------------------- //
+  // -- Public --------------------------------------------- //
 
-  get starkPublicKey(): string | undefined {
-    if (!this.activeKeyPair) return undefined;
-    return starkwareCrypto.getStarkPublicKey(this.activeKeyPair);
-  }
-
-  public setProvider(provider: string | providers.Provider): void {
-    this.provider = getJsonRpcProvider(provider);
-  }
-
-  public setWalletIndex(walletIndex: number): void {
-    this.walletIndex = walletIndex;
-  }
-
-  public async getStarkPublicKey(path?: string): Promise<string> {
-    const keyPair = await this.getKeyPairFromPath(path);
-    const starkPublicKey = starkwareCrypto.getStarkPublicKey(keyPair);
-    return starkPublicKey;
-  }
-
-  public async getActiveKeyPair(): Promise<starkwareCrypto.KeyPair> {
-    await this.getAccountMapping();
-    if (this.activeKeyPair) {
-      return this.activeKeyPair;
-    } else {
-      throw new Error('No Active Starkware KeyPair - please provide a path');
-    }
-  }
-
-  public getEthereumAddress(): string {
-    return Wallet.fromMnemonic(this.mnemonic, getPath(this.walletIndex))
-      .address;
-  }
-
-  // -- JSON-RPC ----------------------------------------------------- //
-
-  public async account(
-    layer: string,
-    application: string,
-    index: string
-  ): Promise<string> {
-    const path = starkwareCrypto.getAccountPath(
-      layer,
-      application,
-      this.getEthereumAddress(),
-      index
-    );
-
-    return this.getStarkKey(path);
-  }
-
-  public async registerUser(
-    contractAddress: string,
-    ethKey: string,
-    starkKey: string,
-    operatorSignature: string
-  ): Promise<PopulatedTransaction> {
-    const exchangeContract = this.getExchangeContract(contractAddress);
-    const unsignedTx = await exchangeContract.populateTransaction.registerUser(
+  public async registerUser (input: IRegisterUserInput): Promise<string> {
+    const { ethKey, starkKey, operatorSignature } = input
+    return this._encodeFunctionCall('registerUser', [
       ethKey,
       starkKey,
-      operatorSignature
-    );
-
-    return unsignedTx;
+      operatorSignature,
+    ])
   }
 
-  public async deposit(
-    contractAddress: string,
-    starkKey: string,
-    quantizedAmount: string,
-    token: starkwareCrypto.Token,
-    vaultId: string
-  ): Promise<PopulatedTransaction> {
-    const exchangeContract = this.getExchangeContract(contractAddress);
-    const tokenId = starkwareCrypto.hashTokenId(token);
-    const unsignedTx = await exchangeContract.populateTransaction.deposit(
+  public async deposit (input: IDepositInput): Promise<string> {
+    const { starkKey, assetType, vaultId, quantizedAmount } = input
+    const args = [starkKey, assetType, vaultId]
+
+    if (typeof quantizedAmount === 'string') {
+      args.push(quantizedAmount)
+
+      // The reason for fragments is to avoid the ethers
+      // error "multiple matching functions"
+      // because of overloaded functions.
+      const fragment = {
+        constant: false,
+        inputs: [
+          {
+            internalType: 'uint256',
+            name: 'starkKey',
+            type: 'uint256',
+          },
+          {
+            internalType: 'uint256',
+            name: 'assetType',
+            type: 'uint256',
+          },
+          {
+            internalType: 'uint256',
+            name: 'vaultId',
+            type: 'uint256',
+          },
+          {
+            internalType: 'uint256',
+            name: 'quantizedAmount',
+            type: 'uint256',
+          },
+        ],
+        name: 'deposit',
+        outputs: [],
+        payable: false,
+        stateMutability: 'nonpayable',
+        type: 'function',
+      }
+
+      return this._encodeFunctionCall(fragment, args)
+    }
+
+    const fragment = {
+      constant: false,
+      inputs: [
+        {
+          internalType: 'uint256',
+          name: 'starkKey',
+          type: 'uint256',
+        },
+        {
+          internalType: 'uint256',
+          name: 'assetType',
+          type: 'uint256',
+        },
+        {
+          internalType: 'uint256',
+          name: 'vaultId',
+          type: 'uint256',
+        },
+      ],
+      name: 'deposit',
+      outputs: [],
+      payable: true,
+      stateMutability: 'payable',
+      type: 'function',
+    }
+
+    return this._encodeFunctionCall(fragment, args)
+  }
+
+  public async depositCancel (input: IDepositCancelInput): Promise<string> {
+    const { starkKey, assetType, vaultId } = input
+    return this._encodeFunctionCall('depositCancel', [
       starkKey,
-      tokenId,
+      assetType,
       vaultId,
-      quantizedAmount
-    );
-    return unsignedTx;
+    ])
   }
 
-  public async depositCancel(
-    contractAddress: string,
-    starkKey: string,
-    token: starkwareCrypto.Token,
-    vaultId: string
-  ): Promise<PopulatedTransaction> {
-    const exchangeContract = this.getExchangeContract(contractAddress);
-    const tokenId = starkwareCrypto.hashTokenId(token);
-    const unsignedTx = await exchangeContract.populateTransaction.depositCancel(
+  public async depositReclaim (input: IDepositReclaimInput): Promise<string> {
+    const { starkKey, assetType, vaultId } = input
+    return this._encodeFunctionCall('depositReclaim', [
       starkKey,
-      tokenId,
-      vaultId
-    );
-    return unsignedTx;
+      assetType,
+      vaultId,
+    ])
   }
 
-  public async depositReclaim(
-    contractAddress: string,
-    starkKey: string,
-    token: starkwareCrypto.Token,
-    vaultId: string
-  ): Promise<PopulatedTransaction> {
-    const exchangeContract = this.getExchangeContract(contractAddress);
-    const tokenId = starkwareCrypto.hashTokenId(token);
-    const unsignedTx = await exchangeContract.populateTransaction.depositReclaim(
+  public async withdraw (input: IWithdrawInput): Promise<string> {
+    const { starkKey, assetType } = input
+    return this._encodeFunctionCall('withdraw', [starkKey, assetType])
+  }
+
+  public async withdrawTo (input: IWithdrawToInput): Promise<string> {
+    const { starkKey, assetType, recipient } = input
+    return this._encodeFunctionCall('withdrawTo', [
       starkKey,
-      tokenId,
-      vaultId
-    );
-    return unsignedTx;
+      assetType,
+      recipient,
+    ])
   }
 
-  public async transfer(
-    from: starkwareCrypto.TransferParams,
-    to: starkwareCrypto.TransferParams,
-    token: starkwareCrypto.Token,
-    quantizedAmount: string,
-    nonce: string,
-    expirationTimestamp: string,
-    condition?: string
+  public async fullWithdrawalRequest (
+    input: IFullWithdrawalRequestInput
   ): Promise<string> {
-    const senderVaultId = from.vaultId;
-    const receiverVaultId = to.vaultId;
-    const receiverKey = to.starkKey;
-    const msg = starkwareCrypto.getTransferMsgHash(
+    const { starkKey, vaultId } = input
+    return this._encodeFunctionCall('fullWithdrawalRequest', [
+      starkKey,
+      vaultId,
+    ])
+  }
+
+  public async freezeRequest (input: IFreezeRequestInput): Promise<string> {
+    const { starkKey, vaultId } = input
+    return this._encodeFunctionCall('freezeRequest', [starkKey, vaultId])
+  }
+
+  public async escape (input: IEscapeInput): Promise<string> {
+    const { starkKey, vaultId, assetType, quantizedAmount } = input
+    return this._encodeFunctionCall('escape', [
+      starkKey,
+      vaultId,
+      assetType,
+      quantizedAmount,
+    ])
+  }
+
+  public async depositNft (input: IDepositNftInput): Promise<string> {
+    const { starkKey, vaultId, assetType, tokenId } = input
+    return this._encodeFunctionCall('depositNft', [
+      starkKey,
+      assetType,
+      vaultId,
+      tokenId,
+    ])
+  }
+
+  public async depositNftReclaim (
+    input: IDepositNftReclaimInput
+  ): Promise<string> {
+    const { starkKey, assetType, vaultId, tokenId } = input
+    return this._encodeFunctionCall('depositNftReclaim', [
+      starkKey,
+      assetType,
+      vaultId,
+      tokenId,
+    ])
+  }
+
+  public async withdrawAndMint (input: IWithdrawAndMintInput): Promise<string> {
+    const { starkKey, assetType, mintableBlob } = input
+    return this._encodeFunctionCall('withdrawAndMint', [
+      starkKey,
+      assetType,
+      mintableBlob,
+    ])
+  }
+
+  public async withdrawNft (input: IWithdrawNftInput): Promise<string> {
+    const { starkKey, assetType, tokenId } = input
+    return this._encodeFunctionCall('withdrawNft', [
+      starkKey,
+      assetType,
+      tokenId,
+    ])
+  }
+
+  public async withdrawNftTo (input: IWithdrawNftToInput): Promise<string> {
+    const { starkKey, assetType, tokenId, recipient } = input
+    return this._encodeFunctionCall('withdrawNftTo', [
+      starkKey,
+      assetType,
+      tokenId,
+      recipient,
+    ])
+  }
+
+  public async transfer (input: ITransferInput): Promise<string> {
+    const {
       quantizedAmount,
       nonce,
       senderVaultId,
-      token,
+      assetType,
+      receiverVaultId,
+      receiverKey,
+      expirationTimestamp,
+      condition,
+    } = input
+    return starkwareCrypto.getTransferMsgHash(
+      quantizedAmount,
+      nonce,
+      senderVaultId,
+      assetType,
       receiverVaultId,
       receiverKey,
       expirationTimestamp,
       condition
-    );
-    const keyPair = await this.getActiveKeyPair();
-    const signature = starkwareCrypto.sign(keyPair, msg);
-    const starkSignature = starkwareCrypto.serializeSignature(signature);
-    return starkSignature;
+    )
   }
 
-  public async createOrder(
-    starkKey: string,
-    sell: starkwareCrypto.OrderParams,
-    buy: starkwareCrypto.OrderParams,
-    nonce: string,
-    expirationTimestamp: string
-  ): Promise<string> {
-    const vaultSell = sell.vaultId;
-    const vaultBuy = buy.vaultId;
-    const amountSell = sell.quantizedAmount;
-    const amountBuy = buy.quantizedAmount;
-    const tokenSell = sell.token;
-    const tokenBuy = buy.token;
-    const msg = starkwareCrypto.getLimitOrderMsgHash(
+  public async createOrder (input: ICreateOrderInput): Promise<string> {
+    const {
       vaultSell,
       vaultBuy,
       amountSell,
       amountBuy,
-      tokenSell,
-      tokenBuy,
+      tokenSellAssetType,
+      tokenBuyAssetType,
+      nonce,
+      expirationTimestamp,
+    } = input
+    return starkwareCrypto.getLimitOrderMsgHash(
+      vaultSell,
+      vaultBuy,
+      amountSell,
+      amountBuy,
+      tokenSellAssetType,
+      tokenBuyAssetType,
       nonce,
       expirationTimestamp
-    );
-    const keyPair = await this.getActiveKeyPair();
-    const signature = starkwareCrypto.sign(keyPair, msg);
-    const starkSignature = starkwareCrypto.serializeSignature(signature);
-    return starkSignature;
+    )
   }
 
-  public async withdraw(
-    contractAddress: string,
-    starkKey: string,
-    token: starkwareCrypto.Token
-  ): Promise<PopulatedTransaction> {
-    const exchangeContract = this.getExchangeContract(contractAddress);
-    const tokenId = starkwareCrypto.hashTokenId(token);
-    const unsignedTx = await exchangeContract.populateTransaction.withdraw(
-      starkKey,
-      tokenId
-    );
-    return unsignedTx;
-  }
+  // -- Private --------------------------------------------- //
 
-  public async withdrawTo(
-    contractAddress: string,
-    starkKey: string,
-    token: starkwareCrypto.Token,
-    recipient: string
-  ): Promise<PopulatedTransaction> {
-    const exchangeContract = this.getExchangeContract(contractAddress);
-    const tokenId = starkwareCrypto.hashTokenId(token);
-    const unsignedTx = await exchangeContract.populateTransaction.withdrawTo(
-      starkKey,
-      tokenId,
-      recipient
-    );
-    return unsignedTx;
-  }
-
-  public async fullWithdrawal(
-    contractAddress: string,
-    starkKey: string,
-    vaultId: string
-  ): Promise<PopulatedTransaction> {
-    const exchangeContract = this.getExchangeContract(contractAddress);
-    const unsignedTx = await exchangeContract.populateTransaction.fullWithdrawalRequest(
-      starkKey,
-      vaultId
-    );
-    return unsignedTx;
-  }
-
-  public async freeze(
-    contractAddress: string,
-    starkKey: string,
-    vaultId: string
-  ): Promise<PopulatedTransaction> {
-    const exchangeContract = this.getExchangeContract(contractAddress);
-    const unsignedTx = await exchangeContract.populateTransaction.freezeRequest(
-      starkKey,
-      vaultId
-    );
-    return unsignedTx;
-  }
-
-  public async verifyEscape(
-    contractAddress: string,
-    starkKey: string,
-    proof: string[]
-  ): Promise<PopulatedTransaction> {
-    const exchangeContract = this.getExchangeContract(contractAddress);
-    const unsignedTx = await exchangeContract.populateTransaction.verifyEscape(
-      proof
-    );
-    return unsignedTx;
-  }
-
-  public async escape(
-    contractAddress: string,
-    starkKey: string,
-    vaultId: string,
-    token: starkwareCrypto.Token,
-    quantizedAmount: string
-  ): Promise<PopulatedTransaction> {
-    const exchangeContract = this.getExchangeContract(contractAddress);
-    const tokenId = starkwareCrypto.hashTokenId(token);
-    const unsignedTx = await exchangeContract.populateTransaction.escape(
-      starkKey,
-      vaultId,
-      tokenId,
-      quantizedAmount
-    );
-    return unsignedTx;
-  }
-
-  public async depositNft(
-    contractAddress: string,
-    starkKey: string,
-    assetType: string,
-    vaultId: string,
-    token: starkwareCrypto.Token
-  ): Promise<PopulatedTransaction> {
-    const exchangeContract = this.getExchangeContract(contractAddress);
-    const tokenId = starkwareCrypto.hashTokenId(token);
-    const unsignedTx = await exchangeContract.populateTransaction.depositNft(
-      starkKey,
-      assetType,
-      vaultId,
-      tokenId
-    );
-
-    return unsignedTx;
-  }
-
-  public async depositNftReclaim(
-    contractAddress: string,
-    starkKey: string,
-    assetType: string,
-    vaultId: string,
-    token: starkwareCrypto.Token
-  ): Promise<PopulatedTransaction> {
-    const exchangeContract = this.getExchangeContract(contractAddress);
-    const tokenId = starkwareCrypto.hashTokenId(token);
-    const unsignedTx = await exchangeContract.populateTransaction.depositNftReclaim(
-      starkKey,
-      assetType,
-      vaultId,
-      tokenId
-    );
-
-    return unsignedTx;
-  }
-
-  public async withdrawAndMint(
-    contractAddress: string,
-    starkKey: string,
-    assetType: string,
-    mintingBlob: string | Buffer
-  ): Promise<PopulatedTransaction> {
-    const exchangeContract = this.getExchangeContract(contractAddress);
-    const unsignedTx = await exchangeContract.populateTransaction.withdrawAndMint(
-      starkKey,
-      assetType,
-      mintingBlob
-    );
-
-    return unsignedTx;
-  }
-
-  public async withdrawNft(
-    contractAddress: string,
-    starkKey: string,
-    assetType: string,
-    token: starkwareCrypto.Token
-  ): Promise<PopulatedTransaction> {
-    const exchangeContract = this.getExchangeContract(contractAddress);
-    const tokenId = starkwareCrypto.hashTokenId(token);
-    const unsignedTx = await exchangeContract.populateTransaction.withdrawNft(
-      starkKey,
-      assetType,
-      tokenId
-    );
-
-    return unsignedTx;
-  }
-
-  public async withdrawNftTo(
-    contractAddress: string,
-    starkKey: string,
-    assetType: string,
-    token: starkwareCrypto.Token,
-    recipient: string
-  ): Promise<PopulatedTransaction> {
-    const exchangeContract = this.getExchangeContract(contractAddress);
-    const tokenId = starkwareCrypto.hashTokenId(token);
-    const unsignedTx = await exchangeContract.populateTransaction.withdrawNftTo(
-      starkKey,
-      assetType,
-      tokenId,
-      recipient
-    );
-
-    return unsignedTx;
-  }
-
-  // -- Private ------------------------------------------------------- //
-
-  private async getKeyPairFromPath(
-    path?: string
-  ): Promise<starkwareCrypto.KeyPair> {
-    const accountMapping = await this.getAccountMapping();
-    if (!path) {
-      return this.getActiveKeyPair();
-    }
-    const match = accountMapping[path];
-    if (match) {
-      return starkwareCrypto.ec.keyFromPrivate(match);
-    }
-    const activeKeyPair = starkwareCrypto.getKeyPairFromPath(
-      this.mnemonic,
-      path
-    );
-    await this.setActiveKeyPair(path, activeKeyPair);
-    return activeKeyPair;
-  }
-
-  private async setActiveKeyPair(
-    path: string,
-    activeKeyPair: starkwareCrypto.KeyPair
-  ) {
-    const accountMapping = await this.getAccountMapping();
-    accountMapping[path] = activeKeyPair.getPrivate('hex');
-    this.accountMapping = accountMapping;
-    this.activeKeyPair = activeKeyPair;
-    await this.store.set(this.accountMappingKey, accountMapping);
-  }
-
-  private getExchangeContract(contractAddress: string) {
-    return new Contract(contractAddress, abi, this.provider);
-  }
-
-  private async getAccountMapping(): Promise<StarkwareAccountMapping> {
-    if (typeof this.accountMapping !== 'undefined') {
-      return this.accountMapping;
+  private _encodeFunctionCall = (method: string | any, args: any[]) => {
+    let fragment: string | ethers.utils.FunctionFragment
+    if (typeof method === 'string') {
+      fragment = method
+    } else {
+      fragment = ethers.utils.FunctionFragment.from(
+        method as ethers.utils.FunctionFragment
+      )
     }
 
-    const accountMapping: StarkwareAccountMapping =
-      (await this.store.get(this.accountMappingKey)) || {};
-    this.accountMapping = accountMapping;
-
-    const paths = Object.keys(accountMapping);
-    if (paths.length && !this.activeKeyPair) {
-      this.activeKeyPair = starkwareCrypto.ec.keyFromPrivate(
-        accountMapping[paths[0]]
-      );
-    }
-    return accountMapping;
-  }
-
-  private async getStarkKey(path?: string): Promise<string> {
-    const starkPublicKey = await this.getStarkPublicKey(path);
-
-    return encUtils.sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey));
+    return this._encoder.encodeFunctionData(fragment, args)
   }
 }
 
-export default StarkwareController;
+export default StarkwareController

@@ -1,71 +1,71 @@
-import StarkwareWallet from 'starkware-wallet';
-import { Wallet } from 'ethers';
+import StarkwareWallet from 'starkware-wallet'
+import { Wallet } from 'ethers'
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'events'
 
-import { IRpcConnection } from '../../src';
+import { IRpcConnection } from '../../src'
 
-const storage = {};
+const storage = {}
 
 const store = {
   set: async (key: string, data: any) => {
-    storage[key] = data;
+    storage[key] = data
   },
   get: async (key: string) => {
-    return storage[key];
+    return storage[key]
   },
   remove: async (key: string) => {
-    delete storage[key];
+    delete storage[key]
   },
-};
+}
 
 export class MockWalletController {
-  private starkwareController: StarkwareWallet;
-  constructor(mnemonic: string) {
-    const wallet = Wallet.fromMnemonic(mnemonic);
-    this.starkwareController = new StarkwareWallet(wallet, store);
+  private starkwareController: StarkwareWallet
+  constructor (mnemonic: string) {
+    const wallet = Wallet.fromMnemonic(mnemonic)
+    this.starkwareController = new StarkwareWallet(wallet, store)
   }
-  resolve(payload: any) {
-    return this.starkwareController.resolve(payload);
+  resolve (payload: any) {
+    return this.starkwareController.resolve(payload)
   }
 }
 
 export class MockRpcConnection extends EventEmitter implements IRpcConnection {
-  public connected: boolean = false;
+  public connected: boolean = false
 
-  constructor(private readonly walletController: MockWalletController) {
-    super();
+  constructor (private readonly walletController: MockWalletController) {
+    super()
   }
 
-  public async open(): Promise<void> {
-    this.connected = true;
-    this.emit('open');
-    this.emit('connect');
+  public async open (): Promise<void> {
+    this.connected = true
+    this.emit('open')
+    this.emit('connect')
   }
 
-  public async close(): Promise<void> {
-    this.connected = false;
-    this.emit('close');
-    this.emit('disconnect');
+  public async close (): Promise<void> {
+    this.connected = false
+    this.emit('close')
+    this.emit('disconnect')
   }
 
-  public async send(payload: any) {
-    const res: any = await this.walletController.resolve(payload);
+  public async send (payload: any) {
+    const res: any = await this.walletController.resolve(payload)
     if (res.result) {
-      return res.result;
+      return res.result
     } else {
       if (res.error && res.error.message) {
-        throw new Error(res.error.message);
+        throw new Error(res.error.message)
       } else {
         throw new Error(
           `Failed JSON-RPC request with method: ${payload.method}`
-        );
+        )
       }
     }
   }
 }
 
-export function getMockConnection(mnemonic: string) {
-  const walletController = new MockWalletController(mnemonic);
-  return new MockRpcConnection(walletController);
+export function getMockConnection (mnemonic: string) {
+  const walletController = new MockWalletController(mnemonic)
+  return new MockRpcConnection(walletController)
 }

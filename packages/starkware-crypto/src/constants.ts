@@ -2023,4 +2023,4 @@ export const constantPointsHex = [
     '2c6276b764fb398fa555857dbe0ce0ec18fab7a233bf23851295739801f0585',
     '5d8f4897ce44007ec5bfcb9aeb78b8f6e1d40a514f72d213c9300d2770d2b8c',
   ],
-];
+]

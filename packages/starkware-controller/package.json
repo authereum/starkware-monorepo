@@ -1,7 +1,7 @@
 {
-  "name": "starkware-controller",
+  "name": "@authereum/starkware-controller",
   "description": "Starkware JSON-RPC Controller Library",
-  "version": "1.7.8",
+  "version": "1.7.8-beta.0",
   "author": "Pedro Gomes <github.com/pedrouid>",
   "license": "Apache-2.0",
   "keywords": [
@@ -33,18 +33,22 @@
     "build:umd": "webpack",
     "build": "yarn clean && yarn build:cjs && yarn build:umd",
     "test": "tsdx test ./test",
-    "lint": "tsdx lint src test",
-    "prepare": "yarn lint && yarn build"
+    "lint": "prettier-standard --format",
+    "prepare": "yarn lint && yarn build",
+    "publish:beta": "npm publish --tag beta --access public"
   },
   "dependencies": {
-    "ethers": "^5.0.8",
-    "starkware-crypto": "^1.9.7",
-    "starkware-types": "^1.2.0"
+    "@authereum/starkware-crypto": "1.9.7-beta.0",
+    "@babel/core": "^7.12.3",
+    "enc-utils": "^2.2.2",
+    "ethers": "^5.0.19",
+    "starkware-types": "1.2.0"
   },
   "devDependencies": {
     "@types/jest": "25.1.1",
     "@types/node": "13.7.0",
     "husky": "4.2.5",
+    "prettier-standard": "^16.4.1",
     "tsdx": "0.13.2",
     "tslib": "1.10.0",
     "typescript": "3.7.5",
@@ -58,7 +62,7 @@
   },
   "prettier": {
     "printWidth": 80,
-    "semi": true,
+    "semi": false,
     "singleQuote": true,
     "trailingComma": "es5"
   }

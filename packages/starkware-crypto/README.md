@@ -9,22 +9,22 @@ This library is a port from [starkex-resources/\*\*/signature.js](https://github
 ## Example
 
 ```typescript
-import * as starkwareCrypto from 'starkware-crypto';
+import * as starkwareCrypto from 'starkware-crypto'
 
-const mnemonic = '';
+const mnemonic = ''
 
 const path = getAccountPath(
   'starkex',
   'starkexdvf',
   '0x0000000000000000000000000000000000000000',
   '0'
-);
+)
 
-const keyPair = starkwareCrypto.getKeyPairFromPath(mnemonic, path);
+const keyPair = starkwareCrypto.getKeyPairFromPath(mnemonic, path)
 
-const publicKey = starkwareCrypto.getPublic(keyPair);
+const publicKey = starkwareCrypto.getPublic(keyPair)
 
-const starkPublicKey = starkwareCrypto.getStarkPublicKey(publicKey);
+const starkPublicKey = starkwareCrypto.getStarkPublicKey(publicKey)
 
 const msgParams = {
   amount: '2154549703648910716',
@@ -41,7 +41,7 @@ const msgParams = {
   receiverPublicKey:
     '0x5fa3383597691ea9d827a79e1a4f0f7949435ced18ca9619de8ab97e661020',
   expirationTimestamp: '438953',
-};
+}
 
 const message = starkwareCrypto.getTransferMsgHash(
   msgParams.amount,
@@ -51,11 +51,11 @@ const message = starkwareCrypto.getTransferMsgHash(
   msgParams.receiverVaultId,
   msgParams.receiverPublicKey,
   msgParams.expirationTimestamp
-);
+)
 
-const signature = starkwareCrypto.sign(keyPair, message);
+const signature = starkwareCrypto.sign(keyPair, message)
 
-const verified = starkwareCrypto.verify(keyPair, message, signature);
+const verified = starkwareCrypto.verify(keyPair, message, signature)
 ```
 
 ## API
@@ -67,29 +67,27 @@ interface StarkwareCrypto {
     application: string,
     ethereumAddress: string,
     index: string
-  ): string;
+  ): string
 
-  getKeyPairFromPath(mnemonic: string, path: string): KeyPair;
+  getKeyPairFromPath(mnemonic: string, path: string): KeyPair
 
-  getKeyPair(privateKey: string): KeyPair;
+  getKeyPair(privateKey: string): KeyPair
 
-  getKeyPairFromPublicKey(publicKey: string): KeyPair;
+  getKeyPairFromPublicKey(publicKey: string): KeyPair
 
-  getPrivate(keyPair: KeyPair): string;
+  getPrivate(keyPair: KeyPair): string
 
-  getPublic(keyPair: KeyPair, compressed: bolean): string;
+  getPublic(keyPair: KeyPair, compressed: bolean): string
 
-  getStarkPublicKey(keyPair: KeyPair): string;
+  getStarkPublicKey(keyPair: KeyPair): string
 
-  getXCoordinate(publicKey: string): string;
+  getXCoordinate(publicKey: string): string
 
-  getYCoordinate(publicKey: string): string;
+  getYCoordinate(publicKey: string): string
 
-  hashTokenId(token: Token);
+  hashMessage(w1: string, w2: string, w3: string)
 
-  hashMessage(w1: string, w2: string, w3: string);
-
-  deserializeMessage(serialized: string): MessageParams;
+  deserializeMessage(serialized: string): MessageParams
 
   serializeMessage(
     instructionTypeBn: BN,
@@ -99,7 +97,7 @@ interface StarkwareCrypto {
     amount1Bn: BN,
     nonceBn: BN,
     expirationTimestampBn: BN
-  ): string;
+  ): string
 
   formatMessage(
     instruction: 'transfer' | 'order',
@@ -109,7 +107,7 @@ interface StarkwareCrypto {
     amount1: string,
     nonce: string,
     expirationTimestamp: string
-  ): string;
+  ): string
 
   getLimitOrderMsgHash(
     vaultSell: string,
@@ -120,7 +118,7 @@ interface StarkwareCrypto {
     tokenBuy: Token,
     nonce: string,
     expirationTimestamp: string
-  ): string;
+  ): string
 
   getTransferMsgHash(
     amount: string,
@@ -130,61 +128,61 @@ interface StarkwareCrypto {
     receiverVaultId: string,
     receiverPublicKey: string,
     expirationTimestamp: string
-  ): string;
+  ): string
 
-  sign(keyPair: KeyPair, msg: string): Signature;
+  sign(keyPair: KeyPair, msg: string): Signature
 
-  verify(keyPair: KeyPair, msg: string, sig: SignatureInput): boolean;
+  verify(keyPair: KeyPair, msg: string, sig: SignatureInput): boolean
 
   verifyStarkPublicKey(
     starkPublicKey: string,
     msg: string,
     sig: SignatureInput
-  ): boolean;
+  ): boolean
 
-  compress(publicKey: string): string;
+  compress(publicKey: string): string
 
-  decompress(publicKey: string): string;
+  decompress(publicKey: string): string
 
-  exportRecoveryParam(recoveryParam: number | null): string;
+  exportRecoveryParam(recoveryParam: number | null): string
 
-  importRecoveryParam(v: string): number;
+  importRecoveryParam(v: string): number
 
-  serializeSignature(sig: Signature): string;
+  serializeSignature(sig: Signature): string
 
-  deserializeSignature(sig: string): SignatureOptions;
+  deserializeSignature(sig: string): SignatureOptions
 }
 ```
 
 ## Typings
 
 ```typescript
-type KeyPair = elliptic.ec.KeyPair;
+type KeyPair = elliptic.ec.KeyPair
 
 type MessageParams = {
-  instructionTypeBn: BN;
-  vault0Bn: BN;
-  vault1Bn: BN;
-  amount0Bn: BN;
-  amount1Bn: BN;
-  nonceBn: BN;
-  expirationTimestampBn: BN;
-};
+  instructionTypeBn: BN
+  vault0Bn: BN
+  vault1Bn: BN
+  amount0Bn: BN
+  amount1Bn: BN
+  nonceBn: BN
+  expirationTimestampBn: BN
+}
 
 class Signature {
-  r: BN;
-  s: BN;
-  recoveryParam: number | null;
+  r: BN
+  s: BN
+  recoveryParam: number | null
 
-  constructor(options: SignatureInput, enc?: string);
+  constructor (options: SignatureInput, enc?: string)
 
-  toDER(enc?: string | null): any;
+  toDER (enc?: string | null): any
 }
 
 interface SignatureOptions {
-  r: BNInput;
-  s: BNInput;
-  recoveryParam?: number;
+  r: BNInput
+  s: BNInput
+  recoveryParam?: number
 }
 
 type BNInput =
@@ -193,14 +191,14 @@ type BNInput =
   | number
   | Buffer
   | Uint8Array
-  | ReadonlyArray<number>;
+  | ReadonlyArray<number>
 
 type SignatureInput =
   | Signature
   | SignatureOptions
   | Uint8Array
   | ReadonlyArray<number>
-  | string;
+  | string
 ```
 
 ## License

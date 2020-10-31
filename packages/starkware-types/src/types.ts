@@ -162,9 +162,8 @@ export namespace MethodResults {
   export type StarkCreateOrderResult = { starkSignature: string };
   export type StarkWithdrawResult = { txhash: string };
   export type StarkWithdrawToResult = { txhash: string };
-  export type StarkFullWithdrawalResult = { txhash: string };
-  export type StarkFreezeResult = { txhash: string };
-  export type StarkVerifyEscapeResult = { txhash: string };
+  export type StarkFullWithdrawalRequestResult = { txhash: string };
+  export type StarkFreezeRequestResult = { txhash: string };
   export type StarkEscapeResult = { txhash: string };
   export type StarkDepositNftResult = { txhash: string };
   export type StarkDepositNftReclaimResult = { txhash: string };
