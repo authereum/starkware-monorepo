@@ -9,7 +9,7 @@ import {
 import BasicProvider from 'basic-provider'
 import { toWei } from 'web3-utils'
 
-import { MethodResults, MethodParams } from 'starkware-types'
+import { MethodResults, MethodParams } from '@authereum/starkware-types'
 import { EventEmitter } from 'events'
 
 function matches (a: any, b: any): boolean {

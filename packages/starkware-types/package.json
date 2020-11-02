@@ -1,7 +1,7 @@
 {
-  "name": "starkware-types",
+  "name": "@authereum/starkware-types",
   "description": "Starkware Typings",
-  "version": "1.2.0",
+  "version": "1.2.0-beta.0",
   "author": "Pedro Gomes <github.com/pedrouid>",
   "license": "Apache-2.0",
   "keywords": [
@@ -34,7 +34,8 @@
     "build": "yarn clean && yarn build:cjs && yarn build:umd",
     "test": "tsdx test ./test",
     "lint": "tsdx lint src test",
-    "prepare": "yarn lint && yarn build && yarn test"
+    "prepare": "yarn lint && yarn build && yarn test",
+    "publish:beta": "npm publish --tag beta --access public"
   },
   "devDependencies": {
     "@types/jest": "25.1.1",

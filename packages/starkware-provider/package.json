@@ -45,7 +45,7 @@
     "basic-provider": "^1.6.1",
     "enc-utils": "^2.2.2",
     "rsv-signature": "^1.1.0",
-    "starkware-types": "^1.2.0",
+    "@authereum/starkware-types": "^1.2.0-beta.0",
     "web3-utils": "^1.3.0"
   },
   "devDependencies": {
