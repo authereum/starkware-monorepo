@@ -38,11 +38,11 @@
     "publish:beta": "npm publish --tag beta --access public"
   },
   "dependencies": {
-    "@authereum/starkware-crypto": "1.9.7-beta.0",
+    "@authereum/starkware-crypto": "1.9.7-beta.2",
     "@babel/core": "^7.12.3",
     "enc-utils": "^2.2.2",
     "ethers": "^5.0.19",
-    "starkware-types": "1.2.0"
+    "@authereum/starkware-types": "1.2.0-beta.1"
   },
   "devDependencies": {
     "@types/jest": "25.1.1",
