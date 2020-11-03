@@ -3,7 +3,7 @@ import * as bip39 from 'bip39'
 import * as encUtils from 'enc-utils'
 import BN from 'bn.js'
 import hash from 'hash.js'
-import { ec } from './crypto'
+import { ec, deserializeSignature } from './crypto'
 
 /*
  Returns an integer from a given section of bits out of a hex string.
@@ -111,3 +111,8 @@ function hashKeyWithIndex (key: string, index: number) {
 }
 
 export const StarkExEc = ec.n
+
+export function privateKeyFromSignature (signature: string): string {
+  const sig = deserializeSignature(signature)
+  return grindKey(sig.r.toString('hex'), StarkExEc)
+}

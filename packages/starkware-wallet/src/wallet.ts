@@ -90,11 +90,7 @@ export class StarkwareWallet {
     store: Store,
     accountMappingKey: string = DEFAULT_ACCOUNT_MAPPING_KEY
   ) {
-    const sig = starkwareCrypto.deserializeSignature(signature)
-    const privateKey = starkwareCrypto.grindKey(
-      sig.r.toString('hex'),
-      starkwareCrypto.StarkExEc
-    )
+    const privateKey = starkwareCrypto.privateKeyFromSignature(signature)
     return StarkwareWallet.fromPrivateKey(
       privateKey,
       provider,

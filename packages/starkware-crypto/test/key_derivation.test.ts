@@ -1,4 +1,10 @@
-import { StarkExEc, getKeyPairFromPath, getAccountPath, grindKey } from '../src'
+import {
+  StarkExEc,
+  getKeyPairFromPath,
+  getAccountPath,
+  grindKey,
+  privateKeyFromSignature,
+} from '../src'
 
 describe('Key derivation', () => {
   const layer = 'starkex'
@@ -38,6 +44,13 @@ describe('Key grinding', () => {
       '86F3E7293141F20A8BAFF320E8EE4ACCB9D4A4BF2B4D295E8CEE784DB46E0519'
     expect(grindKey(privateKey, StarkExEc)).toBe(
       '5c8c8683596c732541a59e03007b2d30dbbbb873556fe65b5fb63c16688f941'
+    )
+  })
+  it('should produce private key from signature', () => {
+    const sig =
+      '0xfb7ae61d6b2c34de46d17830eff6bc73888f560fa4f8ab0e0de50a6f0f8a131f43b69300b96b8e2bcd42efd172a6d531ba2b39a765596fe7e1b39cc37114c1ad1b'
+    expect(privateKeyFromSignature(sig)).toBe(
+      '11c41410c6aa7c5edb706103e328bd088d3f2becdd741137e4d29b22c1c45e2'
     )
   })
 })
