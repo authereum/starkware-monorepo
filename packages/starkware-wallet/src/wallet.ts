@@ -84,6 +84,25 @@ export class StarkwareWallet {
     return new StarkwareWallet(privateKey, provider, store, accountMappingKey)
   }
 
+  static fromSignature (
+    signature: string,
+    provider: string | providers.Provider,
+    store: Store,
+    accountMappingKey: string = DEFAULT_ACCOUNT_MAPPING_KEY
+  ) {
+    const sig = starkwareCrypto.deserializeSignature(signature)
+    const privateKey = starkwareCrypto.grindKey(
+      sig.r.toString('hex'),
+      starkwareCrypto.StarkExEc
+    )
+    return StarkwareWallet.fromPrivateKey(
+      privateKey,
+      provider,
+      store,
+      accountMappingKey
+    )
+  }
+
   // -- Get / Set ----------------------------------------------------- //
 
   public setProvider (provider: string | providers.Provider): void {
