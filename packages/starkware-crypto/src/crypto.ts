@@ -2,10 +2,8 @@ import BN from 'bn.js'
 import hashJS from 'hash.js'
 import assert from 'assert'
 import * as RSV from 'rsv-signature'
-import { mnemonicToSeedSync } from 'bip39'
 import * as elliptic from 'elliptic'
 import keccak256 from 'keccak256'
-import { hdkey } from 'ethereumjs-wallet'
 import { soliditySha3 } from 'web3-utils'
 import {
   hexToBuffer,
@@ -180,39 +178,6 @@ function fixMessage (msg: string) {
   return msg + '0'
 }
 
-function hashKeyWithIndex (key: string, index: number): BN {
-  return hexToBN(
-    hashJS
-      .sha256()
-      .update(
-        hexToBuffer(removeHexPrefix(key) + sanitizeBytes(numberToHex(index), 2))
-      )
-      .digest('hex')
-  )
-}
-
-function grindKey (privateKey: string): string {
-  let i = 0
-  let key: BN = hashKeyWithIndex(privateKey, i)
-
-  while (!key.lt(secpOrder.sub(secpOrder.mod(order)))) {
-    key = hashKeyWithIndex(key.toString(16), i)
-    i = i++
-  }
-  return key.mod(order).toString('hex')
-}
-
-function getIntFromBits (
-  hex: string,
-  start: number,
-  end: number | undefined = undefined
-): number {
-  let bin = hexToBinary(hex)
-  let bits = bin.slice(start, end)
-  let int = binaryToNumber(bits)
-  return int
-}
-
 function hashSelector (selector: string): string {
   return sanitizeHex(
     keccak256(selector)
@@ -242,37 +207,6 @@ function assertInRange (
 }
 
 /* --------------------------- PUBLIC ---------------------------------- */
-
-export function getAccountPath (
-  layer: string,
-  application: string,
-  ethereumAddress: string,
-  index: string
-): string {
-  const layerHash = hashJS
-    .sha256()
-    .update(layer)
-    .digest('hex')
-  const applicationHash = hashJS
-    .sha256()
-    .update(application)
-    .digest('hex')
-  const layerInt = getIntFromBits(layerHash, -31)
-  const applicationInt = getIntFromBits(applicationHash, -31)
-  const ethAddressInt1 = getIntFromBits(ethereumAddress, -31)
-  const ethAddressInt2 = getIntFromBits(ethereumAddress, -62, -31)
-  return `m/2645'/${layerInt}'/${applicationInt}'/${ethAddressInt1}'/${ethAddressInt2}'/${index}`
-}
-
-export function getKeyPairFromPath (mnemonic: string, path: string): KeyPair {
-  const seed = mnemonicToSeedSync(mnemonic).toString('hex')
-  const privateKey = hdkey
-    .fromMasterSeed(hexToBuffer(seed))
-    .derivePath(path)
-    .getWallet()
-    .getPrivateKeyString()
-  return getKeyPair(grindKey(privateKey))
-}
 
 export function getKeyPair (privateKey: string): KeyPair {
   return starkEc.keyFromPrivate(privateKey, 'hex')

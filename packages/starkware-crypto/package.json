@@ -1,7 +1,7 @@
 {
   "name": "@authereum/starkware-crypto",
   "description": "Starkware Crypto Library",
-  "version": "1.9.7-beta.2",
+  "version": "1.9.7-beta.3",
   "author": "Pedro Gomes <github.com/pedrouid>",
   "license": "Apache-2.0",
   "keywords": [
@@ -36,7 +36,7 @@
     "lint": "prettier-standard --format",
     "prepare": "yarn lint && yarn build",
     "publish:beta": "npm publish --tag beta --access public",
-    "publish:latest": "npm publish --tag beta --access public"
+    "publish:latest": "npm publish --tag latest --access public"
   },
   "dependencies": {
     "bip39": "^3.0.2",

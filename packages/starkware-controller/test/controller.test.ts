@@ -147,7 +147,7 @@ describe('StarkwareController', () => {
     const encodedData = await controller.withdrawAndMint({
       starkKey,
       assetType: ethAssetType,
-      mintableBlob: '0x00',
+      mintingBlob: '0x00',
     })
 
     expect(encodedData).toBe(

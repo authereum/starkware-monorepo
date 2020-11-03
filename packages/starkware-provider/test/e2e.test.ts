@@ -44,10 +44,18 @@ describe('e2e', () => {
   const tokenQuantum = '1000'
   const vaultId = '10'
   const tokenId = '377' // https://ropsten.etherscan.io/tx/0x00976db10036ba008b037c6feaac0be2cadb874c72861adad0f0d4747cf8c485
+	const getStarkKey = () => {
+		const layer = 'starkex'
+		const application = 'starkexdvf'
+		const index = '0'
+
+		return wallet.account(layer, application, index)
+	}
+
   it('should register user successfully', async () => {
     const adminKey = process.env.ADMIN_KEY as string
     assert(adminKey, 'Admin key not found')
-    const starkKey = await wallet.getStarkKey()
+    const starkKey = await getStarkKey()
     const operatorSignature = createUserRegistrationSig(
       ethKey,
       starkKey,
@@ -64,7 +72,7 @@ describe('e2e', () => {
     console.log(response.result.txhash)
   }, 10e3)
   it.only('should deposit ETH successfully', async () => {
-    const starkKey = await wallet.getStarkKey()
+    const starkKey = await getStarkKey()
     const assetType = getEthAssetType(ethQuantum)
     const response = await provider.send('stark_deposit', {
       starkKey,
@@ -78,7 +86,7 @@ describe('e2e', () => {
     console.log(response.result.txhash)
   }, 10e3)
   it('should deposit ERC20 successfully', async () => {
-    const starkKey = await wallet.getStarkKey()
+    const starkKey = await getStarkKey()
     const assetType = getErc20AssetType(ropstenTokenAddress, tokenQuantum)
     const tokenAmount = '1'
     const quantizedAmount = quantizeAmount(tokenAmount, tokenQuantum) // 0.001 token
@@ -96,7 +104,7 @@ describe('e2e', () => {
     console.log(response.result.txhash)
   }, 10e3)
   it('should deposit NFT successfully', async () => {
-    const starkKey = await wallet.getStarkKey()
+    const starkKey = await getStarkKey()
     const assetType = getErc721AssetType(ropstenNftAddress)
 
     // note: make sure starkEx contract is approved first by nft contract
@@ -112,7 +120,7 @@ describe('e2e', () => {
     console.log(response.result.txhash)
   }, 10e3)
   it('should withdraw ETH successfully', async () => {
-    const starkKey = await wallet.getStarkKey()
+    const starkKey = await getStarkKey()
     const assetType = getEthAssetType(ethQuantum)
 
     // note: sender needs to be ethKey for withdrawal
@@ -126,7 +134,7 @@ describe('e2e', () => {
     console.log(response.result.txhash)
   }, 10e3)
   it('should withdraw ERC20 successfully', async () => {
-    const starkKey = await wallet.getStarkKey()
+    const starkKey = await getStarkKey()
     const assetType = getErc20AssetType(ropstenTokenAddress, tokenQuantum)
 
     // note: sender needs to be ethKey for withdrawal
@@ -140,7 +148,7 @@ describe('e2e', () => {
     console.log(response.result.txhash)
   }, 10e3)
   it('should withdraw ERC721 successfully', async () => {
-    const starkKey = await wallet.getStarkKey()
+    const starkKey = await getStarkKey()
     const assetType = getErc721AssetType(ropstenNftAddress)
 
     // note: sender needs to be ethKey for withdrawal
@@ -155,7 +163,7 @@ describe('e2e', () => {
     console.log(response.result.txhash)
   }, 10e3)
   it('should do a full withdrawal request', async () => {
-    const starkKey = await wallet.getStarkKey()
+    const starkKey = await getStarkKey()
 
     // note: sender needs to be ethKey for withdrawal
     const response = await provider.send('stark_fullWithdrawalRequest', {
@@ -168,16 +176,16 @@ describe('e2e', () => {
     console.log(response.result.txhash)
   }, 10e3)
   it('should do a withdrawal and mint request', async () => {
-    const starkKey = await wallet.getStarkKey()
+    const starkKey = await getStarkKey()
     // note: must be a mintable asset type
     const assetType = getErc20AssetType(ropstenTokenAddress, tokenQuantum)
-    const mintableBlob = '0x00' // TODO
+    const mintingBlob = '0x00' // TODO
 
     // note: sender needs to be ethKey for withdrawal
     const response = await provider.send('stark_withdrawAndMint', {
       starkKey,
       assetType,
-      mintableBlob,
+      mintingBlob,
     })
 
     expect(response.error).toBeUndefined()
@@ -185,7 +193,7 @@ describe('e2e', () => {
     console.log(response.result.txhash)
   }, 10e3)
   it('should do a freeze request', async () => {
-    const starkKey = await wallet.getStarkKey()
+    const starkKey = await getStarkKey()
 
     const response = await provider.send('stark_freezeRequest', {
       starkKey,
@@ -197,7 +205,7 @@ describe('e2e', () => {
     console.log(response.result.txhash)
   }, 10e3)
   it('should do an escape request ', async () => {
-    const starkKey = await wallet.getStarkKey()
+    const starkKey = await getStarkKey()
     const assetType = getErc20AssetType(ropstenTokenAddress, tokenQuantum)
     const tokenAmount = '1'
     const quantizedAmount = quantizeAmount(tokenAmount, tokenQuantum) // 0.001 token

@@ -35,10 +35,6 @@ describe('StarkwareWallet', () => {
     const account = await starkWallet.account(layer, application, index)
     expect(account).toEqual(starkKey)
   })
-  it('getStarkKey', async () => {
-    const sKey = await starkWallet.getStarkKey()
-    expect(sKey).toEqual(starkKey)
-  })
   it('sign', async () => {
     const signature = await starkWallet.sign('example')
     expect(signature).toEqual(

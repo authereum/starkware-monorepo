@@ -75,7 +75,7 @@ export interface IDepositNftReclaimInput {
 export interface IWithdrawAndMintInput {
   starkKey: string
   assetType: string
-  mintableBlob: string
+  mintingBlob: string
 }
 
 export interface IWithdrawNftInput {
@@ -286,11 +286,11 @@ export class StarkwareController {
   }
 
   public async withdrawAndMint (input: IWithdrawAndMintInput): Promise<string> {
-    const { starkKey, assetType, mintableBlob } = input
+    const { starkKey, assetType, mintingBlob } = input
     return this._encodeFunctionCall('withdrawAndMint', [
       starkKey,
       assetType,
-      mintableBlob,
+      mintingBlob,
     ])
   }
 

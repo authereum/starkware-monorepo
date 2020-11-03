@@ -86,11 +86,6 @@ export class StarkwareWallet {
 
   // -- Get / Set ----------------------------------------------------- //
 
-  get starkPublicKey (): string | undefined {
-    if (!this.activeKeyPair) return undefined
-    return starkwareCrypto.getStarkPublicKey(this.activeKeyPair)
-  }
-
   public setProvider (provider: string | providers.Provider): void {
     this.provider = getJsonRpcProvider(provider)
   }
@@ -99,7 +94,7 @@ export class StarkwareWallet {
     this.walletIndex = walletIndex
   }
 
-  public async getStarkPublicKey (path?: string): Promise<string> {
+  public async getStarkPublicKey (path: string): Promise<string> {
     const keyPair = await this.getKeyPairFromPath(path)
     const starkPublicKey = starkwareCrypto.getStarkPublicKey(keyPair)
     return starkPublicKey
@@ -134,9 +129,8 @@ export class StarkwareWallet {
     return this.getStarkKey(path)
   }
 
-  public async getStarkKey (path?: string): Promise<string> {
+  public async getStarkKey (path: string): Promise<string> {
     const starkPublicKey = await this.getStarkPublicKey(path)
-
     return sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey))
   }
 
@@ -173,7 +167,7 @@ export class StarkwareWallet {
   // -- Private ------------------------------------------------------- //
 
   private async getKeyPairFromPath (
-    path: string = '0'
+    path: string
   ): Promise<starkwareCrypto.KeyPair> {
     const accountMapping = await this.getAccountMapping()
     if (this.privateKey) {
@@ -185,6 +179,7 @@ export class StarkwareWallet {
     if (!path) {
       return this.getActiveKeyPair()
     }
+
     const match = accountMapping[path]
     if (match) {
       return starkwareCrypto.ec.keyFromPrivate(match)

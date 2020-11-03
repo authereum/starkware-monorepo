@@ -208,11 +208,11 @@ class StarkwareProvider extends BasicProvider {
         return { txhash } as MethodResults.StarkDepositNftReclaimResult
       }
       case 'stark_withdrawAndMint': {
-        const { starkKey, assetType, mintableBlob } = params
+        const { starkKey, assetType, mintingBlob } = params
         const data = await this._controller.withdrawAndMint({
           starkKey,
           assetType,
-          mintableBlob,
+          mintingBlob,
         })
 
         const txhash = await this._sendTransaction(data)
