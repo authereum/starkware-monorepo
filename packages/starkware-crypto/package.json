@@ -1,7 +1,7 @@
 {
   "name": "@authereum/starkware-crypto",
   "description": "Starkware Crypto Library",
-  "version": "1.9.7-beta.4",
+  "version": "1.9.7-beta.5",
   "author": "",
   "license": "Apache-2.0",
   "keywords": [
@@ -22,7 +22,7 @@
   "main": "dist/cjs/index.js",
   "types": "dist/cjs/index.d.ts",
   "unpkg": "dist/umd/index.min.js",
-  "homepage": "github.com/authereum/starkware-monorepo/tree/master/packages/starkware-crypto",
+  "homepage": "https://github.com/authereum/starkware-monorepo/tree/master/packages/starkware-crypto",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/authereum/starkware-monorepo.git"

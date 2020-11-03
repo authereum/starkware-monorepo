@@ -54,11 +54,11 @@ function hexToBN (value: string): BN {
 }
 
 function isHexPrefixed (str: string): boolean {
-  return str.substring(0, 2) === '0x'
+  return (str || '').substring(0, 2) === '0x'
 }
 
 function hasHexPrefix (str: string) {
-  return str.substring(0, 2) === '0x'
+  return (str || '').substring(0, 2) === '0x'
 }
 
 /* --------------------------- ELLIPTIC ---------------------------------- */

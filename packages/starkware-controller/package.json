@@ -1,8 +1,8 @@
 {
   "name": "@authereum/starkware-controller",
   "description": "Starkware JSON-RPC Controller Library",
-  "version": "1.7.8-beta.0",
-  "author": "Pedro Gomes <github.com/pedrouid>",
+  "version": "1.7.8-beta.1",
+  "author": "",
   "license": "Apache-2.0",
   "keywords": [
     "stark",
@@ -15,16 +15,20 @@
   "files": [
     "dist"
   ],
+  "contributors": [
+    "Pedro Gomes <github.com/pedrouid>",
+    "Miguel Mota <github.com/miguelmota>"
+  ],
   "main": "dist/cjs/index.js",
   "types": "dist/cjs/index.d.ts",
   "unpkg": "dist/umd/index.min.js",
-  "homepage": "https://github.com/pedrouid/starkware-controller",
+  "homepage": "https://github.com/authereum/starkware-monorepo/tree/master/packages/starkware-controller",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pedrouid/starkware-controller.git"
+    "url": "git+https://github.com/authereum/starkware-monorepo.git"
   },
   "bugs": {
-    "url": "https://github.com/pedrouid/starkware-controller/issues"
+    "url": "https://github.com/authereum/starkware-monorepo/issues"
   },
   "scripts": {
     "start": "tsdx watch",
@@ -39,7 +43,7 @@
     "publish:latest": "npm publish --tag latest --access public"
   },
   "dependencies": {
-    "@authereum/starkware-crypto": "1.9.7-beta.2",
+    "@authereum/starkware-crypto": "1.9.7-beta.5",
     "@babel/core": "^7.12.3",
     "enc-utils": "^2.2.2",
     "ethers": "^5.0.19",
