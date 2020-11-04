@@ -1,3 +1,4 @@
+export * from './asset'
 export * from './constants'
 export * from './crypto'
 export * from './keyDerivation'

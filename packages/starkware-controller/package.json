@@ -43,7 +43,7 @@
     "publish:latest": "npm publish --tag latest --access public"
   },
   "dependencies": {
-    "@authereum/starkware-crypto": "1.9.7-beta.5",
+    "@authereum/starkware-crypto": "1.9.7-beta.6",
     "@babel/core": "^7.12.3",
     "enc-utils": "^2.2.2",
     "ethers": "^5.0.19",

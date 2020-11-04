@@ -17,6 +17,8 @@ describe('StarkwareController', () => {
   const quantizedAmount = '10'
   const tokenId = '1234'
   const recipient = '0x1dF62f291b2E969fB0849d99D9Ce41e2F137006e'
+  const ethAssetId =
+    '0x01142460171646987f20c714eda4b92812b22b811f56f27130937c267e29bd9e'
 
   let controller: StarkwareController = new StarkwareController()
   it('should initiate successfully', async () => {
@@ -47,23 +49,23 @@ describe('StarkwareController', () => {
   it('should return encoded call data for depositCancel', async () => {
     const encodedData = await controller.depositCancel({
       starkKey,
-      assetType: ethAssetType,
+      assetId: ethAssetId,
       vaultId,
     })
 
     expect(encodedData).toBe(
-      '0x7df7dc040664f48f7a7e2800d402839f63945021623385f85b687abbcbaef31845abe11103c06b40679089fc2f488b867577bceadd20ab3205a25c02a546cc3d18cd6f21000000000000000000000000000000000000000000000000000000000000000f'
+      '0x7df7dc040664f48f7a7e2800d402839f63945021623385f85b687abbcbaef31845abe11101142460171646987f20c714eda4b92812b22b811f56f27130937c267e29bd9e000000000000000000000000000000000000000000000000000000000000000f'
     )
   })
   it('should return encoded call data for depositReclaim', async () => {
-    const encodedData = await controller.depositCancel({
+    const encodedData = await controller.depositReclaim({
       starkKey,
       assetType: ethAssetType,
       vaultId,
     })
 
     expect(encodedData).toBe(
-      '0x7df7dc040664f48f7a7e2800d402839f63945021623385f85b687abbcbaef31845abe11103c06b40679089fc2f488b867577bceadd20ab3205a25c02a546cc3d18cd6f21000000000000000000000000000000000000000000000000000000000000000f'
+      '0xae8738160664f48f7a7e2800d402839f63945021623385f85b687abbcbaef31845abe11103c06b40679089fc2f488b867577bceadd20ab3205a25c02a546cc3d18cd6f21000000000000000000000000000000000000000000000000000000000000000f'
     )
   })
   it('should return encoded call data for withdraw', async () => {
@@ -111,12 +113,12 @@ describe('StarkwareController', () => {
     const encodedData = await controller.escape({
       starkKey,
       vaultId,
-      assetType: ethAssetType,
+      assetId: ethAssetId,
       quantizedAmount,
     })
 
     expect(encodedData).toBe(
-      '0x9e3adac40664f48f7a7e2800d402839f63945021623385f85b687abbcbaef31845abe111000000000000000000000000000000000000000000000000000000000000000f03c06b40679089fc2f488b867577bceadd20ab3205a25c02a546cc3d18cd6f21000000000000000000000000000000000000000000000000000000000000000a'
+      '0x9e3adac40664f48f7a7e2800d402839f63945021623385f85b687abbcbaef31845abe111000000000000000000000000000000000000000000000000000000000000000f01142460171646987f20c714eda4b92812b22b811f56f27130937c267e29bd9e000000000000000000000000000000000000000000000000000000000000000a'
     )
   })
   it('should return encoded call data for depositNft', async () => {

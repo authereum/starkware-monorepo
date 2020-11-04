@@ -20,7 +20,7 @@ export interface IDepositInput {
 
 export interface IDepositCancelInput {
   starkKey: string
-  assetType: string
+  assetId: string
   vaultId: string
 }
 
@@ -54,7 +54,7 @@ export interface IFreezeRequestInput {
 export interface IEscapeInput {
   starkKey: string
   vaultId: string
-  assetType: string
+  assetId: string
   quantizedAmount: string
 }
 
@@ -207,10 +207,10 @@ export class StarkwareController {
   }
 
   public async depositCancel (input: IDepositCancelInput): Promise<string> {
-    const { starkKey, assetType, vaultId } = input
+    const { starkKey, assetId, vaultId } = input
     return this._encodeFunctionCall('depositCancel', [
       starkKey,
-      assetType,
+      assetId,
       vaultId,
     ])
   }
@@ -254,11 +254,11 @@ export class StarkwareController {
   }
 
   public async escape (input: IEscapeInput): Promise<string> {
-    const { starkKey, vaultId, assetType, quantizedAmount } = input
+    const { starkKey, vaultId, assetId, quantizedAmount } = input
     return this._encodeFunctionCall('escape', [
       starkKey,
       vaultId,
-      assetType,
+      assetId,
       quantizedAmount,
     ])
   }

@@ -171,7 +171,7 @@ describe('starkware-crypto', () => {
 })
 
 describe('library examples', () => {
-  const testData = require('./signature_test_data.json')
+  const testData = require('./data/signature_test_data.json')
 
   test('Signing a StarkEx Order', () => {
     const privateKey = testData.meta_data.party_a_order.private_key.substring(2)
@@ -403,7 +403,7 @@ describe('signature tests', () => {
 
   describe('Key computation', () => {
     it('should derive public key correctly', () => {
-      const precomputedKeys = require('./keys_precomputed.json')
+      const precomputedKeys = require('./data/keys_precomputed.json')
       for (const privKey in precomputedKeys) {
         if ({}.hasOwnProperty.call(precomputedKeys, privKey)) {
           // Drop the '0x' prefix.
@@ -593,7 +593,7 @@ describe('signature tests', () => {
   })
   describe('Pedersen Hash', () => {
     it('should hash correctly', () => {
-      const testData = require('./signature_test_data.json')
+      const testData = require('./data/signature_test_data.json')
       for (const hashTestData of [
         testData.hash_test.pedersen_hash_data_1,
         testData.hash_test.pedersen_hash_data_2,
@@ -610,7 +610,7 @@ describe('signature tests', () => {
 
   describe('Signature Tests', () => {
     it('should create ecdsa deterministic signatures', () => {
-      const rfc6979TestData = require('./rfc6979_signature_test_vector.json')
+      const rfc6979TestData = require('./data/rfc6979_signature_test_vector.json')
       const privateKey = rfc6979TestData.private_key.substring(2)
       const keyPair = starkwareCrypto.ec.keyFromPrivate(privateKey, 'hex')
       let i = 0

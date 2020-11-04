@@ -590,7 +590,7 @@ export function getTransferMsgHash (
   assert(
     hasHexPrefix(receiverPublicKey) &&
       (condition === null || hasHexPrefix(condition)),
-    'Hex strings expected to be prefixed with 0x.'
+    MISSING_HEX_PREFIX
   )
 
   const w1 = parseTokenInput(token)
