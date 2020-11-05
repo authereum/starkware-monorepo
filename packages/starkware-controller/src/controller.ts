@@ -5,110 +5,110 @@ import starkExchangeAbi from './StarkExchangeABI'
 
 // -- Types --------------------------------------------- //
 
-export interface IRegisterUserInput {
+export interface RegisterUserParams {
   starkKey: string
   ethKey: string
   operatorSignature: string
 }
 
-export interface IDepositInput {
+export interface DepositParams {
   starkKey: string
   assetType: string
   vaultId: string
   quantizedAmount?: string | null
 }
 
-export interface IDepositCancelInput {
+export interface DepositCancelParams {
   starkKey: string
   assetId: string
   vaultId: string
 }
 
-export interface IDepositReclaimInput {
+export interface DepositReclaimParams {
   starkKey: string
   assetType: string
   vaultId: string
 }
 
-export interface IWithdrawInput {
+export interface WithdrawParams {
   starkKey: string
   assetType: string
 }
 
-export interface IWithdrawToInput {
+export interface WithdrawToParams {
   starkKey: string
   assetType: string
   recipient: string
 }
 
-export interface IFullWithdrawalRequestInput {
+export interface FullWithdrawalRequestParams {
   starkKey: string
   vaultId: string
 }
 
-export interface IFreezeRequestInput {
+export interface FreezeRequestParams {
   starkKey: string
   vaultId: string
 }
 
-export interface IEscapeInput {
+export interface EscapeParams {
   starkKey: string
   vaultId: string
   assetId: string
   quantizedAmount: string
 }
 
-export interface IDepositNftInput {
+export interface DepositNftParams {
   starkKey: string
   vaultId: string
   assetType: string
   tokenId: string
 }
 
-export interface IDepositNftReclaimInput {
+export interface DepositNftReclaimParams {
   starkKey: string
   assetType: string
   vaultId: string
   tokenId: string
 }
 
-export interface IWithdrawAndMintInput {
+export interface WithdrawAndMintParams {
   starkKey: string
   assetType: string
   mintingBlob: string
 }
 
-export interface IWithdrawNftInput {
+export interface WithdrawNftParams {
   starkKey: string
   assetType: string
   tokenId: string
 }
 
-export interface IWithdrawNftToInput {
+export interface WithdrawNftToParams {
   starkKey: string
   assetType: string
   tokenId: string
   recipient: string
 }
 
-export interface ITransferInput {
+export interface TransferParams {
   quantizedAmount: string
   nonce: string
   senderVaultId: string
-  assetType: string
-  receiverVaultId: string
-  receiverKey: string
+  assetId: string
+  targetVaultId: string
+  targetKey: string
   expirationTimestamp: string
   condition?: string
 }
 
-export interface ICreateOrderInput {
-  vaultSell: string
-  vaultBuy: string
-  amountSell: string
-  amountBuy: string
-  tokenSellAssetType: string
-  tokenBuyAssetType: string
+export interface OrderParams {
+  sellVaultId: string
+  buyVaultId: string
+  sellQuantizedAmount: string
+  buyQuantizedAmount: string
+  sellAssetId: string
+  buyAssetId: string
   nonce: string
   expirationTimestamp: string
 }
@@ -124,8 +124,8 @@ export class StarkwareController {
 
   // -- Public --------------------------------------------- //
 
-  public async registerUser (input: IRegisterUserInput): Promise<string> {
-    const { ethKey, starkKey, operatorSignature } = input
+  public async registerUser (params: RegisterUserParams): Promise<string> {
+    const { ethKey, starkKey, operatorSignature } = params
     return this._encodeFunctionCall('registerUser', [
       ethKey,
       starkKey,
@@ -133,8 +133,8 @@ export class StarkwareController {
     ])
   }
 
-  public async deposit (input: IDepositInput): Promise<string> {
-    const { starkKey, assetType, vaultId, quantizedAmount } = input
+  public async deposit (params: DepositParams): Promise<string> {
+    const { starkKey, assetType, vaultId, quantizedAmount } = params
     const args = [starkKey, assetType, vaultId]
 
     if (typeof quantizedAmount === 'string') {
@@ -206,8 +206,8 @@ export class StarkwareController {
     return this._encodeFunctionCall(fragment, args)
   }
 
-  public async depositCancel (input: IDepositCancelInput): Promise<string> {
-    const { starkKey, assetId, vaultId } = input
+  public async depositCancel (params: DepositCancelParams): Promise<string> {
+    const { starkKey, assetId, vaultId } = params
     return this._encodeFunctionCall('depositCancel', [
       starkKey,
       assetId,
@@ -215,8 +215,8 @@ export class StarkwareController {
     ])
   }
 
-  public async depositReclaim (input: IDepositReclaimInput): Promise<string> {
-    const { starkKey, assetType, vaultId } = input
+  public async depositReclaim (params: DepositReclaimParams): Promise<string> {
+    const { starkKey, assetType, vaultId } = params
     return this._encodeFunctionCall('depositReclaim', [
       starkKey,
       assetType,
@@ -224,13 +224,13 @@ export class StarkwareController {
     ])
   }
 
-  public async withdraw (input: IWithdrawInput): Promise<string> {
-    const { starkKey, assetType } = input
+  public async withdraw (params: WithdrawParams): Promise<string> {
+    const { starkKey, assetType } = params
     return this._encodeFunctionCall('withdraw', [starkKey, assetType])
   }
 
-  public async withdrawTo (input: IWithdrawToInput): Promise<string> {
-    const { starkKey, assetType, recipient } = input
+  public async withdrawTo (params: WithdrawToParams): Promise<string> {
+    const { starkKey, assetType, recipient } = params
     return this._encodeFunctionCall('withdrawTo', [
       starkKey,
       assetType,
@@ -239,22 +239,22 @@ export class StarkwareController {
   }
 
   public async fullWithdrawalRequest (
-    input: IFullWithdrawalRequestInput
+    params: FullWithdrawalRequestParams
   ): Promise<string> {
-    const { starkKey, vaultId } = input
+    const { starkKey, vaultId } = params
     return this._encodeFunctionCall('fullWithdrawalRequest', [
       starkKey,
       vaultId,
     ])
   }
 
-  public async freezeRequest (input: IFreezeRequestInput): Promise<string> {
-    const { starkKey, vaultId } = input
+  public async freezeRequest (params: FreezeRequestParams): Promise<string> {
+    const { starkKey, vaultId } = params
     return this._encodeFunctionCall('freezeRequest', [starkKey, vaultId])
   }
 
-  public async escape (input: IEscapeInput): Promise<string> {
-    const { starkKey, vaultId, assetId, quantizedAmount } = input
+  public async escape (params: EscapeParams): Promise<string> {
+    const { starkKey, vaultId, assetId, quantizedAmount } = params
     return this._encodeFunctionCall('escape', [
       starkKey,
       vaultId,
@@ -263,8 +263,8 @@ export class StarkwareController {
     ])
   }
 
-  public async depositNft (input: IDepositNftInput): Promise<string> {
-    const { starkKey, vaultId, assetType, tokenId } = input
+  public async depositNft (params: DepositNftParams): Promise<string> {
+    const { starkKey, vaultId, assetType, tokenId } = params
     return this._encodeFunctionCall('depositNft', [
       starkKey,
       assetType,
@@ -274,9 +274,9 @@ export class StarkwareController {
   }
 
   public async depositNftReclaim (
-    input: IDepositNftReclaimInput
+    params: DepositNftReclaimParams
   ): Promise<string> {
-    const { starkKey, assetType, vaultId, tokenId } = input
+    const { starkKey, assetType, vaultId, tokenId } = params
     return this._encodeFunctionCall('depositNftReclaim', [
       starkKey,
       assetType,
@@ -285,8 +285,10 @@ export class StarkwareController {
     ])
   }
 
-  public async withdrawAndMint (input: IWithdrawAndMintInput): Promise<string> {
-    const { starkKey, assetType, mintingBlob } = input
+  public async withdrawAndMint (
+    params: WithdrawAndMintParams
+  ): Promise<string> {
+    const { starkKey, assetType, mintingBlob } = params
     return this._encodeFunctionCall('withdrawAndMint', [
       starkKey,
       assetType,
@@ -294,8 +296,8 @@ export class StarkwareController {
     ])
   }
 
-  public async withdrawNft (input: IWithdrawNftInput): Promise<string> {
-    const { starkKey, assetType, tokenId } = input
+  public async withdrawNft (params: WithdrawNftParams): Promise<string> {
+    const { starkKey, assetType, tokenId } = params
     return this._encodeFunctionCall('withdrawNft', [
       starkKey,
       assetType,
@@ -303,8 +305,8 @@ export class StarkwareController {
     ])
   }
 
-  public async withdrawNftTo (input: IWithdrawNftToInput): Promise<string> {
-    const { starkKey, assetType, tokenId, recipient } = input
+  public async withdrawNftTo (params: WithdrawNftToParams): Promise<string> {
+    const { starkKey, assetType, tokenId, recipient } = params
     return this._encodeFunctionCall('withdrawNftTo', [
       starkKey,
       assetType,
@@ -313,47 +315,47 @@ export class StarkwareController {
     ])
   }
 
-  public async transfer (input: ITransferInput): Promise<string> {
+  public async transfer (params: TransferParams): Promise<string> {
     const {
       quantizedAmount,
       nonce,
       senderVaultId,
-      assetType,
-      receiverVaultId,
-      receiverKey,
+      assetId,
+      targetVaultId,
+      targetKey,
       expirationTimestamp,
       condition,
-    } = input
+    } = params
     return starkwareCrypto.getTransferMsgHash(
       quantizedAmount,
       nonce,
       senderVaultId,
-      assetType,
-      receiverVaultId,
-      receiverKey,
+      assetId,
+      targetVaultId,
+      targetKey,
       expirationTimestamp,
       condition
     )
   }
 
-  public async createOrder (input: ICreateOrderInput): Promise<string> {
+  public async createOrder (params: OrderParams): Promise<string> {
     const {
-      vaultSell,
-      vaultBuy,
-      amountSell,
-      amountBuy,
-      tokenSellAssetType,
-      tokenBuyAssetType,
+      sellVaultId,
+      buyVaultId,
+      sellQuantizedAmount,
+      buyQuantizedAmount,
+      sellAssetId,
+      buyAssetId,
       nonce,
       expirationTimestamp,
-    } = input
+    } = params
     return starkwareCrypto.getLimitOrderMsgHash(
-      vaultSell,
-      vaultBuy,
-      amountSell,
-      amountBuy,
-      tokenSellAssetType,
-      tokenBuyAssetType,
+      sellVaultId,
+      buyVaultId,
+      sellQuantizedAmount,
+      buyQuantizedAmount,
+      sellAssetId,
+      buyAssetId,
       nonce,
       expirationTimestamp
     )

@@ -187,14 +187,14 @@ describe('StarkwareController', () => {
       quantizedAmount,
       nonce,
       senderVaultId: vaultId,
-      assetType: ethAssetType,
-      receiverVaultId: vaultId,
-      receiverKey: starkKey,
+      assetId: ethAssetId,
+      targetVaultId: vaultId,
+      targetKey: starkKey,
       expirationTimestamp,
     })
 
     expect(messageHash).toBe(
-      '0x07c20c821d79bd01b4fa95be89144dd8a3df8e0adc99be40b018e3da25724b58'
+      '0x073d816fff4ccf199217cd66c04da9b5b13ab37994a01ad71d24af361c8281fc'
     )
   })
   it('should return message hash for transfer with condition', async () => {
@@ -207,15 +207,15 @@ describe('StarkwareController', () => {
       quantizedAmount,
       nonce,
       senderVaultId: vaultId,
-      assetType: ethAssetType,
-      receiverVaultId: vaultId,
-      receiverKey: starkKey,
+      assetId: ethAssetId,
+      targetVaultId: vaultId,
+      targetKey: starkKey,
       expirationTimestamp,
       condition,
     })
 
     expect(messageHash).toBe(
-      '0x06d3fb4dc5b0199a19bad2a2fbf962a7c69592e89fe2574428f9f0adaf190a3a'
+      '0x016afa3d0ff3d517a8c5709fcf21bbf1f0e96d3d0431f2563269b5dbcaf71890'
     )
   })
   it('should return message hash for createOrder', async () => {
@@ -223,18 +223,18 @@ describe('StarkwareController', () => {
     const expirationTimestamp = '444396'
 
     const messageHash = await controller.createOrder({
-      vaultSell: vaultId,
-      vaultBuy: vaultId,
-      amountSell: '10',
-      amountBuy: '10',
-      tokenSellAssetType: ethAssetType,
-      tokenBuyAssetType: ethAssetType,
+      sellVaultId: vaultId,
+      buyVaultId: vaultId,
+      sellQuantizedAmount: '10',
+      buyQuantizedAmount: '10',
+      sellAssetId: ethAssetId,
+      buyAssetId: ethAssetId,
       nonce,
       expirationTimestamp,
     })
 
     expect(messageHash).toBe(
-      '0x0196ab03c8487ea0feff4343eaa345e4768a1690673f86c45481538ed5854482'
+      '0x01baf2d545b4285a209aaef5fe57a810a12c41d8ab28db1c64cc916df9e5c092'
     )
   })
 })

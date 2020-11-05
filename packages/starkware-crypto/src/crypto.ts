@@ -16,9 +16,6 @@ import {
   binaryToNumber,
 } from 'enc-utils'
 import {
-  Token,
-  ERC20TokenData,
-  ERC721TokenData,
   KeyPair,
   MessageParams,
   Signature,
@@ -26,6 +23,7 @@ import {
   NestedArray,
 } from './types'
 import { constantPointsHex } from './constants'
+import { Asset, getAssetId } from './asset'
 
 /* --------------------------- UTILS ---------------------------------- */
 
@@ -145,7 +143,7 @@ function checkHexValue (hex: string) {
   assert(hexBn.lt(PRIME))
 }
 
-function parseTokenInput (input: Token | string) {
+function parseTokenInput (input: Asset | string) {
   if (typeof input === 'string') {
     if (isCompressedPublicKey(input)) {
       return getXCoordinate(input)
@@ -153,7 +151,7 @@ function parseTokenInput (input: Token | string) {
     checkHexValue(input)
     return input
   }
-  return hashAssetId(input)
+  return getAssetId(input)
 }
 
 /*
@@ -377,33 +375,6 @@ export function getMintableErc721AssetType (
   return calculateAssetType(assetInfo, '1')
 }
 
-export function hashAssetId (token: Token) {
-  let id: string
-  let tokenAddress: string
-  switch (token.type.toUpperCase()) {
-    case 'ETH':
-      id = 'ETH()'
-      break
-    case 'ERC20':
-      tokenAddress = (token.data as ERC20TokenData).tokenAddress
-      checkHexValue(tokenAddress)
-      id = `ERC20Token(${tokenAddress})`
-      break
-    case 'ERC721':
-      tokenAddress = (token.data as ERC721TokenData).tokenAddress
-      checkHexValue(tokenAddress)
-      id = `ERC721Token(${tokenAddress})`
-      break
-    default:
-      throw new Error(`Unknown token type: ${token.type}`)
-  }
-  return sanitizeHex(
-    keccak256(id)
-      .toString('hex')
-      .slice(0, 8)
-  )
-}
-
 // Message hashing --------------------------------------------------
 
 export function hashMessage (
@@ -526,41 +497,51 @@ export function formatMessage (
 }
 
 export function getLimitOrderMsgHash (
-  vaultSell: string,
-  vaultBuy: string,
-  amountSell: string,
-  amountBuy: string,
-  tokenSell: Token | string,
-  tokenBuy: Token | string,
+  sellVaultId: string,
+  buyVaultId: string,
+  sellQuantizedAmount: string,
+  buyQuantizedAmount: string,
+  sellAsset: Asset | string, // string is asset id
+  buyAsset: Asset | string, // string is asset id
   nonce: string,
   expirationTimestamp: string
 ): string {
-  const w1 = parseTokenInput(tokenSell)
-  const w2 = parseTokenInput(tokenBuy)
+  const w1 = parseTokenInput(sellAsset)
+  const w2 = parseTokenInput(buyAsset)
   const w3 = formatMessage(
     'order',
-    vaultSell,
-    vaultBuy,
-    amountSell,
-    amountBuy,
+    sellVaultId,
+    buyVaultId,
+    sellQuantizedAmount,
+    buyQuantizedAmount,
     nonce,
     expirationTimestamp
   )
 
-  const vaultSellBn = intToBN(vaultSell)
-  const vaultBuyBn = intToBN(vaultBuy)
-  const amountSellBn = intToBN(amountSell)
-  const amountBuyBn = intToBN(amountBuy)
-  const tokenSellBn = hexToBN(w1.substring(2))
-  const tokenBuyBn = hexToBN(w2.substring(2))
+  const sellVaultIdBn = intToBN(sellVaultId)
+  const buyVaultIdBn = intToBN(buyVaultId)
+  const sellQuantizedAmountBn = intToBN(sellQuantizedAmount)
+  const buyQuantizedAmountBn = intToBN(buyQuantizedAmount)
+  const sellAssetBn = hexToBN(w1.substring(2))
+  const buyAssetBn = hexToBN(w2.substring(2))
   const nonceBn = intToBN(nonce)
   const expirationTimestampBn = intToBN(expirationTimestamp)
-  assertInRange(vaultSellBn, ZERO_BN, TWO_POW_31_BN, 'vaultSell')
-  assertInRange(vaultBuyBn, ZERO_BN, TWO_POW_31_BN, 'vaultBuy')
-  assertInRange(amountSellBn, ZERO_BN, TWO_POW_63_BN, 'amountSell')
-  assertInRange(amountBuyBn, ZERO_BN, TWO_POW_63_BN, 'amountBuy')
-  assertInRange(tokenSellBn, ZERO_BN, PRIME, 'tokenSell')
-  assertInRange(tokenBuyBn, ZERO_BN, PRIME, 'tokenBuy')
+  assertInRange(sellVaultIdBn, ZERO_BN, TWO_POW_31_BN, 'sellVaultId')
+  assertInRange(buyVaultIdBn, ZERO_BN, TWO_POW_31_BN, 'buyVaultId')
+  assertInRange(
+    sellQuantizedAmountBn,
+    ZERO_BN,
+    TWO_POW_63_BN,
+    'sellQuantizedAmount'
+  )
+  assertInRange(
+    buyQuantizedAmountBn,
+    ZERO_BN,
+    TWO_POW_63_BN,
+    'buyQuantizedAmount'
+  )
+  assertInRange(sellAssetBn, ZERO_BN, PRIME, 'sellAsset')
+  assertInRange(buyAssetBn, ZERO_BN, PRIME, 'buyAsset')
   assertInRange(nonceBn, ZERO_BN, TWO_POW_31_BN, 'nonce')
   assertInRange(
     expirationTimestampBn,
@@ -578,47 +559,47 @@ export function getLimitOrderMsgHash (
 // transfer: H(H(w1,w2),w3)
 // conditional transfer: H(H(H(w1,w2),w4),w3)
 export function getTransferMsgHash (
-  amount: string,
+  quantizedAmount: string,
   nonce: string,
   senderVaultId: string,
-  token: Token | string,
-  receiverVaultId: string,
-  receiverPublicKey: string,
+  token: Asset | string,
+  targetVaultId: string,
+  targetPublicKey: string,
   expirationTimestamp: string,
   condition: string | null = null
 ): string {
   assert(
-    hasHexPrefix(receiverPublicKey) &&
+    hasHexPrefix(targetPublicKey) &&
       (condition === null || hasHexPrefix(condition)),
     MISSING_HEX_PREFIX
   )
 
   const w1 = parseTokenInput(token)
-  const w2 = parseTokenInput(receiverPublicKey)
+  const w2 = parseTokenInput(targetPublicKey)
   const w3 = formatMessage(
     condition ? 'conditionalTransfer' : 'transfer',
     senderVaultId,
-    receiverVaultId,
-    amount,
+    targetVaultId,
+    quantizedAmount,
     ZERO_BN.toString(),
     nonce,
     expirationTimestamp
   )
 
-  const amountBn = intToBN(amount)
+  const quantizedAmountBn = intToBN(quantizedAmount)
   const nonceBn = intToBN(nonce)
   const senderVaultIdBn = intToBN(senderVaultId)
   const tokenBn = hexToBN(w1.substring(2))
-  const receiverVaultIdBn = intToBN(receiverVaultId)
-  const receiverPublicKeyBn = hexToBN(receiverPublicKey.substring(2))
+  const targetVaultIdBn = intToBN(targetVaultId)
+  const targetPublicKeyBn = hexToBN(targetPublicKey.substring(2))
   const expirationTimestampBn = intToBN(expirationTimestamp)
 
-  assertInRange(amountBn, ZERO_BN, TWO_POW_63_BN, 'amount')
+  assertInRange(quantizedAmountBn, ZERO_BN, TWO_POW_63_BN, 'quantizedAmount')
   assertInRange(nonceBn, ZERO_BN, TWO_POW_31_BN, 'nonce')
   assertInRange(senderVaultIdBn, ZERO_BN, TWO_POW_31_BN, 'senderVault')
   assertInRange(tokenBn, ZERO_BN, PRIME, 'token')
-  assertInRange(receiverVaultIdBn, ZERO_BN, TWO_POW_31_BN, 'receiverVaultId')
-  assertInRange(receiverPublicKeyBn, ZERO_BN, PRIME, 'receiverPublicKey')
+  assertInRange(targetVaultIdBn, ZERO_BN, TWO_POW_31_BN, 'targetVaultId')
+  assertInRange(targetPublicKeyBn, ZERO_BN, PRIME, 'targetPublicKey')
   assertInRange(
     expirationTimestampBn,
     ZERO_BN,

@@ -4,7 +4,7 @@ import * as encUtils from 'enc-utils'
 import sha3 from 'js-sha3'
 
 export interface AssetData {
-  quantum: string
+  quantum?: string
   tokenAddress?: string
   tokenId?: string
 }
@@ -113,6 +113,41 @@ export function getAssetId (assetDict: Asset) {
   }
 
   return '0x' + assetId.toJSON()
+}
+
+export function getEthAssetId (quantum: string) {
+  const asset = {
+    type: 'ETH',
+    data: {
+      quantum,
+    },
+  }
+
+  return getAssetId(asset)
+}
+
+export function getErc20AssetId (tokenAddress: string, quantum: string) {
+  const asset = {
+    type: 'ERC20',
+    data: {
+      tokenAddress,
+      quantum,
+    },
+  }
+
+  return getAssetId(asset)
+}
+
+export function getErc721AssetId (tokenAddress: string, tokenId: string) {
+  const asset = {
+    type: 'ERC721',
+    data: {
+      tokenAddress,
+      tokenId,
+    },
+  }
+
+  return getAssetId(asset)
 }
 
 /*

@@ -39,7 +39,8 @@
     "test": "tsdx test ./test",
     "lint": "prettier-standard --format",
     "prepare": "yarn lint && yarn build",
-    "publish:beta": "npm publish --tag beta --access public"
+    "publish:beta": "npm publish --tag beta --access public",
+    "publish:latest": "npm publish --tag latest --access public"
   },
   "dependencies": {
     "@authereum/starkware-crypto": "1.9.7-beta.6",

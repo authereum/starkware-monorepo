@@ -3,7 +3,7 @@ import StarkwareWallet from '@authereum/starkware-wallet'
 import StarkwareProvider from '../src'
 import Store from './shared/Store'
 
-describe('e2e', () => {
+describe('StarkwareProvider', () => {
   const rpcProvider = new providers.JsonRpcProvider(
     'https://ropsten-rpc.linkpool.io/'
   )
@@ -30,7 +30,7 @@ describe('e2e', () => {
     expect(result).toEqual(starkKey)
   })
   it('should get account successfully', async () => {
-    const account = await provider.getAccount(layer, application, index)
+    const account = await provider.account(layer, application, index)
     expect(account).toEqual(starkKey)
   })
   it('should call send successfully', async () => {
@@ -40,5 +40,54 @@ describe('e2e', () => {
       index,
     })
     expect(response.result.starkKey).toEqual(starkKey)
+  })
+  it('should resolve request successfully', async () => {
+    const response = await provider.resolve({
+      id: 1,
+      jsonrpc: '2.0',
+      method: 'stark_account',
+      params: {
+        layer,
+        application,
+        index,
+      },
+    })
+    expect(response.result.starkKey).toEqual(starkKey)
+  })
+  it('should resolve transfer request successfully', async () => {
+    const starkSignature = await provider.transfer({
+      from: {
+        starkKey,
+        vaultId: '1',
+      },
+      to: {
+        starkKey,
+        vaultId: '606138218',
+      },
+      asset: { type: 'ETH', data: { quantum: '10000000000' } },
+      amount: '1',
+      nonce: '1597237097',
+      expirationTimestamp: '444396',
+    })
+    console.log(starkSignature)
+    expect(starkSignature).toBeTruthy()
+  })
+  it('should resolve order request successfully', async () => {
+    const starkSignature = await provider.transfer({
+      from: {
+        starkKey,
+        vaultId: '1',
+      },
+      to: {
+        starkKey,
+        vaultId: '606138218',
+      },
+      asset: { type: 'ETH', data: { quantum: '10000000000' } },
+      amount: '1',
+      nonce: '1597237097',
+      expirationTimestamp: '444396',
+    })
+    console.log(starkSignature)
+    expect(starkSignature).toBeTruthy()
   })
 })
