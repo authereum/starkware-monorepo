@@ -208,7 +208,11 @@ class StarkwareProvider extends BasicProvider {
     this.contractAddress = contractAddress
   }
 
-  public async resolveResult (method: any, params: any): Promise<any> {
+  public async resolveResult (
+    method: any,
+    params: any,
+    txOpts: any = {}
+  ): Promise<any> {
     switch (method) {
       case 'stark_account': {
         const { layer, application, index } = params
@@ -218,59 +222,59 @@ class StarkwareProvider extends BasicProvider {
         }
       }
       case 'stark_register': {
-        const txhash = await this.registerUser(params)
+        const txhash = await this.registerUser(params, txOpts)
         return { txhash }
       }
       case 'stark_deposit': {
-        const txhash = await this.deposit(params)
+        const txhash = await this.deposit(params, txOpts)
         return { txhash }
       }
       case 'stark_depositCancel': {
-        const txhash = await this.cancelDeposit(params)
+        const txhash = await this.cancelDeposit(params, txOpts)
         return { txhash }
       }
       case 'stark_depositReclaim': {
-        const txhash = await this.reclaimDeposit(params)
+        const txhash = await this.reclaimDeposit(params, txOpts)
         return { txhash }
       }
       case 'stark_depositNft': {
-        const txhash = await this.deposit(params)
+        const txhash = await this.deposit(params, txOpts)
         return { txhash }
       }
       case 'stark_depositNftReclaim': {
-        const txhash = await this.reclaimDeposit(params)
+        const txhash = await this.reclaimDeposit(params, txOpts)
         return { txhash }
       }
       case 'stark_withdraw': {
-        const txhash = await this.withdraw(params)
+        const txhash = await this.withdraw(params, txOpts)
         return { txhash }
       }
       case 'stark_withdrawTo': {
-        const txhash = await this.withdraw(params)
+        const txhash = await this.withdraw(params, txOpts)
         return { txhash }
       }
       case 'stark_fullWithdrawal': {
-        const txhash = await this.fullWithdrawalRequest(params)
+        const txhash = await this.fullWithdrawalRequest(params, txOpts)
         return { txhash }
       }
       case 'stark_withdrawAndMint': {
-        const txhash = await this.withdrawAndMint(params)
+        const txhash = await this.withdrawAndMint(params, txOpts)
         return { txhash }
       }
       case 'stark_withdrawNft': {
-        const txhash = await this.withdraw(params)
+        const txhash = await this.withdraw(params, txOpts)
         return { txhash }
       }
       case 'stark_withdrawNftTo': {
-        const txhash = await this.withdraw(params)
+        const txhash = await this.withdraw(params, txOpts)
         return { txhash }
       }
       case 'stark_freeze': {
-        const txhash = await this.freeze(params)
+        const txhash = await this.freeze(params, txOpts)
         return { txhash }
       }
       case 'stark_escape': {
-        const txhash = await this.escape(params)
+        const txhash = await this.escape(params, txOpts)
         return { txhash }
       }
       case 'stark_transfer': {
@@ -301,17 +305,21 @@ class StarkwareProvider extends BasicProvider {
         const address = await this.getAddress()
         return [address]
       }
+      case 'eth_requestAccounts': {
+        const address = await this.getAddress()
+        return [address]
+      }
       default: {
         throw new Error(`Unknown Starkware RPC Method: ${method}`)
       }
     }
   }
 
-  public async resolve (payload: any): Promise<any> {
+  public async resolve (payload: any, txOpts: any = {}): Promise<any> {
     const { id, method, params } = payload
 
     try {
-      const result = await this.resolveResult(method, params)
+      const result = await this.resolveResult(method, params, txOpts)
       return { id, result }
     } catch (err) {
       return {
@@ -377,7 +385,10 @@ class StarkwareProvider extends BasicProvider {
     return starkKey
   }
 
-  public async registerUser (input: RegisterUserParams): Promise<string> {
+  public async registerUser (
+    input: RegisterUserParams,
+    txOpts: any = {}
+  ): Promise<string> {
     let { ethKey, operatorSignature } = input
     const starkKey = await this.getActiveAccount()
 
@@ -401,11 +412,14 @@ class StarkwareProvider extends BasicProvider {
       starkKey,
       operatorSignature,
     })
-    const txhash = await this._sendContractTransaction(data)
+    const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
-  public async deposit (input: DepositParams): Promise<string> {
+  public async deposit (
+    input: DepositParams,
+    txOpts: any = {}
+  ): Promise<string> {
     let { vaultId, amount, asset } = input
     const starkKey = await this.getActiveAccount()
     const assetType = getAssetType(asset)
@@ -418,7 +432,7 @@ class StarkwareProvider extends BasicProvider {
         tokenId,
       })
 
-      const txhash = await this._sendContractTransaction(data)
+      const txhash = await this._sendContractTransaction(data, txOpts)
       return txhash
     }
 
@@ -441,54 +455,76 @@ class StarkwareProvider extends BasicProvider {
       quantizedAmount,
     })
 
-    const txhash = await this._sendContractTransaction(data, ethValue)
+    txOpts.value = txOpts.value || ethValue
+    const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
-  public async depositEth (input: DepositEthParams): Promise<string> {
+  public async depositEth (
+    input: DepositEthParams,
+    txOpts: any = {}
+  ): Promise<string> {
     const { amount, quantum, vaultId } = input
-    return this.deposit({
-      vaultId,
-      amount,
-      asset: {
-        type: 'ETH',
-        data: {
-          quantum,
+    return this.deposit(
+      {
+        vaultId,
+        amount,
+        asset: {
+          type: 'ETH',
+          data: {
+            quantum,
+          },
         },
       },
-    })
+      txOpts
+    )
   }
 
-  public async depositErc20 (input: DepositErc20Params): Promise<string> {
+  public async depositErc20 (
+    input: DepositErc20Params,
+    txOpts: any = {}
+  ): Promise<string> {
     const { amount, quantum, tokenAddress, vaultId } = input
-    return this.deposit({
-      vaultId,
-      amount,
-      asset: {
-        type: 'ERC20',
-        data: {
-          tokenAddress,
-          quantum,
+    return this.deposit(
+      {
+        vaultId,
+        amount,
+        asset: {
+          type: 'ERC20',
+          data: {
+            tokenAddress,
+            quantum,
+          },
         },
       },
-    })
+      txOpts
+    )
   }
 
-  public async depositErc721 (input: DepositErc721Params): Promise<string> {
+  public async depositErc721 (
+    input: DepositErc721Params,
+    txOpts: any = {}
+  ): Promise<string> {
     const { tokenId, tokenAddress, vaultId } = input
-    return this.deposit({
-      vaultId,
-      asset: {
-        type: 'ERC721',
-        data: {
-          tokenAddress,
-          tokenId,
+    return this.deposit(
+      {
+        vaultId,
+        asset: {
+          type: 'ERC721',
+          data: {
+            tokenAddress,
+            tokenId,
+          },
         },
       },
-    })
+      txOpts
+    )
   }
 
-  public async cancelDeposit (input: DepositCancelParams): Promise<string> {
+  public async cancelDeposit (
+    input: DepositCancelParams,
+    txOpts: any = {}
+  ): Promise<string> {
     let { vaultId, asset } = input
     const starkKey = await this.getActiveAccount()
     const assetId = getAssetId(asset)
@@ -497,12 +533,13 @@ class StarkwareProvider extends BasicProvider {
       assetId,
       vaultId,
     })
-    const txhash = await this._sendContractTransaction(data)
+    const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
   public async reclaimDeposit (
-    input: DepositParamsReclaimParams
+    input: DepositParamsReclaimParams,
+    txOpts: any = {}
   ): Promise<string> {
     let { vaultId, asset } = input
     const starkKey = await this.getActiveAccount()
@@ -517,7 +554,7 @@ class StarkwareProvider extends BasicProvider {
         tokenId,
       })
 
-      const txhash = await this._sendContractTransaction(data)
+      const txhash = await this._sendContractTransaction(data, txOpts)
       return txhash
     }
 
@@ -527,11 +564,14 @@ class StarkwareProvider extends BasicProvider {
       vaultId,
     })
 
-    const txhash = await this._sendContractTransaction(data)
+    const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
-  public async withdraw (input: WithdrawParams): Promise<string> {
+  public async withdraw (
+    input: WithdrawParams,
+    txOpts: any = {}
+  ): Promise<string> {
     let { asset, recipient } = input
     const starkKey = await this.getActiveAccount()
     const assetType = getAssetType(asset)
@@ -545,7 +585,7 @@ class StarkwareProvider extends BasicProvider {
           recipient,
         })
 
-        const txhash = await this._sendContractTransaction(data)
+        const txhash = await this._sendContractTransaction(data, txOpts)
         return txhash
       } else {
         const data = await this._controller.withdrawNft({
@@ -554,7 +594,7 @@ class StarkwareProvider extends BasicProvider {
           tokenId,
         })
 
-        const txhash = await this._sendContractTransaction(data)
+        const txhash = await this._sendContractTransaction(data, txOpts)
         return txhash
       }
     }
@@ -566,7 +606,7 @@ class StarkwareProvider extends BasicProvider {
         recipient,
       })
 
-      const txhash = await this._sendContractTransaction(data)
+      const txhash = await this._sendContractTransaction(data, txOpts)
       return txhash
     } else {
       const data = await this._controller.withdraw({
@@ -574,56 +614,77 @@ class StarkwareProvider extends BasicProvider {
         assetType,
       })
 
-      const txhash = await this._sendContractTransaction(data)
+      const txhash = await this._sendContractTransaction(data, txOpts)
       return txhash
     }
   }
 
-  public async withdrawEth (input: WithdrawEthParams): Promise<string> {
+  public async withdrawEth (
+    input: WithdrawEthParams,
+    txOpts: any = {}
+  ): Promise<string> {
     const { quantum, recipient } = input
 
-    return this.withdraw({
-      asset: {
-        type: 'ETH',
-        data: {
-          quantum,
+    return this.withdraw(
+      {
+        asset: {
+          type: 'ETH',
+          data: {
+            quantum,
+          },
         },
+        recipient,
       },
-      recipient,
-    })
+      txOpts
+    )
   }
 
-  public async withdrawErc20 (input: WithdrawErc20Params): Promise<string> {
+  public async withdrawErc20 (
+    input: WithdrawErc20Params,
+    txOpts: any = {}
+  ): Promise<string> {
     const { tokenAddress, quantum, recipient } = input
 
-    return this.withdraw({
-      asset: {
-        type: 'ERC20',
-        data: {
-          tokenAddress,
-          quantum,
+    return this.withdraw(
+      {
+        asset: {
+          type: 'ERC20',
+          data: {
+            tokenAddress,
+            quantum,
+          },
         },
+        recipient,
       },
-      recipient,
-    })
+      txOpts
+    )
   }
 
-  public async withdrawErc721 (input: WithdrawErc721Params): Promise<string> {
+  public async withdrawErc721 (
+    input: WithdrawErc721Params,
+    txOpts: any = {}
+  ): Promise<string> {
     const { tokenAddress, tokenId, recipient } = input
 
-    return this.withdraw({
-      asset: {
-        type: 'ERC721',
-        data: {
-          tokenAddress,
-          tokenId,
+    return this.withdraw(
+      {
+        asset: {
+          type: 'ERC721',
+          data: {
+            tokenAddress,
+            tokenId,
+          },
         },
+        recipient,
       },
-      recipient,
-    })
+      txOpts
+    )
   }
 
-  public async withdrawAndMint (input: WithdrawAndMintParams): Promise<string> {
+  public async withdrawAndMint (
+    input: WithdrawAndMintParams,
+    txOpts: any = {}
+  ): Promise<string> {
     const { asset, mintingBlob } = input
     const starkKey = await this.getActiveAccount()
     const assetType = getAssetType(asset)
@@ -633,33 +694,36 @@ class StarkwareProvider extends BasicProvider {
       mintingBlob,
     })
 
-    const txhash = await this._sendContractTransaction(data)
+    const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
-  public async fullWithdrawalRequest (vaultId: string): Promise<string> {
+  public async fullWithdrawalRequest (
+    vaultId: string,
+    txOpts: any = {}
+  ): Promise<string> {
     const starkKey = await this.getActiveAccount()
     const data = await this._controller.fullWithdrawalRequest({
       starkKey,
       vaultId,
     })
 
-    const txhash = await this._sendContractTransaction(data)
+    const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
-  public async freeze (vaultId: string): Promise<string> {
+  public async freeze (vaultId: string, txOpts: any = {}): Promise<string> {
     const starkKey = await this.getActiveAccount()
     const data = await this._controller.freezeRequest({
       starkKey,
       vaultId,
     })
 
-    const txhash = await this._sendContractTransaction(data)
+    const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
-  public async escape (input: EscapeParams): Promise<string> {
+  public async escape (input: EscapeParams, txOpts: any = {}): Promise<string> {
     const { amount, asset, vaultId } = input
     const starkKey = await this.getActiveAccount()
     const assetId = getAssetId(asset)
@@ -674,7 +738,7 @@ class StarkwareProvider extends BasicProvider {
       quantizedAmount,
     })
 
-    const txhash = await this._sendContractTransaction(data)
+    const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
@@ -868,14 +932,11 @@ class StarkwareProvider extends BasicProvider {
     return this._signerWallet.address
   }
 
-  private async _sendContractTransaction (
-    data: string,
-    value: string = '0x00'
-  ) {
+  private async _sendContractTransaction (data: string, txOpts: any = {}) {
     const unsignedTx = {
       to: this.contractAddress,
       data,
-      value,
+      ...txOpts,
       //gasLimit: '0x7a120', // 100k
       //gasLimit: '0x7a120', // 500k
       //gasLimit: '0xf4240' // 1M
