@@ -1,5 +1,4 @@
 import * as ethers from 'ethers'
-import * as encUtils from 'enc-utils'
 import * as starkwareCrypto from '@authereum/starkware-crypto'
 import starkExchangeAbi from './StarkExchangeABI'
 
@@ -359,6 +358,19 @@ export class StarkwareController {
       nonce,
       expirationTimestamp
     )
+  }
+
+  public async getEthKeyCall (
+    starkKey: string,
+    contractAddress: string,
+    provider: ethers.providers.Provider
+  ): Promise<string> {
+    const contract = new ethers.Contract(
+      contractAddress,
+      starkExchangeAbi,
+      provider
+    )
+    return contract.callStatic.getEthKey(starkKey)
   }
 
   // -- Private --------------------------------------------- //

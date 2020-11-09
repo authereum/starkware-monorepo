@@ -1,5 +1,6 @@
 import { providers } from 'ethers'
 import StarkwareWallet from '@authereum/starkware-wallet'
+import * as ethers from 'ethers'
 import StarkwareProvider from '../src'
 import Store from './shared/Store'
 
@@ -18,9 +19,16 @@ describe('StarkwareProvider', () => {
     '0x017e159e246999ee9ce7d1103d5d0d52c468bcb385d202ef362de2f878162c48'
   const store = new Store()
 
-  const wallet = new StarkwareWallet(mnemonic, rpcProvider as any, store)
+  const starkWallet = new StarkwareWallet(mnemonic, rpcProvider as any, store)
+  const privateKey =
+    '0xb0057716d5917badaf911b193b12b910811c1497b5bada8d7711f758981c3773'
+  const signerWallet = new ethers.Wallet(privateKey, rpcProvider)
   const ropstenContractAddress = '0x5FedCE831BD3Bdb71F938EC26f984c84f40dB477'
-  const provider = new StarkwareProvider(wallet, ropstenContractAddress)
+  const provider = new StarkwareProvider(
+    starkWallet,
+    signerWallet,
+    ropstenContractAddress
+  )
   const ethKey = '0x1dF62f291b2E969fB0849d99D9Ce41e2F137006e'
   it('should instantiate sucessfully', async () => {
     expect(provider).toBeTruthy()
@@ -41,7 +49,7 @@ describe('StarkwareProvider', () => {
     })
     expect(response.result.starkKey).toEqual(starkKey)
   })
-  it('should resolve request successfully', async () => {
+  it('should resolve stark account request successfully', async () => {
     const response = await provider.resolve({
       id: 1,
       jsonrpc: '2.0',
@@ -54,7 +62,7 @@ describe('StarkwareProvider', () => {
     })
     expect(response.result.starkKey).toEqual(starkKey)
   })
-  it('should resolve transfer request successfully', async () => {
+  it('should resolve stark transfer request successfully', async () => {
     const starkSignature = await provider.transfer({
       from: {
         starkKey,
@@ -72,7 +80,7 @@ describe('StarkwareProvider', () => {
     console.log(starkSignature)
     expect(starkSignature).toBeTruthy()
   })
-  it('should resolve order request successfully', async () => {
+  it('should resolve stark order request successfully', async () => {
     const starkSignature = await provider.transfer({
       from: {
         starkKey,
@@ -89,5 +97,26 @@ describe('StarkwareProvider', () => {
     })
     console.log(starkSignature)
     expect(starkSignature).toBeTruthy()
+  })
+  it('should resolve sign message request successfully', async () => {
+    const msg = 'hello world'
+    const address = await provider.getAddress()
+    const { result } = await provider.resolve({
+      id: 1,
+      jsonrpc: '2.0',
+      method: 'personal_sign',
+      params: [msg, address],
+    })
+    expect(result).toBeTruthy()
+  })
+  it('should resolve eth account request successfully', async () => {
+    const address = provider.getAddress()
+    const { result } = await provider.resolve({
+      id: 1,
+      jsonrpc: '2.0',
+      method: 'eth_accounts',
+      params: [],
+    })
+    expect(result[0]).toBe(ethKey)
   })
 })

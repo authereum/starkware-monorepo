@@ -179,6 +179,11 @@ export class StarkwareWallet {
     return tx
   }
 
+  public async getAddress (): Promise<string> {
+    const wallet = this.getWallet()
+    return wallet.getAddress()
+  }
+
   // -- Private ------------------------------------------------------- //
 
   private async getKeyPairFromPath (

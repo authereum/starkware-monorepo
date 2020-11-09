@@ -44,7 +44,7 @@ function solidityKeccak (types: string[], values: any[]) {
 }
 
 function intToBN (value: string): BN {
-  return new BN(value, 10)
+  return new BN(value || 0, 10)
 }
 
 function hexToBN (value: string): BN {

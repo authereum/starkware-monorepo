@@ -1,7 +1,7 @@
 {
   "name": "@authereum/starkware-wallet",
   "description": "Starkware Wallet Library",
-  "version": "1.2.2-beta.0",
+  "version": "1.2.2-beta.2",
   "author": "",
   "license": "Apache-2.0",
   "keywords": [
@@ -43,7 +43,7 @@
     "publish:latest": "npm publish --tag latest --access public"
   },
   "dependencies": {
-    "@authereum/starkware-crypto": "1.9.7-beta.6",
+    "@authereum/starkware-crypto": "1.9.7-beta.7",
     "bn.js": "^5.1.3",
     "enc-utils": "^2.2.2",
     "ethers": "^5.0.19"

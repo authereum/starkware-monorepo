@@ -1,4 +1,6 @@
 import { EventEmitter } from 'events'
+import * as ethers from 'ethers'
+import { sanitizeHex, numberToHex, isHexString } from 'enc-utils'
 import StarkwareWallet from '@authereum/starkware-wallet'
 import StarkwareController from '@authereum/starkware-controller'
 import {
@@ -180,20 +182,30 @@ function matches (a: any, b: any): boolean {
 
 class StarkwareProvider extends BasicProvider {
   private _accountParams: AccountParams | undefined
-  private _wallet: StarkwareWallet
+  private _starkWallet: StarkwareWallet
+  private _signerWallet: ethers.Wallet
   private _controller: StarkwareController
 
-  public readonly contractAddress: string
+  public contractAddress: string
   public starkKey: string | undefined
 
-  constructor (wallet: StarkwareWallet, contractAddress: string) {
+  constructor (
+    starkWallet: StarkwareWallet,
+    signerWallet: ethers.Wallet,
+    contractAddress: string
+  ) {
     const conn = new Connection()
     super(conn)
     conn.setProvider(this)
 
-    this._wallet = wallet
+    this._starkWallet = starkWallet
+    this._signerWallet = signerWallet
     this.contractAddress = contractAddress
     this._controller = new StarkwareController()
+  }
+
+  setContractAddress (contractAddress: string) {
+    this.contractAddress = contractAddress
   }
 
   public async resolveResult (method: any, params: any): Promise<any> {
@@ -222,7 +234,7 @@ class StarkwareProvider extends BasicProvider {
         return { txhash }
       }
       case 'stark_depositNft': {
-        const txhash = await this.reclaimDeposit(params)
+        const txhash = await this.deposit(params)
         return { txhash }
       }
       case 'stark_depositNftReclaim': {
@@ -268,6 +280,26 @@ class StarkwareProvider extends BasicProvider {
       case 'stark_createOrder': {
         const starkSignature = await this.createOrder(params)
         return { starkSignature }
+      }
+      case 'personal_sign': {
+        const message = params[0]
+        return this.signMessage(message)
+      }
+      case 'eth_sign': {
+        const message = params[1]
+        return this.signMessage(message)
+      }
+      case 'eth_signTransaction': {
+        const tx = params[1]
+        return this.signTransaction(tx)
+      }
+      case 'eth_sendTransaction': {
+        const tx = params[1]
+        return this.sendTransaction(tx)
+      }
+      case 'eth_accounts': {
+        const address = await this.getAddress()
+        return [address]
       }
       default: {
         throw new Error(`Unknown Starkware RPC Method: ${method}`)
@@ -340,7 +372,7 @@ class StarkwareProvider extends BasicProvider {
     index: string
   ): Promise<string> {
     this._accountParams = { layer, application, index }
-    const starkKey = await this._wallet.account(layer, application, index)
+    const starkKey = await this._starkWallet.account(layer, application, index)
     this.starkKey = starkKey
     return starkKey
   }
@@ -348,6 +380,22 @@ class StarkwareProvider extends BasicProvider {
   public async registerUser (input: RegisterUserParams): Promise<string> {
     let { ethKey, operatorSignature } = input
     const starkKey = await this.getActiveAccount()
+
+    let registeredEthKey = false
+    try {
+      registeredEthKey = !!(await this._controller.getEthKeyCall(
+        starkKey,
+        this.contractAddress,
+        this._signerWallet.provider as any
+      ))
+    } catch (err) {
+      // noop
+    }
+
+    if (registeredEthKey) {
+      throw new Error('StarkKey is already registered')
+    }
+
     const data = await this._controller.registerUser({
       ethKey,
       starkKey,
@@ -363,7 +411,7 @@ class StarkwareProvider extends BasicProvider {
     const assetType = getAssetType(asset)
     if (asset.type === 'ERC721') {
       const tokenId = asset.data.tokenId as string
-      const data = await this._controller.depositNftReclaim({
+      const data = await this._controller.depositNft({
         starkKey,
         assetType,
         vaultId,
@@ -374,7 +422,7 @@ class StarkwareProvider extends BasicProvider {
       return txhash
     }
 
-    let quantizedAmount = ''
+    let quantizedAmount: string | null = null
     let ethValue = ''
     if (asset.type === 'ETH') {
       ethValue = quantizeAmount(amount as string, asset.data.quantum as string)
@@ -393,12 +441,7 @@ class StarkwareProvider extends BasicProvider {
       quantizedAmount,
     })
 
-    let wei = ''
-    if (ethValue) {
-      wei = toWei(ethValue)
-    }
-
-    const txhash = await this._sendContractTransaction(data, wei)
+    const txhash = await this._sendContractTransaction(data, ethValue)
     return txhash
   }
 
@@ -665,7 +708,7 @@ class StarkwareProvider extends BasicProvider {
       condition,
     })
 
-    const starkSignature = await this._wallet.sign(msgHash)
+    const starkSignature = await this._starkWallet.sign(msgHash)
     return starkSignature
   }
 
@@ -787,19 +830,48 @@ class StarkwareProvider extends BasicProvider {
       expirationTimestamp,
     })
 
-    const starkSignature = await this._wallet.sign(msgHash)
+    const starkSignature = await this._starkWallet.sign(msgHash)
     return starkSignature
   }
 
+  public async starkSignMessage (message: any) {
+    return this._starkWallet.sign(message)
+  }
+
+  public async signMessage (message: any) {
+    return this._signerWallet.signMessage(message)
+  }
+
+  public async starkSignTransaction (tx: any) {
+    return this._starkWallet.signTransaction(tx)
+  }
+
   public async signTransaction (tx: any) {
-    return this._wallet.signTransaction(tx)
+    return this._signerWallet.signTransaction(tx)
   }
 
-  public async sendTransaction (tx: any): Promise<any> {
-    return this._wallet.signTransaction(tx)
+  public async starkSendTransaction (tx: any): Promise<any> {
+    return this._starkWallet.sendTransaction(tx)
   }
 
-  private async _sendContractTransaction (data: string, value: string = '0x') {
+  public async sendTransaction (unsignedTx: any): Promise<any> {
+    if (unsignedTx.value) {
+      if (!isHexString(unsignedTx.value)) {
+        unsignedTx.value = sanitizeHex(numberToHex(unsignedTx.value))
+      }
+    }
+    const populatedTx = await this._signerWallet.populateTransaction(unsignedTx)
+    return this._signerWallet.sendTransaction(populatedTx)
+  }
+
+  public getAddress (): string {
+    return this._signerWallet.address
+  }
+
+  private async _sendContractTransaction (
+    data: string,
+    value: string = '0x00'
+  ) {
     const unsignedTx = {
       to: this.contractAddress,
       data,

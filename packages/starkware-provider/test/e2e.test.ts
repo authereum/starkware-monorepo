@@ -1,6 +1,6 @@
 require('dotenv').config()
 import assert from 'assert'
-import { providers } from 'ethers'
+import { providers, Wallet } from 'ethers'
 import StarkwareWallet from '@authereum/starkware-wallet'
 import {
   createUserRegistrationSig,
@@ -19,38 +19,37 @@ const generatePrivateKey = () => {
 }
 
 // TODO: fix
-describe.skip('e2e', () => {
+describe('e2e', () => {
   const rpcProvider = new providers.JsonRpcProvider(
     //'https://ropsten-rpc.linkpool.io/'
     'https://ropsten.rpc.authereum.com'
   )
 
-  //const privateKey = generatePrivateKey()
-  const privateKey =
-    '5bbed7f26b73fca3bd7b0817d483248e0818a924547077036682d97de2899664' // 0x2768fB72A8c7000a0a2C966F6E7E83C38e3ceF63
   const store = new Store()
-  const wallet = StarkwareWallet.fromPrivateKey(
-    privateKey,
-    rpcProvider as any,
-    store
-  )
+  const mnemonic =
+    'puzzle number lab sense puzzle escape glove faith strike poem acoustic picture grit struggle know tuna soul indoor thumb dune fit job timber motor'
+  const layer = 'starkex'
+  const application = 'starkexdemo'
+  const index = '1'
+  const starkWallet = new StarkwareWallet(mnemonic, rpcProvider as any, store)
+  const privateKey =
+    '0x20a31d76b88c34a077fbf0a6721ca1aa9cfa05332c4ef87648eb0a7c48a6cf48'
+  const ethKey = '0xb8D1c647219Ce2A746151fF27a8ec5888Ef16D17'
+  const signerWallet = new Wallet(privateKey, rpcProvider)
   const ropstenContractAddress = '0x5FedCE831BD3Bdb71F938EC26f984c84f40dB477'
-  const provider = new StarkwareProvider(wallet, ropstenContractAddress)
-  const ethKey = '0x1dF62f291b2E969fB0849d99D9Ce41e2F137006e'
-  const ethKeyPriv =
-    '0x4925b029480132c09876d306bd14f97645358e4e9144aa4bdcbd6ab1e804064b'
+  const provider = new StarkwareProvider(
+    starkWallet,
+    signerWallet,
+    ropstenContractAddress
+  )
   const ropstenTokenAddress = '0x0d9c8723b343a8368bebe0b5e89273ff8d712e3c' // ropsten USDC from Compound
   const ropstenNftAddress = '0x6B5E013ba22F08ED46d33Fa6d483Fd60e001262e' // https://zinc.cidaro.com/
   const ethQuantum = '10'
   const tokenQuantum = '1000'
   const vaultId = '10'
-  const tokenId = '377' // https://ropsten.etherscan.io/tx/0x00976db10036ba008b037c6feaac0be2cadb874c72861adad0f0d4747cf8c485
+  const tokenId = '398' // https://ropsten.etherscan.io/tx/0x6ee93201efff1e9e4aaadeabd04c2d61504be7421e6af062a568017f5fef31c7
   const getStarkKey = () => {
-    const layer = 'starkex'
-    const application = 'starkexdvf'
-    const index = '0'
-
-    return wallet.account(layer, application, index)
+    return provider.account(layer, application, index)
   }
 
   it('should register user successfully', async () => {
@@ -62,9 +61,8 @@ describe.skip('e2e', () => {
       starkKey,
       adminKey
     )
-    const response = await provider.send('stark_registerUser', {
+    const response = await provider.send('stark_register', {
       ethKey,
-      starkKey,
       operatorSignature,
     })
 
@@ -72,14 +70,17 @@ describe.skip('e2e', () => {
     expect(response.result.txhash).toBeTruthy()
     console.log(response.result.txhash)
   }, 10e3)
-  it.only('should deposit ETH successfully', async () => {
-    const starkKey = await getStarkKey()
-    const assetType = getEthAssetType(ethQuantum)
+  it('should deposit ETH successfully', async () => {
+    await provider.enable(layer, application, index)
     const response = await provider.send('stark_deposit', {
-      starkKey,
-      assetType,
+      asset: {
+        type: 'ETH',
+        data: {
+          quantum: ethQuantum,
+        },
+      },
+      amount: '100000000000000000', // 0.01
       vaultId,
-      ethValue: '0.01',
     })
 
     expect(response.error).toBeUndefined()
@@ -88,16 +89,19 @@ describe.skip('e2e', () => {
   }, 10e3)
   it('should deposit ERC20 successfully', async () => {
     const starkKey = await getStarkKey()
-    const assetType = getErc20AssetType(ropstenTokenAddress, tokenQuantum)
-    const tokenAmount = '1'
-    const quantizedAmount = quantizeAmount(tokenAmount, tokenQuantum) // 0.001 token
+    const amount = '10000' // 0.01
 
     // note: make sure starkEx contract is approved first by token contract
     const response = await provider.send('stark_deposit', {
-      starkKey,
-      assetType,
+      asset: {
+        type: 'ERC20',
+        data: {
+          tokenAddress: ropstenTokenAddress,
+          quantum: tokenQuantum,
+        },
+      },
+      amount,
       vaultId,
-      quantizedAmount,
     })
 
     expect(response.error).toBeUndefined()
@@ -106,12 +110,16 @@ describe.skip('e2e', () => {
   }, 10e3)
   it('should deposit NFT successfully', async () => {
     const starkKey = await getStarkKey()
-    const assetType = getErc721AssetType(ropstenNftAddress)
 
     // note: make sure starkEx contract is approved first by nft contract
-    const response = await provider.send('stark_depositNft', {
-      starkKey,
-      assetType,
+    const response = await provider.send('stark_deposit', {
+      asset: {
+        type: 'ERC721',
+        data: {
+          tokenAddress: ropstenNftAddress,
+          tokenId,
+        },
+      },
       vaultId,
       tokenId,
     })
@@ -122,26 +130,33 @@ describe.skip('e2e', () => {
   }, 10e3)
   it('should withdraw ETH successfully', async () => {
     const starkKey = await getStarkKey()
-    const assetType = getEthAssetType(ethQuantum)
 
     // note: sender needs to be ethKey for withdrawal
     const response = await provider.send('stark_withdraw', {
-      starkKey,
-      assetType,
+      asset: {
+        type: 'ETH',
+        data: {
+          quantum: ethQuantum,
+        },
+      },
     })
 
     expect(response.error).toBeUndefined()
     expect(response.result.txhash).toBeTruthy()
     console.log(response.result.txhash)
   }, 10e3)
-  it('should withdraw ERC20 successfully', async () => {
+  it.only('should withdraw ERC20 successfully', async () => {
     const starkKey = await getStarkKey()
-    const assetType = getErc20AssetType(ropstenTokenAddress, tokenQuantum)
 
     // note: sender needs to be ethKey for withdrawal
     const response = await provider.send('stark_withdraw', {
-      starkKey,
-      assetType,
+      asset: {
+        type: 'ERC20',
+        data: {
+          tokenAddress: ropstenTokenAddress,
+          quantum: tokenQuantum,
+        },
+      },
     })
 
     expect(response.error).toBeUndefined()
@@ -150,13 +165,17 @@ describe.skip('e2e', () => {
   }, 10e3)
   it('should withdraw ERC721 successfully', async () => {
     const starkKey = await getStarkKey()
-    const assetType = getErc721AssetType(ropstenNftAddress)
 
     // note: sender needs to be ethKey for withdrawal
-    const response = await provider.send('stark_withdrawNft', {
+    const response = await provider.send('stark_withdraw', {
       starkKey,
-      assetType,
-      tokenId,
+      asset: {
+        type: 'ERC721',
+        data: {
+          tokenAddress: ropstenNftAddress,
+          tokenId,
+        },
+      },
     })
 
     expect(response.error).toBeUndefined()
@@ -207,15 +226,19 @@ describe.skip('e2e', () => {
   }, 10e3)
   it('should do an escape request ', async () => {
     const starkKey = await getStarkKey()
-    const assetId = getErc20AssetId(ropstenTokenAddress, tokenQuantum)
-    const tokenAmount = '1'
-    const quantizedAmount = quantizeAmount(tokenAmount, tokenQuantum) // 0.001 token
+    const amount = '1'
 
     const response = await provider.send('stark_escape', {
       starkKey,
       vaultId,
-      assetId,
-      quantizedAmount,
+      asset: {
+        type: 'ERC20',
+        data: {
+          tokenAddress: ropstenTokenAddress,
+          quantum: tokenQuantum,
+        },
+      },
+      amount,
     })
 
     expect(response.error).toBeUndefined()

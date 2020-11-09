@@ -1,7 +1,7 @@
 {
   "name": "@authereum/starkware-controller",
   "description": "Starkware JSON-RPC Controller Library",
-  "version": "1.7.8-beta.2",
+  "version": "1.7.8-beta.3",
   "author": "",
   "license": "Apache-2.0",
   "keywords": [
@@ -43,7 +43,7 @@
     "publish:latest": "npm publish --tag latest --access public"
   },
   "dependencies": {
-    "@authereum/starkware-crypto": "1.9.7-beta.6",
+    "@authereum/starkware-crypto": "1.9.7-beta.7",
     "@babel/core": "^7.12.3",
     "enc-utils": "^2.2.2",
     "ethers": "^5.0.19",
