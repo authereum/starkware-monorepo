@@ -6,11 +6,11 @@
 
 This library is a port from [starkex-resources/\*\*/signature.js](https://github.com/starkware-libs/starkex-resources/blob/master/crypto/starkware/crypto/signature/signature.js).
 
-## Examples
-
-Derive path:
+## Getting started
 
 ```js
+import * as starkwareCrypto from '@authereum/starkware-crypto'
+
 const mnemonic =
   'puzzle number lab sense puzzle escape glove faith strike poem acoustic picture grit struggle know tuna soul indoor thumb dune fit job timber motor'
 const layer = 'starkex'
@@ -18,13 +18,17 @@ const application = 'starkexdvf'
 const zeroAddress = '0x0000000000000000000000000000000000000000'
 const index = '0'
 
-const path = getAccountPath(
+const path = starkwareCrypto.getAccountPath(
   layer,
   application,
   zeroAddress,
   index
 )
+
+const keyPair = starkwareCrypto.getKeyPairFromPath(mnemonic, path)
 ```
+
+## Examples
 
 Derive key pair:
 
@@ -136,7 +140,7 @@ console.log(getErc721AssetId(tokenAddress, tokenId)) // '0x02b0ff0c09505bc40f9d1
 
 Quantize amount:
 
-```
+```js
 const amount = '420000'
 const quantum = '1000'
 const quantizedAmount = starkwareCrypto.quantizeAmount(amount, quantum)

@@ -24,7 +24,7 @@ const application = 'starkexdvf'
 const index = '0'
 
 const starkKey = await starkProvider.account(layer, application, index)
-console.log(starkKey) // 0x017e159e246999ee9ce7d1103d5d0d52c468bcb385d202ef362de2f878162c48
+console.log(starkKey) // '0x017e159e246999ee9ce7d1103d5d0d52c468bcb385d202ef362de2f878162c48'
 ```
 
 ## Examples
@@ -149,7 +149,7 @@ Create limit order:
 ```js
 const starkSignature = await starkProvider.createOrder({
   sell: {
-    vaultId
+    vaultId,
     amount,
     data: {
       quantum
@@ -183,7 +183,7 @@ const response = await starkProvider.send('stark_deposit', {
       quantum
     },
   },
-  amount
+  amount,
   vaultId
 })
 ```
