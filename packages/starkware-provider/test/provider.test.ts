@@ -81,17 +81,23 @@ describe('StarkwareProvider', () => {
     expect(starkSignature).toBeTruthy()
   })
   it('should resolve stark order request successfully', async () => {
-    const starkSignature = await provider.transfer({
-      from: {
-        starkKey,
+    const starkSignature = await provider.createOrder({
+      sell: {
+        type: 'ETH',
+        data: {
+          quantum: '10'
+        },
+        amount: '1',
         vaultId: '1',
       },
-      to: {
-        starkKey,
-        vaultId: '606138218',
+      buy: {
+        type: 'ETH',
+        data: {
+          quantum: '10'
+        },
+        amount: '1',
+        vaultId: '5',
       },
-      asset: { type: 'ETH', data: { quantum: '10000000000' } },
-      amount: '1',
       nonce: '1597237097',
       expirationTimestamp: '444396',
     })

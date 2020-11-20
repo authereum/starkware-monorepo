@@ -1,204 +1,146 @@
 # starkware-crypto [![npm version](https://badge.fury.io/js/starkware-crypto.svg)](https://badge.fury.io/js/starkware-crypto)
 
-Starkware Crypto Library
+> Starkware Crypto Library
 
 ## Description
 
 This library is a port from [starkex-resources/\*\*/signature.js](https://github.com/starkware-libs/starkex-resources/blob/master/crypto/starkware/crypto/signature/signature.js).
 
-## Example
+## Examples
 
-```typescript
-import * as starkwareCrypto from 'starkware-crypto'
+Derive path:
 
-const mnemonic = ''
+```js
+const mnemonic =
+  'puzzle number lab sense puzzle escape glove faith strike poem acoustic picture grit struggle know tuna soul indoor thumb dune fit job timber motor'
+const layer = 'starkex'
+const application = 'starkexdvf'
+const zeroAddress = '0x0000000000000000000000000000000000000000'
+const index = '0'
 
 const path = getAccountPath(
-  'starkex',
-  'starkexdvf',
-  '0x0000000000000000000000000000000000000000',
-  '0'
+  layer,
+  application,
+  zeroAddress,
+  index
 )
-
-const keyPair = starkwareCrypto.getKeyPairFromPath(mnemonic, path)
-
-const publicKey = starkwareCrypto.getPublic(keyPair)
-
-const starkPublicKey = starkwareCrypto.getStarkPublicKey(publicKey)
-
-const msgParams = {
-  amount: '2154549703648910716',
-  nonce: '1',
-  senderVaultId: '34',
-  token: {
-    type: 'ETH' as starkwareCrypto.TokenTypes,
-    data: {
-      quantum: '1',
-      tokenAddress: '0x89b94e8C299235c00F97E6B0D7368E82d640E848',
-    },
-  },
-  receiverVaultId: '21',
-  receiverPublicKey:
-    '0x5fa3383597691ea9d827a79e1a4f0f7949435ced18ca9619de8ab97e661020',
-  expirationTimestamp: '438953',
-}
-
-const message = starkwareCrypto.getTransferMsgHash(
-  msgParams.amount,
-  msgParams.nonce,
-  msgParams.senderVaultId,
-  msgParams.token,
-  msgParams.receiverVaultId,
-  msgParams.receiverPublicKey,
-  msgParams.expirationTimestamp
-)
-
-const signature = starkwareCrypto.sign(keyPair, message)
-
-const verified = starkwareCrypto.verify(keyPair, message, signature)
 ```
 
-## API
+Derive key pair:
 
-```typescript
-interface StarkwareCrypto {
-  getAccountPath(
-    layer: string,
-    application: string,
-    ethereumAddress: string,
-    index: string
-  ): string
-
-  getKeyPairFromPath(mnemonic: string, path: string): KeyPair
-
-  getKeyPair(privateKey: string): KeyPair
-
-  getKeyPairFromPublicKey(publicKey: string): KeyPair
-
-  getPrivate(keyPair: KeyPair): string
-
-  getPublic(keyPair: KeyPair, compressed: bolean): string
-
-  getStarkPublicKey(keyPair: KeyPair): string
-
-  getXCoordinate(publicKey: string): string
-
-  getYCoordinate(publicKey: string): string
-
-  hashMessage(w1: string, w2: string, w3: string)
-
-  deserializeMessage(serialized: string): MessageParams
-
-  serializeMessage(
-    instructionTypeBn: BN,
-    vault0Bn: BN,
-    vault1Bn: BN,
-    amount0Bn: BN,
-    amount1Bn: BN,
-    nonceBn: BN,
-    expirationTimestampBn: BN
-  ): string
-
-  formatMessage(
-    instruction: 'transfer' | 'order',
-    vault0: string,
-    vault1: string,
-    amount0: string,
-    amount1: string,
-    nonce: string,
-    expirationTimestamp: string
-  ): string
-
-  getLimitOrderMsgHash(
-    vaultSell: string,
-    vaultBuy: string,
-    amountSell: string,
-    amountBuy: string,
-    tokenSell: Token,
-    tokenBuy: Token,
-    nonce: string,
-    expirationTimestamp: string
-  ): string
-
-  getTransferMsgHash(
-    amount: string,
-    nonce: string,
-    senderVaultId: string,
-    token: Token,
-    receiverVaultId: string,
-    receiverPublicKey: string,
-    expirationTimestamp: string
-  ): string
-
-  sign(keyPair: KeyPair, msg: string): Signature
-
-  verify(keyPair: KeyPair, msg: string, sig: SignatureInput): boolean
-
-  verifyStarkPublicKey(
-    starkPublicKey: string,
-    msg: string,
-    sig: SignatureInput
-  ): boolean
-
-  compress(publicKey: string): string
-
-  decompress(publicKey: string): string
-
-  exportRecoveryParam(recoveryParam: number | null): string
-
-  importRecoveryParam(v: string): number
-
-  serializeSignature(sig: Signature): string
-
-  deserializeSignature(sig: string): SignatureOptions
-}
+```js
+const keyPair = getKeyPairFromPath(mnemonic, path)
 ```
 
-## Typings
+Public key:
 
-```typescript
-type KeyPair = elliptic.ec.KeyPair
+```js
+const compressed = true
+const pubKey = getPublic(keyPair, compressed)
+```
 
-type MessageParams = {
-  instructionTypeBn: BN
-  vault0Bn: BN
-  vault1Bn: BN
-  amount0Bn: BN
-  amount1Bn: BN
-  nonceBn: BN
-  expirationTimestampBn: BN
+Public key X coordinate:
+
+```js
+const x = getXCoordinate(pubKey)
+```
+
+Public key Y coordinate:
+
+```js
+const y = getYCoordinate(pubKey)
+```
+
+Transfer message hash:
+
+```js
+const msgHash = getTransferMsgHash(
+  amount, // (uint63 decimal str)
+  nonce, // (uint31)
+  senderVaultId, // (uint31)
+  token, // (hex str with 0x prefix < prime)
+  targetVaultId, // (uint31)
+  targetPublicKey, // (hex str with 0x prefix < prime)
+  expirationTimestamp, // (uint22)
+  condition // (hex str with 0x prefix < prime)
+)
+```
+
+Verify signature:
+
+```js
+const msgSignature = starkwareCrypto.sign(keyPair, msgHash)
+assert(starkwareCrypto.verify(publicKey, msgHash, msgSignature))
+```
+
+ETH asset type:
+
+```js
+const asset = {
+  type: 'ETH',
+  data: {
+    quantum: '1'
+  }
 }
+console.log(getAssetType(asset)) // '0x01142460171646987f20c714eda4b92812b22b811f56f27130937c267e29bd9e'
+```
 
-class Signature {
-  r: BN
-  s: BN
-  recoveryParam: number | null
+ERC20 asset type:
 
-  constructor (options: SignatureInput, enc?: string)
-
-  toDER (enc?: string | null): any
+```js
+const asset = {
+  type: 'ERC20',
+  data: {
+    quantum: '10000',
+    tokenAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+  }
 }
+console.log(getAssetType(asset)) // '0x0352386d5b7c781d47ecd404765307d74edc4d43b0490b8e03c71ac7a7429653'
+```
 
-interface SignatureOptions {
-  r: BNInput
-  s: BNInput
-  recoveryParam?: number
+ERC721 asset type:
+
+```js
+const asset = {
+  type: 'ERC721',
+  data: {
+    tokenId: '4100',
+    tokenAddress: '0xB18ed4768F87b0fFAb83408014f1caF066b91380'
+  }
 }
+console.log(getAssetType(asset)) // '0x020c0e279ea2e027258d3056f34eca6e47ad9aaa995b896cafcb68d5a65b115b'
+```
 
-type BNInput =
-  | string
-  | BN
-  | number
-  | Buffer
-  | Uint8Array
-  | ReadonlyArray<number>
+ETH asset ID:
 
-type SignatureInput =
-  | Signature
-  | SignatureOptions
-  | Uint8Array
-  | ReadonlyArray<number>
-  | string
+```js
+const quantum = '1'
+console.log(getEthAssetId(quantum)) // '0x01142460171646987f20c714eda4b92812b22b811f56f27130937c267e29bd9e'
+```
+
+ERC20 asset ID:
+
+```js
+const tokenAddress = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+const quantum = '10000'
+console.log(getErc20AssetId(tokenAddress, quantum)) // '0x0352386d5b7c781d47ecd404765307d74edc4d43b0490b8e03c71ac7a7429653'
+```
+
+ERC721 asset ID:
+
+```js
+const tokenAddress = '0xB18ed4768F87b0fFAb83408014f1caF066b91380'
+const tokenId = '4100'
+console.log(getErc721AssetId(tokenAddress, tokenId)) // '0x02b0ff0c09505bc40f9d1659becf16855a7b2298b010f8a54f4b05325885b40c'
+```
+
+Quantize amount:
+
+```
+const amount = '420000'
+const quantum = '1000'
+const quantizedAmount = starkwareCrypto.quantizeAmount(amount, quantum)
+console.log(quantizedAmount) // '420'
 ```
 
 ## License
