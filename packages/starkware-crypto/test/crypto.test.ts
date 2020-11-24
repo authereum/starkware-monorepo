@@ -23,9 +23,9 @@ describe('starkware-crypto', () => {
   const PUBLIC_KEY = '04' + X_COORDINATE + Y_COORDINATE
   const PUBLIC_KEY_COMPRESSED = '02' + X_COORDINATE
   const STARK_SIGNATURE_ETH =
-    '0x01df4e7bbad23da5e5266c2d724b5c892c9cc25cdb8a5c3371bac53013f3d5270715136cb5e9bf1f2733885d98cebded918e80f130ec85506e2779d364dd83a81c'
+    '0x0728d1fe4b098c776f39ddfac46aea876203fc0473ba2a525b8f0790431a012c05320e7b57a27138a74e4b791ee5053afc92a40fa9145dbc08faaa8b4f0d49c21c'
   const STARK_SIGNATURE_ERC20 =
-    '0x00557b2fcb1a60536a4d2655b2c597d03607c44c7d7cb5afc3bc26a7750af57b006880b2e5857a31df9387071534e1459017c7da0608597fca6f64f0b82d9c401b'
+    '0x01a189aa493cb7303c81db5d753be155fdc4a8269ed038ec576d09f39aa4872904402979bbac3bfec125a2ba6bb22a19293458e60ec4f877c0f5eebe3ca1012a1c'
 
   let path: string
   let keyPair: starkwareCrypto.KeyPair
@@ -78,7 +78,7 @@ describe('starkware-crypto', () => {
     expect(publicKey).toEqual(PUBLIC_KEY)
   })
 
-  it.skip('sign eth transfer message', () => {
+  it('sign eth transfer message', () => {
     const params = {
       from: {
         starkKey:
@@ -120,7 +120,7 @@ describe('starkware-crypto', () => {
       starkwareCrypto.verifyStarkPublicKey(starkPublicKey, message, signature)
     ).toBeTruthy()
   })
-  it.skip('sign erc20 transfer message', () => {
+  it('sign erc20 transfer message', () => {
     const params = {
       from: {
         vaultId: '34',

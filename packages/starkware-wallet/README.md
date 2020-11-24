@@ -21,7 +21,9 @@ const store = {
   },
 }
 
-const provider = new ethers.providers.JsonRpcProvider('https://ropsten.rpc.authereum.com')
+const provider = new ethers.providers.JsonRpcProvider(
+  'https://ropsten.rpc.authereum.com'
+)
 const mnemonic =
   'owner hover awake board copper fiber organ sudden nominee trick decline inflict'
 const starkWallet = new StarkwareWallet(mnemonic, provider, store)
