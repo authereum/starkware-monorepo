@@ -85,7 +85,7 @@ describe('StarkwareProvider', () => {
       sell: {
         type: 'ETH',
         data: {
-          quantum: '10'
+          quantum: '10',
         },
         amount: '1',
         vaultId: '1',
@@ -93,7 +93,7 @@ describe('StarkwareProvider', () => {
       buy: {
         type: 'ETH',
         data: {
-          quantum: '10'
+          quantum: '10',
         },
         amount: '1',
         vaultId: '5',

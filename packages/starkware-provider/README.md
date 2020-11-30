@@ -9,15 +9,22 @@ import StarkwareWallet from '@authereum/starkware-wallet'
 import StarkwareProvider from '@authereum/starkware-provider'
 import * as ethers from 'ethers'
 
-const rpcProvider = new ethers.providers.JsonRpcProvider('https://ropsten.rpc.authereum.com')
+const rpcProvider = new ethers.providers.JsonRpcProvider(
+  'https://ropsten.rpc.authereum.com'
+)
 const starkExAddress = '0x5FedCE831BD3Bdb71F938EC26f984c84f40dB477'
 const mnemonic =
   'puzzle number lab sense puzzle escape glove faith strike poem acoustic picture grit struggle know tuna soul indoor thumb dune fit job timber motor'
 const starkWallet = new StarkwareWallet(mnemonic, rpcProvider)
 
-const privateKey = '0xb0057716d5917badaf911b193b12b910811c1497b5bada8d7711f758981c3773'
+const privateKey =
+  '0xb0057716d5917badaf911b193b12b910811c1497b5bada8d7711f758981c3773'
 const signerWallet = new ethers.Wallet(privateKey, rpcProvider)
-const starkProvider = new StarkwareProvider(starkWallet, signerWallet, starkExAddress)
+const starkProvider = new StarkwareProvider(
+  starkWallet,
+  signerWallet,
+  starkExAddress
+)
 
 const layer = 'starkex'
 const application = 'starkexdvf'
@@ -47,7 +54,7 @@ Deposit ETH:
 const txHash = await starkProvider.depositEth({
   amount,
   quantum,
-  vaultId
+  vaultId,
 })
 ```
 
@@ -58,7 +65,7 @@ const txHash = await starkProvider.depositErc20({
   amount,
   quantum,
   tokenAddress,
-  vaultId
+  vaultId,
 })
 ```
 
@@ -68,7 +75,7 @@ Deposit ERC721:
 const txHash = await starkProvider.depositErc721({
   tokenId,
   tokenAddress,
-  vaultId
+  vaultId,
 })
 ```
 
@@ -77,7 +84,7 @@ Withdraw ETH:
 ```js
 const txHash = await starkProvider.withdrawEth({
   quantum,
-  recipient
+  recipient,
 })
 ```
 
@@ -87,7 +94,7 @@ Withdraw ERC20:
 const txHash = await starkProvider.withdrawErc20({
   tokenAddress,
   quantum,
-  recipient
+  recipient,
 })
 ```
 
@@ -97,7 +104,7 @@ Withdraw ERC721:
 const txHash = await starkProvider.withdrawErc721({
   tokenAddress,
   tokenId,
-  recipient
+  recipient,
 })
 ```
 
@@ -180,10 +187,10 @@ const response = await starkProvider.send('stark_deposit', {
   asset: {
     type: 'ETH',
     data: {
-      quantum
+      quantum,
     },
   },
   amount,
-  vaultId
+  vaultId,
 })
 ```

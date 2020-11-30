@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events'
 import * as ethers from 'ethers'
 import { sanitizeHex, numberToHex, isHexString } from 'enc-utils'
+import WalletConnect from '@walletconnect/client'
 import StarkwareWallet from '@authereum/starkware-wallet'
 import StarkwareController from '@authereum/starkware-controller'
 import {
@@ -178,6 +179,94 @@ function matches (a: any, b: any): boolean {
   return match
 }
 
+class WalletConnectWrapper extends EventEmitter {
+  _wc: WalletConnect | null = null
+
+  constructor () {
+    super()
+    const session = this.getSession()
+    if (session) {
+      const walletConnector = new WalletConnect({ session })
+      this._wc = walletConnector
+      this._setupEvenEmitter()
+    }
+  }
+
+  private _setupEvenEmitter () {
+    // walletconnect doesn't have a way to unsubscribe from event emitter,
+    // so we use a custom event emitter as a workaround.
+    const events = [
+      'connect',
+      'disconnect',
+      'session_request',
+      'session_update',
+      'call_request',
+      'wc_sessionRequest',
+      'wc_sessionUpdate',
+      'error',
+      'transport_open',
+      'transport_close',
+    ]
+    for (const name of events) {
+      this._wc?.on(name, (...args: any[]) => this.emit(name, ...args))
+    }
+  }
+
+  public get connected (): boolean {
+    return !!this._wc?.connected
+  }
+
+  public async connect (connectUri: string) {
+    this._wc = new WalletConnect({
+      uri: connectUri,
+    })
+
+    if (!this._wc?.connected) {
+      await this.createSession()
+    }
+
+    this._setupEvenEmitter()
+  }
+
+  public createSession () {
+    return this._wc?.createSession()
+  }
+
+  public killSession () {
+    return this._wc?.killSession()
+  }
+
+  public approveSession (params: any) {
+    return this._wc?.approveSession(params)
+  }
+
+  public rejectSession (params: any) {
+    return this._wc?.approveSession(params)
+  }
+
+  public approveRequest (params: any) {
+    return this._wc?.approveRequest(params)
+  }
+
+  public rejectRequest (params: any) {
+    return this._wc?.rejectRequest(params)
+  }
+
+  public getSession () {
+    try {
+      // localStorage 'walletconnect' value is set by walletconnect library
+      const session = localStorage.getItem('walletconnect')
+      if (!session) {
+        return null
+      }
+
+      return JSON.parse(session)
+    } catch (err) {
+      return null
+    }
+  }
+}
+
 // -- StarkwareProvider ---------------------------------------------------- //
 
 class StarkwareProvider extends BasicProvider {
@@ -186,6 +275,7 @@ class StarkwareProvider extends BasicProvider {
   private _signerWallet: ethers.Wallet
   private _controller: StarkwareController
 
+  public wc: WalletConnectWrapper
   public contractAddress: string
   public starkKey: string | undefined
 
@@ -202,6 +292,7 @@ class StarkwareProvider extends BasicProvider {
     this._signerWallet = signerWallet
     this.contractAddress = contractAddress
     this._controller = new StarkwareController()
+    this.wc = new WalletConnectWrapper()
   }
 
   setContractAddress (contractAddress: string) {
