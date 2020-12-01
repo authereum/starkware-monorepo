@@ -1,7 +1,8 @@
 import { EventEmitter } from 'events'
 import * as ethers from 'ethers'
 import { sanitizeHex, numberToHex, isHexString } from 'enc-utils'
-import WalletConnect from '@walletconnect/client'
+import WalletConnectClient from '@walletconnect/client'
+import WalletConnect from 'walletconnect'
 import StarkwareWallet from '@authereum/starkware-wallet'
 import StarkwareController from '@authereum/starkware-controller'
 import {
@@ -179,14 +180,14 @@ function matches (a: any, b: any): boolean {
   return match
 }
 
-class WalletConnectWrapper extends EventEmitter {
-  _wc: WalletConnect | null = null
+class WalletConnectClientWrapper extends EventEmitter {
+  _wc: WalletConnectClient | null = null
 
   constructor () {
     super()
     const session = this.getSession()
     if (session) {
-      const walletConnector = new WalletConnect({ session })
+      const walletConnector = new WalletConnectClient({ session })
       this._wc = walletConnector
       this._setupEvenEmitter()
     }
@@ -217,7 +218,7 @@ class WalletConnectWrapper extends EventEmitter {
   }
 
   public async connect (connectUri: string) {
-    this._wc = new WalletConnect({
+    this._wc = new WalletConnectClient({
       uri: connectUri,
     })
 
@@ -267,6 +268,69 @@ class WalletConnectWrapper extends EventEmitter {
   }
 }
 
+export class WalletConnectProvider {
+  _wc: WalletConnect | null = null
+
+  constructor (wc: WalletConnect) {
+    this._wc = wc
+  }
+
+  public async sendRequest (method: string, params: any = {}) {
+    const customRequest: any = {
+      id: Date.now(),
+      jsonrpc: '2.0',
+      method,
+      params,
+    }
+
+    return this._wc?.connector?.sendCustomRequest(customRequest)
+  }
+
+  public async account (params: any) {
+    const { starkKey } = await this.sendRequest('stark_account', params)
+    return starkKey
+  }
+
+  public async requestAccounts () {
+    const accounts = await this.sendRequest('eth_requestAccounts')
+    return accounts
+  }
+
+  public async personalSign (msg: string) {
+    const address = this._wc?.connector?.accounts[0]
+    const signature = await this.sendRequest('personal_sign', [msg, address])
+    return signature
+  }
+
+  public async registerUser (params: any) {
+    const { txhash } = await this.sendRequest('stark_register', params)
+    return txhash
+  }
+
+  public async deposit (params: any) {
+    const { txhash } = await this.sendRequest('stark_deposit', params)
+    return txhash
+  }
+
+  public async withdraw (params: any) {
+    const { txhash } = await this.sendRequest('stark_withdraw', params)
+    return txhash
+  }
+
+  public async transfer (params: any) {
+    const { starkSignature } = await this.sendRequest('stark_transfer', params)
+    return starkSignature
+  }
+
+  public async createOrder (params: any) {
+    const { starkSignature } = await this.sendRequest(
+      'stark_createOrder',
+      params
+    )
+    return starkSignature
+  }
+}
+
 // -- StarkwareProvider ---------------------------------------------------- //
 
 class StarkwareProvider extends BasicProvider {
@@ -275,7 +339,7 @@ class StarkwareProvider extends BasicProvider {
   private _signerWallet: ethers.Wallet
   private _controller: StarkwareController
 
-  public wc: WalletConnectWrapper
+  public wc: WalletConnectClientWrapper
   public contractAddress: string
   public starkKey: string | undefined
 
@@ -292,7 +356,11 @@ class StarkwareProvider extends BasicProvider {
     this._signerWallet = signerWallet
     this.contractAddress = contractAddress
     this._controller = new StarkwareController()
-    this.wc = new WalletConnectWrapper()
+    this.wc = new WalletConnectClientWrapper()
+  }
+
+  static fromWalletConnect (wc: WalletConnect) {
+    return new WalletConnectProvider(wc)
   }
 
   setContractAddress (contractAddress: string) {
