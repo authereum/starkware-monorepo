@@ -194,3 +194,22 @@ const response = await starkProvider.send('stark_deposit', {
   vaultId,
 })
 ```
+
+## WalletConnect
+
+Using StarkWare provider on dapp side:
+
+```js
+import StarkwareProvider from '@authereum/starkware-provider'
+import WalletConnect from 'walletconnect'
+
+const wc = new WalletConnect()
+const provider = StarkwareProvider.fromWalletConnect(wc)
+await wc.connect()
+
+const starkKey = await provider.account({ layer, application, index })
+console.log(starkKey)
+
+const txHash = await provider.registerUser({ ethKey, operatorSignature })
+console.log(txHash)
+```
