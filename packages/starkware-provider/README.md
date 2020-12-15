@@ -197,7 +197,7 @@ const response = await starkProvider.send('stark_deposit', {
 
 ## WalletConnect
 
-Using StarkWare provider on dapp side:
+Example using StarkWare provider on dapp side:
 
 ```js
 import StarkwareProvider from '@authereum/starkware-provider'
@@ -212,4 +212,25 @@ console.log(starkKey)
 
 const txHash = await provider.registerUser({ ethKey, operatorSignature })
 console.log(txHash)
+```
+
+Example using StarkWare provider on the wallet side:
+
+```js
+import { providers, Wallet } from 'ethers'
+import StarkwareProvider from '@authereum/starkware-provider'
+import StarkwareWallet from '@authereum/starkware-wallet'
+
+const rpcProvider = new providers.JsonRpcProvider(rpcUrl)
+const starkWallet = new StarkwareWallet(mnemonic, rpcProvider, store)
+const signerWallet = new Wallet(privateKey, rpcProvider)
+const provider = new StarkwareProvider(
+  starkWallet,
+  signerWallet,
+  contractAddress
+)
+
+provider.wc.on('connect', handleConnect)
+provider.wc.on('session_request', handleSessionRequest)
+provider.wc.on('call_request', handleCallRequest)
 ```
