@@ -83,8 +83,8 @@ ETH asset type:
 const asset = {
   type: 'ETH',
   data: {
-    quantum: '1'
-  }
+    quantum: '1',
+  },
 }
 console.log(getAssetType(asset)) // '0x01142460171646987f20c714eda4b92812b22b811f56f27130937c267e29bd9e'
 ```
@@ -96,8 +96,8 @@ const asset = {
   type: 'ERC20',
   data: {
     quantum: '10000',
-    tokenAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7'
-  }
+    tokenAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+  },
 }
 console.log(getAssetType(asset)) // '0x0352386d5b7c781d47ecd404765307d74edc4d43b0490b8e03c71ac7a7429653'
 ```
@@ -109,8 +109,8 @@ const asset = {
   type: 'ERC721',
   data: {
     tokenId: '4100',
-    tokenAddress: '0xB18ed4768F87b0fFAb83408014f1caF066b91380'
-  }
+    tokenAddress: '0xB18ed4768F87b0fFAb83408014f1caF066b91380',
+  },
 }
 console.log(getAssetType(asset)) // '0x020c0e279ea2e027258d3056f34eca6e47ad9aaa995b896cafcb68d5a65b115b'
 ```

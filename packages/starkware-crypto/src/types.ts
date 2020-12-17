@@ -1,8 +1,6 @@
 import BN from 'bn.js'
 import * as elliptic from 'elliptic'
 
-export * from 'starkware-types'
-
 export type BNInput = elliptic.BNInput
 
 export type KeyPair = elliptic.ec.KeyPair

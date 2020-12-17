@@ -27,7 +27,7 @@ import { Asset, getAssetId } from './asset'
 
 /* --------------------------- UTILS ---------------------------------- */
 
-function solidityKeccak (types: string[], values: any[]) {
+export function solidityKeccak (types: string[], values: any[]) {
   const input = types.map((type: string, i: number) => {
     let value = values[i]
     if (Buffer.isBuffer(value)) {
@@ -43,19 +43,25 @@ function solidityKeccak (types: string[], values: any[]) {
   return hexToBuffer((soliditySha3(...input) as string).slice(2))
 }
 
-function intToBN (value: string): BN {
+export function intToBN (value: string): BN {
   return new BN(value || 0, 10)
 }
 
-function hexToBN (value: string): BN {
-  return new BN(removeHexPrefix(value), 16)
+export function hexToBN (value: string | number | BN): BN {
+  if (typeof value === 'number') {
+    return new BN(value, 10)
+  } else if (typeof value === 'string') {
+    return new BN(removeHexPrefix(value), 16)
+  }
+
+  return value
 }
 
-function isHexPrefixed (str: string): boolean {
+export function isHexPrefixed (str: string): boolean {
   return (str || '').substring(0, 2) === '0x'
 }
 
-function hasHexPrefix (str: string) {
+export function hasHexPrefix (str: string) {
   return (str || '').substring(0, 2) === '0x'
 }
 
@@ -103,12 +109,12 @@ export const constantPoints = constantPointsHex.map((coords: string[]) =>
 )
 export const shiftPoint = constantPoints[0]
 
-const ZERO_BN = intToBN('0')
-const ONE_BN = intToBN('1')
-const TWO_BN = intToBN('2')
-const TWO_POW_22_BN = hexToBN('400000')
-const TWO_POW_31_BN = hexToBN('80000000')
-const TWO_POW_63_BN = hexToBN('8000000000000000')
+export const ZERO_BN = intToBN('0')
+export const ONE_BN = intToBN('1')
+export const TWO_BN = intToBN('2')
+export const TWO_POW_22_BN = hexToBN('400000')
+export const TWO_POW_31_BN = hexToBN('80000000')
+export const TWO_POW_63_BN = hexToBN('8000000000000000')
 
 const MISSING_HEX_PREFIX = 'Hex strings expected to be prefixed with 0x.'
 
@@ -190,7 +196,7 @@ function hashSelector (selector: string): string {
  input, lowerBound, and upperBound should be of type BN.
  inputName should be a string.
 */
-function assertInRange (
+export function assertInRange (
   input: BN,
   lowerBound: BN,
   upperBound: BN,
