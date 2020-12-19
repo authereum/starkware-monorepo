@@ -6,7 +6,6 @@ import WalletConnect from 'walletconnect'
 import StarkwareWallet from '@authereum/starkware-wallet'
 import StarkwareController from '@authereum/starkware-controller'
 import {
-  AccountParams,
   getAssetType,
   quantizeAmount,
   Asset,
@@ -14,6 +13,12 @@ import {
 } from '@authereum/starkware-crypto'
 import BasicProvider from 'basic-provider'
 import { toWei } from 'web3-utils'
+
+export interface AccountParams {
+  layer: string
+  application: string
+  index: string
+}
 
 export interface RegisterUserParams {
   ethKey: string
@@ -553,11 +558,14 @@ class StarkwareProvider extends BasicProvider {
 
     let registeredEthKey = false
     try {
+      // TODO
+      /*
       registeredEthKey = !!(await this._controller.getEthKeyCall(
         starkKey,
         this.contractAddress,
         this._signerWallet.provider as any
       ))
+			*/
     } catch (err) {
       // noop
     }
@@ -861,6 +869,8 @@ class StarkwareProvider extends BasicProvider {
     vaultId: string,
     txOpts: any = {}
   ): Promise<string> {
+    throw new Error('no implemented')
+    /*
     const starkKey = await this.getActiveAccount()
     const data = await this._controller.fullWithdrawalRequest({
       starkKey,
@@ -869,9 +879,12 @@ class StarkwareProvider extends BasicProvider {
 
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
+		*/
   }
 
   public async freeze (vaultId: string, txOpts: any = {}): Promise<string> {
+    throw new Error('no implemented')
+    /*
     const starkKey = await this.getActiveAccount()
     const data = await this._controller.freezeRequest({
       starkKey,
@@ -880,6 +893,7 @@ class StarkwareProvider extends BasicProvider {
 
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
+		*/
   }
 
   public async escape (input: EscapeParams, txOpts: any = {}): Promise<string> {
@@ -1056,6 +1070,288 @@ class StarkwareProvider extends BasicProvider {
     const starkSignature = await this._starkWallet.sign(msgHash)
     return starkSignature
   }
+
+  // stark 3.0 changes
+
+  public async configurationHash (input: number) {
+    throw new Error('not implemented')
+  }
+
+  public async globalConfigurationHash () {
+    throw new Error('not implemented')
+  }
+
+  public async depositCancelDelay () {
+    throw new Error('not implemented')
+  }
+
+  public async freezeGracePeriod () {
+    throw new Error('not implemented')
+  }
+
+  public async mainGovernanceInfoTag () {
+    throw new Error('not implemented')
+  }
+
+  public async maxVerifierCount () {
+    throw new Error('not implemented')
+  }
+
+  public async unfreezeDelay () {
+    throw new Error('not implemented')
+  }
+
+  public async verifierRemovalDelay () {
+    throw new Error('not implemented')
+  }
+
+  public async announceAvailabilityVerifierRemovalIntent (verifier: string) {
+    throw new Error('not implemented')
+  }
+
+  public async announceVerifierRemovalIntent (verifier: string) {
+    throw new Error('not implemented')
+  }
+
+  public async getRegisteredAvailabilityVerifiers () {
+    throw new Error('not implemented')
+  }
+
+  public async getRegisteredVerifiers () {
+    throw new Error('not implemented')
+  }
+
+  public async isAvailabilityVerifier (verifierAddress: string) {
+    throw new Error('not implemented')
+  }
+
+  public async isFrozen () {
+    throw new Error('not implemented')
+  }
+
+  public async isVerifier (verifierAddress: string) {
+    throw new Error('not implemented')
+  }
+
+  public async mainAcceptGovernance () {
+    throw new Error('not implemented')
+  }
+
+  public async mainCancelNomination () {
+    throw new Error('not implemented')
+  }
+
+  public async mainIsGovernor (testGovernor: string) {
+    throw new Error('not implemented')
+  }
+
+  public async mainNominateNewGovernor (newGovernor: string) {
+    throw new Error('not implemented')
+  }
+
+  public async mainRemoveGovernor (governorForRemoval: string) {
+    throw new Error('not implemented')
+  }
+
+  public async registerAvailabilityVerifier (
+    verifier: string,
+    identifier: string
+  ) {
+    throw new Error('not implemented')
+  }
+
+  public async registerVerifier (verifier: string, identifier: string) {
+    throw new Error('not implemented')
+  }
+
+  public async removeAvailabilityVerifier (verifier: string) {
+    throw new Error('not implemented')
+  }
+
+  public async removeVerifier (verifier: string) {
+    throw new Error('not implemented')
+  }
+
+  public async unFreeze () {
+    throw new Error('not implemented')
+  }
+
+  public async getAssetInfo (assetType: string) {
+    throw new Error('not implemented')
+  }
+
+  public async getCancellationRequest (
+    starkKey: string,
+    assetId: string,
+    vaultId: string
+  ) {
+    throw new Error('not implemented')
+  }
+
+  public async getDepositBalance (
+    starkKey: string,
+    assetId: string,
+    vaultId: string
+  ) {
+    throw new Error('not implemented')
+  }
+
+  public async getEthKey (starkKey: string) {
+    throw new Error('not implemented')
+  }
+
+  public async getFullWithdrawalRequest (starkKey: string, vaultId: string) {
+    throw new Error('not implemented')
+  }
+
+  public async getQuantizedDepositBalance (
+    starkKey: string,
+    assetId: string,
+    vaultId: string
+  ) {
+    throw new Error('not implemented')
+  }
+
+  public async getQuantum (presumedAssetType: string) {
+    throw new Error('not implemented')
+  }
+
+  public async getSystemAssetType () {
+    throw new Error('not implemented')
+  }
+
+  public async getWithdrawalBalance (starkKey: string, assetId: string) {
+    throw new Error('not implemented')
+  }
+
+  public async isTokenAdmin (testedAdmin: string) {
+    throw new Error('not implemented')
+  }
+
+  public async isUserAdmin (testedAdmin: string) {
+    throw new Error('not implemented')
+  }
+
+  public async registerSystemAssetType (assetType: string, assetInfo: string) {
+    throw new Error('not implemented')
+  }
+
+  public async registerToken (a: string, b: string, c?: string) {
+    throw new Error('not implemented')
+  }
+
+  public async registerTokenAdmin (newAdmin: string) {
+    throw new Error('not implemented')
+  }
+
+  public async registerUserAdmin (newAdmin: string) {
+    throw new Error('not implemented')
+  }
+
+  public async unregisterTokenAdmin (oldAdmin: string) {
+    throw new Error('not implemented')
+  }
+
+  public async unregisterUserAdmin (oldAdmin: string) {
+    throw new Error('not implemented')
+  }
+
+  public async getLastBatchId () {
+    throw new Error('not implemented')
+  }
+
+  public async getOrderRoot () {
+    throw new Error('not implemented')
+  }
+
+  public async getOrderTreeHeight () {
+    throw new Error('not implemented')
+  }
+
+  public async getSequenceNumber () {
+    throw new Error('not implemented')
+  }
+
+  public async getVaultRoot () {
+    throw new Error('not implemented')
+  }
+
+  public async getVaultTreeHeight () {
+    throw new Error('not implemented')
+  }
+
+  public async isOperator (testedOperator: string) {
+    throw new Error('not implemented')
+  }
+
+  public async registerOperator (newOperator: string) {
+    throw new Error('not implemented')
+  }
+
+  public async setAssetConfiguration (assetId: string, configHash: string) {
+    throw new Error('not implemented')
+  }
+
+  public async setGlobalConfiguration (configHash: string) {
+    throw new Error('not implemented')
+  }
+
+  public async unregisterOperator (removedOperator: string) {
+    throw new Error('not implemented')
+  }
+
+  public async updateState (publicInput: string[], applicationData: string[]) {
+    throw new Error('not implemented')
+  }
+
+  public async forcedTradeRequest (
+    starkKeyA: string,
+    starkKeyB: string,
+    vaultIdA: string,
+    vaultIdB: string,
+    collateralAssetId: string,
+    syntheticAssetId: string,
+    amountCollateral: string,
+    amountSynthetic: string,
+    aIsBuyingSynthetic: string,
+    nonce: string,
+    signature: string
+  ) {
+    throw new Error('not implemented')
+  }
+
+  public async forcedWithdrawalRequest (
+    starkKey: string,
+    vaultId: string,
+    quantizedAmount: string
+  ) {
+    throw new Error('not implemented')
+  }
+
+  public async getForcedTradeRequest (
+    starkKeyA: string,
+    starkKeyB: string,
+    vaultIdA: string,
+    vaultIdB: string,
+    collateralAssetId: string,
+    syntheticAssetId: string,
+    amountCollateral: string,
+    amountSynthetic: string,
+    aIsBuyingSynthetic: boolean,
+    nonce: string
+  ) {
+    throw new Error('not implemented')
+  }
+
+  public async getForcedWithdrawalRequest (
+    starkKey: string,
+    vaultId: string,
+    quantizedAmount: string
+  ) {
+    throw new Error('not implemented')
+  }
+
+  // transaction and message signing
 
   public async starkSignMessage (message: any) {
     return this._starkWallet.sign(message)

@@ -1,6 +1,6 @@
 import * as ethers from 'ethers'
 import * as starkwareCrypto from '@authereum/starkware-crypto'
-import starkExchangeAbi from './StarkExchangeABI'
+import starkExchangeAbi from './abi/PerpetualABI'
 
 // -- Types --------------------------------------------- //
 
@@ -237,6 +237,7 @@ export class StarkwareController {
     ])
   }
 
+  /*
   public async fullWithdrawalRequest (
     params: FullWithdrawalRequestParams
   ): Promise<string> {
@@ -246,11 +247,14 @@ export class StarkwareController {
       vaultId,
     ])
   }
+  */
 
+  /*
   public async freezeRequest (params: FreezeRequestParams): Promise<string> {
     const { starkKey, vaultId } = params
     return this._encodeFunctionCall('freezeRequest', [starkKey, vaultId])
   }
+  */
 
   public async escape (params: EscapeParams): Promise<string> {
     const { starkKey, vaultId, assetId, quantizedAmount } = params
@@ -360,17 +364,368 @@ export class StarkwareController {
     )
   }
 
-  public async getEthKeyCall (
-    starkKey: string,
-    contractAddress: string,
-    provider: ethers.providers.Provider
+  // stark 3.0 changes
+
+  public async configurationHash (input: string): Promise<string> {
+    return this._encodeFunctionCall('configurationHash', [input])
+  }
+
+  public async globalConfigurationHash (): Promise<string> {
+    return this._encodeFunctionCall('globalConfigurationHash', [])
+  }
+
+  public async depositCancelDelay (): Promise<string> {
+    return this._encodeFunctionCall('DEPOSIT_CANCEL_DELAY', [])
+  }
+
+  public async freezeGracePeriod (): Promise<string> {
+    return this._encodeFunctionCall('FREEZE_GRACE_PERIOD', [])
+  }
+
+  public async mainGovernanceInfoTag (): Promise<string> {
+    return this._encodeFunctionCall('MAIN_GOVERNANCE_INFO_TAG', [])
+  }
+
+  public async maxVerifierCount (): Promise<string> {
+    return this._encodeFunctionCall('MAX_VERIFIER_COUNT', [])
+  }
+
+  public async unfreezeDelay (): Promise<string> {
+    return this._encodeFunctionCall('UNFREEZE_DELAY', [])
+  }
+
+  public async verifierRemovalDelay (): Promise<string> {
+    return this._encodeFunctionCall('VERIFIER_REMOVAL_DELAY', [])
+  }
+
+  public async announceAvailabilityVerifierRemovalIntent (
+    verifier: string
   ): Promise<string> {
-    const contract = new ethers.Contract(
-      contractAddress,
-      starkExchangeAbi,
-      provider
+    return this._encodeFunctionCall(
+      'announceAvailabilityVerifierRemovalIntent',
+      [verifier]
     )
-    return contract.callStatic.getEthKey(starkKey)
+  }
+
+  public async announceVerifierRemovalIntent (
+    verifier: string
+  ): Promise<string> {
+    return this._encodeFunctionCall('announceVerifierRemovalIntent', [verifier])
+  }
+
+  public async getRegisteredAvailabilityVerifiers (): Promise<string> {
+    return this._encodeFunctionCall('getRegisteredAvailabilityVerifiers', [])
+  }
+
+  public async getRegisteredVerifiers (): Promise<string> {
+    return this._encodeFunctionCall('getRegisteredVerifiers', [])
+  }
+
+  public async isAvailabilityVerifier (
+    verifierAddress: string
+  ): Promise<string> {
+    return this._encodeFunctionCall('isAvailabilityVerifier', [verifierAddress])
+  }
+
+  public async isFrozen (): Promise<string> {
+    return this._encodeFunctionCall('isFrozen', [])
+  }
+
+  public async isVerifier (verifierAddress: string): Promise<string> {
+    return this._encodeFunctionCall('isVerifier', [verifierAddress])
+  }
+
+  public async mainAcceptGovernance (): Promise<string> {
+    return this._encodeFunctionCall('mainAcceptGovernance', [])
+  }
+
+  public async mainCancelNomination (): Promise<string> {
+    return this._encodeFunctionCall('mainCancelNomination', [])
+  }
+
+  public async mainIsGovernor (testGovernor: string): Promise<string> {
+    return this._encodeFunctionCall('mainIsGovernor', [testGovernor])
+  }
+
+  public async mainNominateNewGovernor (newGovernor: string): Promise<string> {
+    return this._encodeFunctionCall('mainNominateNewGovernor', [newGovernor])
+  }
+
+  public async mainRemoveGovernor (
+    governorForRemoval: string
+  ): Promise<string> {
+    return this._encodeFunctionCall('mainRemoveGovernor', [governorForRemoval])
+  }
+
+  public async registerAvailabilityVerifier (
+    verifier: string,
+    identifier: string
+  ): Promise<string> {
+    return this._encodeFunctionCall('registerAvailabilityVerifier', [
+      verifier,
+      identifier,
+    ])
+  }
+
+  public async registerVerifier (
+    verifier: string,
+    identifier: string
+  ): Promise<string> {
+    return this._encodeFunctionCall('registerVerifier', [verifier, identifier])
+  }
+
+  public async removeAvailabilityVerifier (verifier: string): Promise<string> {
+    return this._encodeFunctionCall('removeAvailabilityVerifier', [verifier])
+  }
+
+  public async removeVerifier (verifier: string): Promise<string> {
+    return this._encodeFunctionCall('removeVerifier', [verifier])
+  }
+
+  public async unFreeze (): Promise<string> {
+    return this._encodeFunctionCall('unFreeze', [])
+  }
+
+  public async getAssetInfo (assetType: string): Promise<string> {
+    return this._encodeFunctionCall('getAssetInfo', [assetType])
+  }
+
+  public async getCancellationRequest (
+    starkKey: string,
+    assetId: string,
+    vaultId: string
+  ): Promise<string> {
+    return this._encodeFunctionCall('getCancellationRequest', [
+      starkKey,
+      assetId,
+      vaultId,
+    ])
+  }
+
+  public async getDepositBalance (
+    starkKey: string,
+    assetId: string,
+    vaultId: string
+  ): Promise<string> {
+    return this._encodeFunctionCall('getDepositBalance', [
+      starkKey,
+      assetId,
+      vaultId,
+    ])
+  }
+
+  public async getEthKey (starkKey: string): Promise<string> {
+    return this._encodeFunctionCall('getEthKey', [starkKey])
+  }
+
+  public async getFullWithdrawalRequest (
+    starkKey: string,
+    vaultId: string
+  ): Promise<string> {
+    return this._encodeFunctionCall('getFullWithdrawalRequest', [
+      starkKey,
+      vaultId,
+    ])
+  }
+
+  public async getQuantizedDepositBalance (
+    starkKey: string,
+    assetId: string,
+    vaultId: string
+  ): Promise<string> {
+    return this._encodeFunctionCall('getQuantizedDepositBalance', [
+      starkKey,
+      assetId,
+      vaultId,
+    ])
+  }
+
+  public async getQuantum (presumedAssetType: string): Promise<string> {
+    return this._encodeFunctionCall('getQuantum', [presumedAssetType])
+  }
+
+  public async getSystemAssetType (): Promise<string> {
+    return this._encodeFunctionCall('getSystemAssetType', [])
+  }
+
+  public async getWithdrawalBalance (
+    starkKey: string,
+    assetId: string
+  ): Promise<string> {
+    return this._encodeFunctionCall('getWithdrawalBalance', [starkKey, assetId])
+  }
+
+  public async isTokenAdmin (testedAdmin: string): Promise<string> {
+    return this._encodeFunctionCall('isTokenAdmin', [testedAdmin])
+  }
+
+  public async isUserAdmin (testedAdmin: string): Promise<string> {
+    return this._encodeFunctionCall('isUserAdmin', [testedAdmin])
+  }
+
+  public async registerSystemAssetType (
+    assetType: string,
+    assetInfo: string
+  ): Promise<string> {
+    return this._encodeFunctionCall('registerSystemAssetType', [
+      assetType,
+      assetInfo,
+    ])
+  }
+
+  public async registerToken (a: string, b: string): Promise<string> {
+    throw new Error('not implemented')
+  }
+
+  public async registerTokenAdmin (newAdmin: string): Promise<string> {
+    return this._encodeFunctionCall('registerTokenAdmin', [newAdmin])
+  }
+
+  public async registerUserAdmin (newAdmin: string): Promise<string> {
+    return this._encodeFunctionCall('registerUserAdmin', [newAdmin])
+  }
+
+  public async unregisterTokenAdmin (oldAdmin: string): Promise<string> {
+    return this._encodeFunctionCall('unregisterTokenAdmin', [oldAdmin])
+  }
+
+  public async unregisterUserAdmin (oldAdmin: string): Promise<string> {
+    return this._encodeFunctionCall('unregisterUserAdmin', [oldAdmin])
+  }
+
+  public async getLastBatchId (): Promise<string> {
+    return this._encodeFunctionCall('getLastBatchId', [])
+  }
+
+  public async getOrderRoot (): Promise<string> {
+    return this._encodeFunctionCall('getOrderRoot', [])
+  }
+
+  public async getOrderTreeHeight (): Promise<string> {
+    return this._encodeFunctionCall('getOrderTreeHeight', [])
+  }
+
+  public async getSequenceNumber (): Promise<string> {
+    return this._encodeFunctionCall('getSequenceNumber', [])
+  }
+
+  public async getVaultRoot (): Promise<string> {
+    return this._encodeFunctionCall('getVaultRoot', [])
+  }
+
+  public async getVaultTreeHeight (): Promise<string> {
+    return this._encodeFunctionCall('getVaultTreeHeight', [])
+  }
+
+  public async isOperator (testedOperator: string): Promise<string> {
+    return this._encodeFunctionCall('isOperator', [testedOperator])
+  }
+
+  public async registerOperator (newOperator: string): Promise<string> {
+    return this._encodeFunctionCall('registerOperator', [newOperator])
+  }
+
+  public async setAssetConfiguration (
+    assetId: string,
+    configHash: string
+  ): Promise<string> {
+    throw new Error('not implemented')
+  }
+
+  public async setGlobalConfiguration (configHash: string): Promise<string> {
+    throw new Error('not implemented')
+  }
+
+  public async unregisterOperator (removedOperator: string): Promise<string> {
+    return this._encodeFunctionCall('unregisterOperator', [removedOperator])
+  }
+
+  public async updateState (
+    publicInput: string[],
+    applicationData: string[]
+  ): Promise<string> {
+    return this._encodeFunctionCall('updateState', [
+      publicInput,
+      applicationData,
+    ])
+  }
+
+  public async forcedTradeRequest (
+    starkKeyA: string,
+    starkKeyB: string,
+    vaultIdA: string,
+    vaultIdB: string,
+    collateralAssetId: string,
+    syntheticAssetId: string,
+    amountCollateral: string,
+    amountSynthetic: string,
+    aIsBuyingSynthetic: boolean,
+    nonce: string,
+    signature: string
+  ): Promise<string> {
+    return this._encodeFunctionCall('forcedTradeRequest', [
+      starkKeyA,
+      starkKeyB,
+      vaultIdA,
+      vaultIdB,
+      collateralAssetId,
+      syntheticAssetId,
+      amountCollateral,
+      amountSynthetic,
+      aIsBuyingSynthetic,
+      nonce,
+      signature,
+    ])
+  }
+
+  public async forcedWithdrawalRequest (
+    starkKey: string,
+    vaultId: string,
+    quantizedAmount: string
+  ): Promise<string> {
+    return this._encodeFunctionCall('forcedWithdrawalRequest', [
+      starkKey,
+      vaultId,
+      quantizedAmount,
+    ])
+  }
+
+  public async getForcedTradeRequest (
+    starkKeyA: string,
+    starkKeyB: string,
+    vaultIdA: string,
+    vaultIdB: string,
+    collateralAssetId: string,
+    syntheticAssetId: string,
+    amountCollateral: string,
+    amountSynthetic: string,
+    aIsBuyingSynthetic: boolean,
+    nonce: string
+  ): Promise<string> {
+    return this._encodeFunctionCall('getForcedTradeRequest', [
+      starkKeyA,
+      starkKeyB,
+      vaultIdA,
+      vaultIdB,
+      collateralAssetId,
+      syntheticAssetId,
+      amountCollateral,
+      amountSynthetic,
+      aIsBuyingSynthetic,
+      nonce,
+    ])
+  }
+
+  public async getForcedWithdrawalRequest (
+    starkKey: string,
+    vaultId: string,
+    quantizedAmount: string
+  ): Promise<string> {
+    return this._encodeFunctionCall('getForcedWithdrawalRequest', [
+      starkKey,
+      vaultId,
+      quantizedAmount,
+    ])
   }
 
   // -- Private --------------------------------------------- //

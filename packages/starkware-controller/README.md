@@ -12,7 +12,7 @@ const controller = new StarkwareController()
 const encodedData = await controller.registerUser({
   ethKey,
   starkKey,
-  operatorSignature
+  operatorSignature,
 })
 ```
 
@@ -24,7 +24,7 @@ Deposit calldata:
 const encodedData = await controller.deposit({
   starkKey,
   assetType,
-  vaultId
+  vaultId,
 })
 ```
 
@@ -35,7 +35,7 @@ const encodedData = await controller.depositNft({
   starkKey,
   assetType,
   vaultId,
-  tokenId
+  tokenId,
 })
 ```
 
@@ -69,7 +69,7 @@ const messageHash = await controller.transfer({
   assetId,
   targetVaultId,
   targetKey,
-  expirationTimestamp
+  expirationTimestamp,
 })
 ```
 
@@ -84,6 +84,6 @@ const messageHash = await controller.createOrder({
   sellAssetId,
   buyAssetId,
   nonce,
-  expirationTimestamp
+  expirationTimestamp,
 })
 ```
