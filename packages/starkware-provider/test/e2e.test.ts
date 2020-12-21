@@ -56,6 +56,7 @@ describe.skip('e2e', () => {
     const adminKey = process.env.ADMIN_KEY as string
     assert(adminKey, 'Admin key not found')
     const starkKey = await getStarkKey()
+    return
     const operatorSignature = createUserRegistrationSig(
       ethKey,
       starkKey,
@@ -214,10 +215,12 @@ describe.skip('e2e', () => {
   }, 10e3)
   it('should do a freeze request', async () => {
     const starkKey = await getStarkKey()
+    const quantizedAmount = '1'
 
     const response = await provider.send('stark_freezeRequest', {
       starkKey,
       vaultId,
+      quantizedAmount,
     })
 
     expect(response.error).toBeUndefined()

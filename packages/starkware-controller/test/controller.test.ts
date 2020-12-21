@@ -501,17 +501,17 @@ describe('StarkwareController', () => {
     const encodedData = await controller.registerOperator(newOperator)
     expect(encodedData).toBeTruthy()
   })
-  it.skip('setAssetConfiguration', async () => {
+  it('setAssetConfiguration', async () => {
     const assetId = '0x01'
-    const configHash = '0x02'
+    const configHash = '0x' + Buffer.alloc(32).toString('hex')
     const encodedData = await controller.setAssetConfiguration(
       assetId,
       configHash
     )
     expect(encodedData).toBeTruthy()
   })
-  it.skip('setGlobalConfiguration', async () => {
-    const configHash = '0x02'
+  it('setGlobalConfiguration', async () => {
+    const configHash = '0x' + Buffer.alloc(32).toString('hex')
     const encodedData = await controller.setGlobalConfiguration(configHash)
     expect(encodedData).toBeTruthy()
   })

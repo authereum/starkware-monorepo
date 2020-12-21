@@ -1,6 +1,7 @@
 import * as ethers from 'ethers'
 import * as starkwareCrypto from '@authereum/starkware-crypto'
 import starkExchangeAbi from './abi/PerpetualABI'
+import { quantizeAmount } from '@authereum/starkware-crypto'
 
 // -- Types --------------------------------------------- //
 
@@ -48,6 +49,7 @@ export interface FullWithdrawalRequestParams {
 export interface FreezeRequestParams {
   starkKey: string
   vaultId: string
+  quantizedAmount: string
 }
 
 export interface EscapeParams {
@@ -237,24 +239,132 @@ export class StarkwareController {
     ])
   }
 
-  /*
   public async fullWithdrawalRequest (
     params: FullWithdrawalRequestParams
   ): Promise<string> {
-    const { starkKey, vaultId } = params
-    return this._encodeFunctionCall('fullWithdrawalRequest', [
-      starkKey,
-      vaultId,
+    throw new Error('not implemented')
+  }
+
+  public async freezeRequest (params: FreezeRequestParams): Promise<string> {
+    const fragment = {
+      constant: false,
+      inputs: [
+        {
+          internalType: 'uint256',
+          name: 'starkKey',
+          type: 'uint256',
+        },
+        {
+          internalType: 'uint256',
+          name: 'vaultId',
+          type: 'uint256',
+        },
+        {
+          internalType: 'uint256',
+          name: 'quantizedAmount',
+          type: 'uint256',
+        },
+      ],
+      name: 'freezeRequest',
+      outputs: [],
+      payable: false,
+      stateMutability: 'nonpayable',
+      type: 'function',
+    }
+
+    return this._encodeFunctionCall(fragment, [
+      params.starkKey,
+      params.vaultId,
+      params.quantizedAmount,
     ])
   }
-  */
 
-  /*
-  public async freezeRequest (params: FreezeRequestParams): Promise<string> {
-    const { starkKey, vaultId } = params
-    return this._encodeFunctionCall('freezeRequest', [starkKey, vaultId])
+  public async freezeRequestTrade (
+    starkKeyA: string,
+    starkKeyB: string,
+    vaultIdA: string,
+    vaultIdB: string,
+    collateralAssetId: string,
+    syntheticAssetId: string,
+    amountCollateral: string,
+    amountSynthetic: string,
+    aIsBuyingSynthetic: boolean,
+    nonce: string
+  ): Promise<string> {
+    const fragment = {
+      constant: false,
+      inputs: [
+        {
+          internalType: 'uint256',
+          name: 'starkKeyA',
+          type: 'uint256',
+        },
+        {
+          internalType: 'uint256',
+          name: 'starkKeyB',
+          type: 'uint256',
+        },
+        {
+          internalType: 'uint256',
+          name: 'vaultIdA',
+          type: 'uint256',
+        },
+        {
+          internalType: 'uint256',
+          name: 'vaultIdB',
+          type: 'uint256',
+        },
+        {
+          internalType: 'uint256',
+          name: 'collateralAssetId',
+          type: 'uint256',
+        },
+        {
+          internalType: 'uint256',
+          name: 'syntheticAssetId',
+          type: 'uint256',
+        },
+        {
+          internalType: 'uint256',
+          name: 'amountCollateral',
+          type: 'uint256',
+        },
+        {
+          internalType: 'uint256',
+          name: 'amountSynthetic',
+          type: 'uint256',
+        },
+        {
+          internalType: 'bool',
+          name: 'aIsBuyingSynthetic',
+          type: 'bool',
+        },
+        {
+          internalType: 'uint256',
+          name: 'nonce',
+          type: 'uint256',
+        },
+      ],
+      name: 'freezeRequest',
+      outputs: [],
+      payable: false,
+      stateMutability: 'nonpayable',
+      type: 'function',
+    }
+
+    return this._encodeFunctionCall(fragment, [
+      starkKeyA,
+      starkKeyB,
+      vaultIdA,
+      vaultIdB,
+      collateralAssetId,
+      syntheticAssetId,
+      amountCollateral,
+      amountSynthetic,
+      aIsBuyingSynthetic,
+      nonce,
+    ])
   }
-  */
 
   public async escape (params: EscapeParams): Promise<string> {
     const { starkKey, vaultId, assetId, quantizedAmount } = params
@@ -573,8 +683,61 @@ export class StarkwareController {
     ])
   }
 
-  public async registerToken (a: string, b: string): Promise<string> {
-    throw new Error('not implemented')
+  public async registerToken (
+    a: string,
+    b: string,
+    c?: string
+  ): Promise<string> {
+    if (c) {
+      const fragment = {
+        constant: false,
+        inputs: [
+          {
+            internalType: 'uint256',
+            name: '',
+            type: 'uint256',
+          },
+          {
+            internalType: 'bytes',
+            name: '',
+            type: 'bytes',
+          },
+          {
+            internalType: 'uint256',
+            name: '',
+            type: 'uint256',
+          },
+        ],
+        name: 'registerToken',
+        outputs: [],
+        payable: false,
+        stateMutability: 'nonpayable',
+        type: 'function',
+      }
+      return this._encodeFunctionCall(fragment, [a, b, c])
+    } else {
+      const fragment = {
+        constant: false,
+        inputs: [
+          {
+            internalType: 'uint256',
+            name: '',
+            type: 'uint256',
+          },
+          {
+            internalType: 'bytes',
+            name: '',
+            type: 'bytes',
+          },
+        ],
+        name: 'registerToken',
+        outputs: [],
+        payable: false,
+        stateMutability: 'nonpayable',
+        type: 'function',
+      }
+      return this._encodeFunctionCall(fragment, [a, b])
+    }
   }
 
   public async registerTokenAdmin (newAdmin: string): Promise<string> {
@@ -629,11 +792,14 @@ export class StarkwareController {
     assetId: string,
     configHash: string
   ): Promise<string> {
-    throw new Error('not implemented')
+    return this._encodeFunctionCall('setAssetConfiguration', [
+      assetId,
+      configHash,
+    ])
   }
 
   public async setGlobalConfiguration (configHash: string): Promise<string> {
-    throw new Error('not implemented')
+    return this._encodeFunctionCall('setGlobalConfiguration', [configHash])
   }
 
   public async unregisterOperator (removedOperator: string): Promise<string> {
@@ -728,9 +894,24 @@ export class StarkwareController {
     ])
   }
 
+  public parseReturnData (fn: string | any, data: string) {
+    let fnName: string = ''
+    if (typeof fn === 'string') {
+      fnName = fn
+    } else if (fn.name) {
+      fnName = fn.name
+    }
+
+    if (this[fnName]) {
+      return this._decodeFunctionResult(fnName, data)
+    }
+
+    throw new Error('not implemented')
+  }
+
   // -- Private --------------------------------------------- //
 
-  private _encodeFunctionCall = (method: string | any, args: any[]) => {
+  private _encodeFunctionCall (method: string | any, args: any[]) {
     let fragment: string | ethers.utils.FunctionFragment
     if (typeof method === 'string') {
       fragment = method
@@ -741,6 +922,15 @@ export class StarkwareController {
     }
 
     return this._encoder.encodeFunctionData(fragment, args)
+  }
+
+  private _decodeFunctionResult (method: string, data: string) {
+    const decoded = this._encoder.decodeFunctionResult(method, data)
+    if (Array.isArray(decoded) && decoded.length === 1) {
+      return decoded[0]
+    }
+
+    return decoded
   }
 }
 

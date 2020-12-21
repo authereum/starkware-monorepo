@@ -434,7 +434,7 @@ class StarkwareProvider extends BasicProvider {
         return { txhash }
       }
       case 'stark_freeze': {
-        const txhash = await this.freeze(params, txOpts)
+        const txhash = await this.freezeRequest(params, txOpts)
         return { txhash }
       }
       case 'stark_escape': {
@@ -558,14 +558,7 @@ class StarkwareProvider extends BasicProvider {
 
     let registeredEthKey = false
     try {
-      // TODO
-      /*
-      registeredEthKey = !!(await this._controller.getEthKeyCall(
-        starkKey,
-        this.contractAddress,
-        this._signerWallet.provider as any
-      ))
-			*/
+      registeredEthKey = !!(await this.getEthKey(starkKey, txOpts))
     } catch (err) {
       // noop
     }
@@ -869,7 +862,7 @@ class StarkwareProvider extends BasicProvider {
     vaultId: string,
     txOpts: any = {}
   ): Promise<string> {
-    throw new Error('no implemented')
+    throw new Error('not implemented')
     /*
     const starkKey = await this.getActiveAccount()
     const data = await this._controller.fullWithdrawalRequest({
@@ -882,18 +875,51 @@ class StarkwareProvider extends BasicProvider {
 		*/
   }
 
-  public async freeze (vaultId: string, txOpts: any = {}): Promise<string> {
-    throw new Error('no implemented')
-    /*
+  public async freezeRequest (
+    vaultId: string,
+    quantizedAmount: string,
+    txOpts: any = {}
+  ): Promise<string> {
     const starkKey = await this.getActiveAccount()
     const data = await this._controller.freezeRequest({
       starkKey,
       vaultId,
+      quantizedAmount,
     })
 
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
-		*/
+  }
+
+  public async freezeRequestTrade (
+    starkKeyA: string,
+    starkKeyB: string,
+    vaultIdA: string,
+    vaultIdB: string,
+    collateralAssetId: string,
+    syntheticAssetId: string,
+    amountCollateral: string,
+    amountSynthetic: string,
+    aIsBuyingSynthetic: boolean,
+    nonce: string,
+    txOpts: any = {}
+  ): Promise<string> {
+    const starkKey = await this.getActiveAccount()
+    const data = await this._controller.freezeRequestTrade(
+      starkKeyA,
+      starkKeyB,
+      vaultIdA,
+      vaultIdB,
+      collateralAssetId,
+      syntheticAssetId,
+      amountCollateral,
+      amountSynthetic,
+      aIsBuyingSynthetic,
+      nonce
+    )
+
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
   public async escape (input: EscapeParams, txOpts: any = {}): Promise<string> {
@@ -1073,235 +1099,501 @@ class StarkwareProvider extends BasicProvider {
 
   // stark 3.0 changes
 
-  public async configurationHash (input: number) {
-    throw new Error('not implemented')
+  public async configurationHash (input: string, txOpts: any = {}) {
+    const data = await this._controller.configurationHash(input)
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.configurationHash,
+      result
+    )
   }
 
-  public async globalConfigurationHash () {
-    throw new Error('not implemented')
+  public async globalConfigurationHash (txOpts: any = {}) {
+    const data = await this._controller.globalConfigurationHash()
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.globalConfigurationHash,
+      result
+    )
   }
 
-  public async depositCancelDelay () {
-    throw new Error('not implemented')
+  public async depositCancelDelay (txOpts: any = {}) {
+    const data = await this._controller.depositCancelDelay()
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.depositCancelDelay,
+      result
+    )
   }
 
-  public async freezeGracePeriod () {
-    throw new Error('not implemented')
+  public async freezeGracePeriod (txOpts: any = {}) {
+    const data = await this._controller.freezeGracePeriod()
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.freezeGracePeriod,
+      result
+    )
   }
 
-  public async mainGovernanceInfoTag () {
-    throw new Error('not implemented')
+  public async mainGovernanceInfoTag (txOpts: any = {}) {
+    const data = await this._controller.mainGovernanceInfoTag()
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.mainGovernanceInfoTag,
+      result
+    )
   }
 
-  public async maxVerifierCount () {
-    throw new Error('not implemented')
+  public async maxVerifierCount (txOpts: any = {}) {
+    const data = await this._controller.maxVerifierCount()
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.maxVerifierCount,
+      result
+    )
   }
 
-  public async unfreezeDelay () {
-    throw new Error('not implemented')
+  public async unfreezeDelay (txOpts: any = {}) {
+    const data = await this._controller.unfreezeDelay()
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.unfreezeDelay,
+      result
+    )
   }
 
-  public async verifierRemovalDelay () {
-    throw new Error('not implemented')
+  public async verifierRemovalDelay (txOpts: any = {}) {
+    const data = await this._controller.verifierRemovalDelay()
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.verifierRemovalDelay,
+      result
+    )
   }
 
-  public async announceAvailabilityVerifierRemovalIntent (verifier: string) {
-    throw new Error('not implemented')
+  public async announceAvailabilityVerifierRemovalIntent (
+    verifier: string,
+    txOpts: any = {}
+  ) {
+    const data = await this._controller.announceAvailabilityVerifierRemovalIntent(
+      verifier
+    )
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.announceVerifierRemovalIntent,
+      result
+    )
   }
 
-  public async announceVerifierRemovalIntent (verifier: string) {
-    throw new Error('not implemented')
+  public async announceVerifierRemovalIntent (
+    verifier: string,
+    txOpts: any = {}
+  ) {
+    const data = await this._controller.announceVerifierRemovalIntent(verifier)
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async getRegisteredAvailabilityVerifiers () {
-    throw new Error('not implemented')
+  public async getRegisteredAvailabilityVerifiers (txOpts: any = {}) {
+    const data = await this._controller.getRegisteredAvailabilityVerifiers()
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.getRegisteredAvailabilityVerifiers,
+      result
+    )
   }
 
-  public async getRegisteredVerifiers () {
-    throw new Error('not implemented')
+  public async getRegisteredVerifiers (txOpts: any = {}) {
+    const data = await this._controller.getRegisteredVerifiers()
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.getRegisteredVerifiers,
+      result
+    )
   }
 
-  public async isAvailabilityVerifier (verifierAddress: string) {
-    throw new Error('not implemented')
+  public async isAvailabilityVerifier (
+    verifierAddress: string,
+    txOpts: any = {}
+  ) {
+    const data = await this._controller.isAvailabilityVerifier(verifierAddress)
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.isAvailabilityVerifier,
+      result
+    )
   }
 
-  public async isFrozen () {
-    throw new Error('not implemented')
+  public async isFrozen (txOpts: any = {}) {
+    const data = await this._controller.isFrozen()
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(this._controller.isFrozen, result)
   }
 
-  public async isVerifier (verifierAddress: string) {
-    throw new Error('not implemented')
+  public async isVerifier (verifierAddress: string, txOpts: any = {}) {
+    const data = await this._controller.isVerifier(verifierAddress)
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(this._controller.isVerifier, result)
   }
 
-  public async mainAcceptGovernance () {
-    throw new Error('not implemented')
+  public async mainAcceptGovernance (txOpts: any = {}) {
+    const data = await this._controller.mainAcceptGovernance()
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async mainCancelNomination () {
-    throw new Error('not implemented')
+  public async mainCancelNomination (txOpts: any = {}) {
+    const data = await this._controller.mainCancelNomination()
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async mainIsGovernor (testGovernor: string) {
-    throw new Error('not implemented')
+  public async mainIsGovernor (testGovernor: string, txOpts: any = {}) {
+    const data = await this._controller.mainIsGovernor(testGovernor)
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.mainIsGovernor,
+      result
+    )
   }
 
-  public async mainNominateNewGovernor (newGovernor: string) {
-    throw new Error('not implemented')
+  public async mainNominateNewGovernor (newGovernor: string, txOpts: any = {}) {
+    const data = await this._controller.mainNominateNewGovernor(newGovernor)
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.mainNominateNewGovernor,
+      result
+    )
   }
 
-  public async mainRemoveGovernor (governorForRemoval: string) {
-    throw new Error('not implemented')
+  public async mainRemoveGovernor (
+    governorForRemoval: string,
+    txOpts: any = {}
+  ) {
+    const data = await this._controller.mainRemoveGovernor(governorForRemoval)
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
   public async registerAvailabilityVerifier (
     verifier: string,
-    identifier: string
+    identifier: string,
+    txOpts: any = {}
   ) {
-    throw new Error('not implemented')
+    const data = await this._controller.registerAvailabilityVerifier(
+      verifier,
+      identifier
+    )
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async registerVerifier (verifier: string, identifier: string) {
-    throw new Error('not implemented')
+  public async registerVerifier (
+    verifier: string,
+    identifier: string,
+    txOpts: any = {}
+  ) {
+    const data = await this._controller.registerVerifier(verifier, identifier)
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async removeAvailabilityVerifier (verifier: string) {
-    throw new Error('not implemented')
+  public async removeAvailabilityVerifier (verifier: string, txOpts: any = {}) {
+    const data = await this._controller.removeAvailabilityVerifier(verifier)
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async removeVerifier (verifier: string) {
-    throw new Error('not implemented')
+  public async removeVerifier (verifier: string, txOpts: any = {}) {
+    const data = await this._controller.removeVerifier(verifier)
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async unFreeze () {
-    throw new Error('not implemented')
+  public async unFreeze (txOpts: any = {}) {
+    const data = await this._controller.unFreeze()
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async getAssetInfo (assetType: string) {
-    throw new Error('not implemented')
+  public async getAssetInfo (assetType: string, txOpts: any = {}) {
+    const data = await this._controller.getAssetInfo(assetType)
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.getAssetInfo,
+      result
+    )
   }
 
   public async getCancellationRequest (
     starkKey: string,
     assetId: string,
-    vaultId: string
+    vaultId: string,
+    txOpts: any = {}
   ) {
-    throw new Error('not implemented')
+    const data = await this._controller.getCancellationRequest(
+      starkKey,
+      assetId,
+      vaultId
+    )
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.getCancellationRequest,
+      result
+    )
   }
 
   public async getDepositBalance (
     starkKey: string,
     assetId: string,
-    vaultId: string
+    vaultId: string,
+    txOpts: any = {}
   ) {
-    throw new Error('not implemented')
+    const data = await this._controller.getDepositBalance(
+      starkKey,
+      assetId,
+      vaultId
+    )
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.getDepositBalance,
+      result
+    )
   }
 
-  public async getEthKey (starkKey: string) {
-    throw new Error('not implemented')
+  public async getEthKey (starkKey: string, txOpts: any = {}) {
+    const data = await this._controller.getEthKey(starkKey)
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(this._controller.getEthKey, result)
   }
 
-  public async getFullWithdrawalRequest (starkKey: string, vaultId: string) {
-    throw new Error('not implemented')
+  public async getFullWithdrawalRequest (
+    starkKey: string,
+    vaultId: string,
+    txOpts: any = {}
+  ) {
+    const data = await this._controller.getFullWithdrawalRequest(
+      starkKey,
+      vaultId
+    )
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.getFullWithdrawalRequest,
+      result
+    )
   }
 
   public async getQuantizedDepositBalance (
     starkKey: string,
     assetId: string,
-    vaultId: string
+    vaultId: string,
+    txOpts: any = {}
   ) {
-    throw new Error('not implemented')
+    const data = await this._controller.getQuantizedDepositBalance(
+      starkKey,
+      assetId,
+      vaultId
+    )
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.getQuantizedDepositBalance,
+      result
+    )
   }
 
-  public async getQuantum (presumedAssetType: string) {
-    throw new Error('not implemented')
+  public async getQuantum (presumedAssetType: string, txOpts: any = {}) {
+    const data = await this._controller.getQuantum(presumedAssetType)
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(this._controller.getQuantum, result)
   }
 
-  public async getSystemAssetType () {
-    throw new Error('not implemented')
+  public async getSystemAssetType (txOpts: any = {}) {
+    const data = await this._controller.getSystemAssetType()
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.getSystemAssetType,
+      result
+    )
   }
 
-  public async getWithdrawalBalance (starkKey: string, assetId: string) {
-    throw new Error('not implemented')
+  public async getWithdrawalBalance (
+    starkKey: string,
+    assetId: string,
+    txOpts: any = {}
+  ) {
+    const data = await this._controller.getWithdrawalBalance(starkKey, assetId)
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.getWithdrawalBalance,
+      result
+    )
   }
 
-  public async isTokenAdmin (testedAdmin: string) {
-    throw new Error('not implemented')
+  public async isTokenAdmin (testedAdmin: string, txOpts: any = {}) {
+    const data = await this._controller.isTokenAdmin(testedAdmin)
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.isTokenAdmin,
+      result
+    )
   }
 
-  public async isUserAdmin (testedAdmin: string) {
-    throw new Error('not implemented')
+  public async isUserAdmin (testedAdmin: string, txOpts: any = {}) {
+    const data = await this._controller.isUserAdmin(testedAdmin)
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.isUserAdmin,
+      result
+    )
   }
 
-  public async registerSystemAssetType (assetType: string, assetInfo: string) {
-    throw new Error('not implemented')
+  public async registerSystemAssetType (
+    assetType: string,
+    assetInfo: string,
+    txOpts: any = {}
+  ) {
+    const data = await this._controller.registerSystemAssetType(
+      assetType,
+      assetInfo
+    )
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async registerToken (a: string, b: string, c?: string) {
-    throw new Error('not implemented')
+  public async registerToken (
+    a: string,
+    b: string,
+    c?: string,
+    txOpts: any = {}
+  ) {
+    const data = await this._controller.registerToken(a, b)
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async registerTokenAdmin (newAdmin: string) {
-    throw new Error('not implemented')
+  public async registerTokenAdmin (newAdmin: string, txOpts: any = {}) {
+    const data = await this._controller.registerTokenAdmin(newAdmin)
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async registerUserAdmin (newAdmin: string) {
-    throw new Error('not implemented')
+  public async registerUserAdmin (newAdmin: string, txOpts: any = {}) {
+    const data = await this._controller.registerUserAdmin(newAdmin)
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async unregisterTokenAdmin (oldAdmin: string) {
-    throw new Error('not implemented')
+  public async unregisterTokenAdmin (oldAdmin: string, txOpts: any = {}) {
+    const data = await this._controller.unregisterTokenAdmin(oldAdmin)
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async unregisterUserAdmin (oldAdmin: string) {
-    throw new Error('not implemented')
+  public async unregisterUserAdmin (oldAdmin: string, txOpts: any = {}) {
+    const data = await this._controller.unregisterUserAdmin(oldAdmin)
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async getLastBatchId () {
-    throw new Error('not implemented')
+  public async getLastBatchId (txOpts: any = {}) {
+    const data = await this._controller.getLastBatchId()
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.getLastBatchId,
+      result
+    )
   }
 
-  public async getOrderRoot () {
-    throw new Error('not implemented')
+  public async getOrderRoot (txOpts: any = {}) {
+    const data = await this._controller.getOrderRoot()
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.getOrderRoot,
+      result
+    )
   }
 
-  public async getOrderTreeHeight () {
-    throw new Error('not implemented')
+  public async getOrderTreeHeight (txOpts: any = {}) {
+    const data = await this._controller.getOrderTreeHeight()
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.getOrderTreeHeight,
+      result
+    )
   }
 
-  public async getSequenceNumber () {
-    throw new Error('not implemented')
+  public async getSequenceNumber (txOpts: any = {}) {
+    const data = await this._controller.getSequenceNumber()
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.getSequenceNumber,
+      result
+    )
   }
 
-  public async getVaultRoot () {
-    throw new Error('not implemented')
+  public async getVaultRoot (txOpts: any = {}) {
+    const data = await this._controller.getVaultRoot()
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.getVaultRoot,
+      result
+    )
   }
 
-  public async getVaultTreeHeight () {
-    throw new Error('not implemented')
+  public async getVaultTreeHeight (txOpts: any = {}) {
+    const data = await this._controller.getVaultTreeHeight()
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async isOperator (testedOperator: string) {
-    throw new Error('not implemented')
+  public async isOperator (testedOperator: string, txOpts: any = {}) {
+    const data = await this._controller.isOperator(testedOperator)
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(this._controller.isOperator, result)
   }
 
-  public async registerOperator (newOperator: string) {
-    throw new Error('not implemented')
+  public async registerOperator (newOperator: string, txOpts: any = {}) {
+    const data = await this._controller.registerOperator(newOperator)
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async setAssetConfiguration (assetId: string, configHash: string) {
-    throw new Error('not implemented')
+  public async setAssetConfiguration (
+    assetId: string,
+    configHash: string,
+    txOpts: any = {}
+  ) {
+    const data = await this._controller.setAssetConfiguration(
+      assetId,
+      configHash
+    )
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async setGlobalConfiguration (configHash: string) {
-    throw new Error('not implemented')
+  public async setGlobalConfiguration (configHash: string, txOpts: any = {}) {
+    const data = await this._controller.setGlobalConfiguration(configHash)
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async unregisterOperator (removedOperator: string) {
-    throw new Error('not implemented')
+  public async unregisterOperator (removedOperator: string, txOpts: any = {}) {
+    const data = await this._controller.unregisterOperator(removedOperator)
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
-  public async updateState (publicInput: string[], applicationData: string[]) {
-    throw new Error('not implemented')
+  public async updateState (
+    publicInput: string[],
+    applicationData: string[],
+    txOpts: any = {}
+  ) {
+    const data = await this._controller.updateState(
+      publicInput,
+      applicationData
+    )
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
   public async forcedTradeRequest (
@@ -1313,19 +1605,41 @@ class StarkwareProvider extends BasicProvider {
     syntheticAssetId: string,
     amountCollateral: string,
     amountSynthetic: string,
-    aIsBuyingSynthetic: string,
+    aIsBuyingSynthetic: boolean,
     nonce: string,
-    signature: string
+    signature: string,
+    txOpts: any = {}
   ) {
-    throw new Error('not implemented')
+    const data = await this._controller.forcedTradeRequest(
+      starkKeyA,
+      starkKeyB,
+      vaultIdA,
+      vaultIdB,
+      collateralAssetId,
+      syntheticAssetId,
+      amountCollateral,
+      amountSynthetic,
+      aIsBuyingSynthetic,
+      nonce,
+      signature
+    )
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
   public async forcedWithdrawalRequest (
     starkKey: string,
     vaultId: string,
-    quantizedAmount: string
+    quantizedAmount: string,
+    txOpts: any = {}
   ) {
-    throw new Error('not implemented')
+    const data = await this._controller.forcedWithdrawalRequest(
+      starkKey,
+      vaultId,
+      quantizedAmount
+    )
+    const txhash = await this._sendContractTransaction(data, txOpts)
+    return txhash
   }
 
   public async getForcedTradeRequest (
@@ -1338,17 +1652,44 @@ class StarkwareProvider extends BasicProvider {
     amountCollateral: string,
     amountSynthetic: string,
     aIsBuyingSynthetic: boolean,
-    nonce: string
+    nonce: string,
+    txOpts: any = {}
   ) {
-    throw new Error('not implemented')
+    const data = await this._controller.getForcedTradeRequest(
+      starkKeyA,
+      starkKeyB,
+      vaultIdA,
+      vaultIdB,
+      collateralAssetId,
+      syntheticAssetId,
+      amountCollateral,
+      amountSynthetic,
+      aIsBuyingSynthetic,
+      nonce
+    )
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.getForcedTradeRequest,
+      result
+    )
   }
 
   public async getForcedWithdrawalRequest (
     starkKey: string,
     vaultId: string,
-    quantizedAmount: string
+    quantizedAmount: string,
+    txOpts: any = {}
   ) {
-    throw new Error('not implemented')
+    const data = await this._controller.getForcedWithdrawalRequest(
+      starkKey,
+      vaultId,
+      quantizedAmount
+    )
+    const result = await this._callContract(data, txOpts)
+    return this._controller.parseReturnData(
+      this._controller.getForcedWithdrawalRequest,
+      result
+    )
   }
 
   // transaction and message signing
@@ -1385,6 +1726,18 @@ class StarkwareProvider extends BasicProvider {
 
   public getAddress (): string {
     return this._signerWallet.address
+  }
+
+  private async _callContract (data: string, txOpts: any = {}) {
+    const unsignedTx = {
+      to: this.contractAddress,
+      data,
+      ...txOpts,
+      gasLimit: '0x7a120', // 500k
+    }
+
+    const populatedTx = await this._signerWallet.populateTransaction(unsignedTx)
+    return this._signerWallet.provider.call(populatedTx)
   }
 
   private async _sendContractTransaction (data: string, txOpts: any = {}) {

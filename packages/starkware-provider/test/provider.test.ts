@@ -6,7 +6,8 @@ import Store from './shared/Store'
 
 describe('StarkwareProvider', () => {
   const rpcProvider = new providers.JsonRpcProvider(
-    'https://ropsten-rpc.linkpool.io/'
+    // 'https://ropsten-rpc.linkpool.io/'
+    'https://ropsten.rpc.authereum.com'
   )
 
   const mnemonic =
@@ -77,7 +78,6 @@ describe('StarkwareProvider', () => {
       nonce: '1597237097',
       expirationTimestamp: '444396',
     })
-    console.log(starkSignature)
     expect(starkSignature).toBeTruthy()
   })
   it('should resolve stark order request successfully', async () => {
@@ -101,7 +101,6 @@ describe('StarkwareProvider', () => {
       nonce: '1597237097',
       expirationTimestamp: '444396',
     })
-    console.log(starkSignature)
     expect(starkSignature).toBeTruthy()
   })
   it('should resolve sign message request successfully', async () => {
@@ -124,5 +123,9 @@ describe('StarkwareProvider', () => {
       params: [],
     })
     expect(result[0]).toBe(ethKey)
+  })
+  it.skip('getEthKey', async () => {
+    const result = await provider.getEthKey(starkKey)
+    expect(result).toBe(ethKey)
   })
 })
