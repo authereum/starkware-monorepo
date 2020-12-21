@@ -1692,6 +1692,54 @@ class StarkwareProvider extends BasicProvider {
     )
   }
 
+  public async perpetualLimitOrder (
+    assetIdSynthetic: number,
+    assetIdCollateral: number,
+    isBuyingSynthetic: number,
+    assetIdFee: number,
+    amountSynthetic: number,
+    amountCollateral: number,
+    amountFee: number,
+    nonce: number,
+    positionId: number,
+    expirationTimestamp: number
+  ): Promise<string> {
+    const msgHash = await this._controller.perpetualLimitOrder(
+      assetIdSynthetic,
+      assetIdCollateral,
+      isBuyingSynthetic,
+      assetIdFee,
+      amountSynthetic,
+      amountCollateral,
+      amountFee,
+      nonce,
+      positionId,
+      expirationTimestamp
+    )
+
+    const starkSignature = await this._starkWallet.sign(msgHash)
+    return starkSignature
+  }
+
+  public async perpetualWithdrawal (
+    assetIdCollateral: number,
+    positionId: number,
+    nonce: number,
+    expirationTimestamp: number,
+    amount: number
+  ): Promise<string> {
+    const msgHash = await this._controller.perpetualWithdrawal(
+      assetIdCollateral,
+      positionId,
+      nonce,
+      expirationTimestamp,
+      amount
+    )
+
+    const starkSignature = await this._starkWallet.sign(msgHash)
+    return starkSignature
+  }
+
   // transaction and message signing
 
   public async starkSignMessage (message: any) {

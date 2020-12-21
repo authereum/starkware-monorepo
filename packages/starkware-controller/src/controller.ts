@@ -894,6 +894,48 @@ export class StarkwareController {
     ])
   }
 
+  public async perpetualLimitOrder (
+    assetIdSynthetic: number,
+    assetIdCollateral: number,
+    isBuyingSynthetic: number,
+    assetIdFee: number,
+    amountSynthetic: number,
+    amountCollateral: number,
+    amountFee: number,
+    nonce: number,
+    positionId: number,
+    expirationTimestamp: number
+  ): Promise<string> {
+    return starkwareCrypto.getPerpetualLimitOrderMsgHash(
+      assetIdSynthetic,
+      assetIdCollateral,
+      isBuyingSynthetic,
+      assetIdFee,
+      amountSynthetic,
+      amountCollateral,
+      amountFee,
+      nonce,
+      positionId,
+      expirationTimestamp
+    )
+  }
+
+  public async perpetualWithdrawal (
+    assetIdCollateral: number,
+    positionId: number,
+    nonce: number,
+    expirationTimestamp: number,
+    amount: number
+  ): Promise<string> {
+    return starkwareCrypto.getPerpetualWithdrawalMsgHash(
+      assetIdCollateral,
+      positionId,
+      nonce,
+      expirationTimestamp,
+      amount
+    )
+  }
+
   public parseReturnData (fn: string | any, data: string) {
     let fnName: string = ''
     if (typeof fn === 'string') {
