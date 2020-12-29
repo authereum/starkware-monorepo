@@ -87,7 +87,7 @@ export class StarkwareWallet {
   static fromSignature (
     signature: string,
     provider: string | providers.Provider,
-    store: Store,
+    store: Store = new MemoryStore(),
     accountMappingKey: string = DEFAULT_ACCOUNT_MAPPING_KEY
   ) {
     const privateKey = starkwareCrypto.privateKeyFromSignature(signature)

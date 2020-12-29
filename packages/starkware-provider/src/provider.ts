@@ -11,8 +11,7 @@ import {
   Asset,
   getAssetId,
 } from '@authereum/starkware-crypto'
-import BasicProvider from 'basic-provider'
-import { toWei } from 'web3-utils'
+import BasicProvider, { IRpcConnection } from './BasicProvider'
 
 export interface AccountParams {
   layer: string
@@ -151,19 +150,12 @@ export interface OrderParams {
   expirationTimestamp: string
 }
 
-interface IRpcConnection extends NodeJS.EventEmitter {
-  connected: boolean
-
-  send(payload: any): Promise<any>
-  open(): Promise<void>
-  close(): Promise<void>
-}
-
 class Connection extends EventEmitter implements IRpcConnection {
   connected: boolean = true
   _provider: any
-  async send (payload: any): Promise<any> {
-    return this._provider.resolve(payload)
+  send = async (payload: any): Promise<any> => {
+    let { method, params } = payload
+    return this._provider.resolveResult(method, params)
   }
   async open (): Promise<void> {
     this.connected = true
@@ -273,10 +265,10 @@ class WalletConnectClientWrapper extends EventEmitter {
   }
 }
 
-export class WalletConnectProvider {
-  _wc: WalletConnect | null = null
+export class StarkwareWalletConnectProvider {
+  _wc: any = null
 
-  constructor (wc: WalletConnect) {
+  constructor (wc: any) {
     this._wc = wc
   }
 
@@ -288,7 +280,15 @@ export class WalletConnectProvider {
       params,
     }
 
-    return this._wc?.connector?.sendCustomRequest(customRequest)
+    if (this._wc?.connector) {
+      // `walletconnect` module
+      return this._wc?.connector?.sendCustomRequest(customRequest)
+    } else if (this._wc?._wc) {
+      // blocknative
+      return this._wc?._wc?.sendCustomRequest(customRequest)
+    } else if (this._wc?.sendCustomRequest) {
+      return this._wc?.sendCustomRequest(customRequest)
+    }
   }
 
   public async account (params: any) {
@@ -302,7 +302,17 @@ export class WalletConnectProvider {
   }
 
   public async personalSign (msg: string) {
-    const address = this._wc?.connector?.accounts[0]
+    let address: null | string = null
+    if (this._wc?.connector) {
+      // `walletconnect` module
+      address = this._wc?.connector?.accounts[0]
+    } else if (this._wc?._wc) {
+      // blocknative
+      address = this._wc?._wc?.accounts[0]
+    } else if (this._wc?.accounts) {
+      address = this._wc?.accounts[0]
+    }
+
     const signature = await this.sendRequest('personal_sign', [msg, address])
     return signature
   }
@@ -351,11 +361,11 @@ class StarkwareProvider extends BasicProvider {
   constructor (
     starkWallet: StarkwareWallet,
     signerWallet: ethers.Wallet,
-    contractAddress: string
+    contractAddress: string,
+    connection: Connection = new Connection()
   ) {
-    const conn = new Connection()
-    super(conn)
-    conn.setProvider(this)
+    super(connection)
+    connection.setProvider(this)
 
     this._starkWallet = starkWallet
     this._signerWallet = signerWallet
@@ -365,18 +375,23 @@ class StarkwareProvider extends BasicProvider {
   }
 
   static fromWalletConnect (wc: WalletConnect) {
-    return new WalletConnectProvider(wc)
+    return new StarkwareWalletConnectProvider(wc)
   }
 
   setContractAddress (contractAddress: string) {
     this.contractAddress = contractAddress
   }
 
-  public async resolveResult (
+  public resolveResult = async (
     method: any,
     params: any,
     txOpts: any = {}
-  ): Promise<any> {
+  ): Promise<any> => {
+    if (typeof method !== 'string') {
+      // TODO: fix
+      ;({ method, params } = method)
+    }
+
     switch (method) {
       case 'stark_account': {
         const { layer, application, index } = params
@@ -451,7 +466,7 @@ class StarkwareProvider extends BasicProvider {
       }
       case 'personal_sign': {
         const message = params[0]
-        return this.signMessage(message)
+        return this.personalSign(message)
       }
       case 'eth_sign': {
         const message = params[1]
@@ -467,20 +482,76 @@ class StarkwareProvider extends BasicProvider {
       }
       case 'eth_accounts': {
         const address = await this.getAddress()
-        return [address]
+        if (address) {
+          return [address]
+        }
+
+        return []
       }
       case 'eth_requestAccounts': {
+        return this.requestAccounts()
+      }
+      case 'net_version': {
+        return this._signerWallet.getChainId()
+      }
+      case 'eth_chainId': {
+        return this._signerWallet.getChainId()
+      }
+      case 'eth_coinbase': {
         const address = await this.getAddress()
-        return [address]
+        return address
+      }
+      case 'eth_blockNumber': {
+        return this._signerWallet.provider.getBlockNumber()
+      }
+      case 'eth_getBalance': {
+        return this._signerWallet.getBalance()
+      }
+      case 'eth_getTransactionCount': {
+        return this._signerWallet.getTransactionCount()
+      }
+      case 'eth_getTransactionCount': {
+        throw new Error('not implemented')
+      }
+      case 'eth_getCode': {
+        throw new Error('not implemented')
+      }
+      case 'eth_getCode': {
+        throw new Error('not implemented')
+      }
+      case 'eth_sendRawTransaction': {
+        throw new Error('not implemented')
+      }
+      case 'eth_getTransactionByHash': {
+        throw new Error('not implemented')
+      }
+      case 'eth_getTransactionReceipt': {
+        throw new Error('not implemented')
+      }
+      case 'eth_getBlockByNumber': {
+        throw new Error('not implemented')
+      }
+      case 'eth_getBlockByHash': {
+        throw new Error('not implemented')
+      }
+      case 'eth_estimateGas': {
+        return this._signerWallet.estimateGas(params)
+      }
+      case 'eth_gasPrice': {
+        return this._signerWallet.getGasPrice()
+      }
+      case 'eth_call': {
+        return this._signerWallet.call(params)
       }
       default: {
+        console.debug('METHOD:', method, 'PARAMS:', params)
         throw new Error(`Unknown Starkware RPC Method: ${method}`)
       }
     }
   }
 
   public async resolve (payload: any, txOpts: any = {}): Promise<any> {
-    const { id, method, params } = payload
+    let { id, method, params } = payload
 
     try {
       const result = await this.resolveResult(method, params, txOpts)
@@ -547,6 +618,19 @@ class StarkwareProvider extends BasicProvider {
     const starkKey = await this._starkWallet.account(layer, application, index)
     this.starkKey = starkKey
     return starkKey
+  }
+
+  public async requestAccounts (): Promise<string[]> {
+    const address = await this.getAddress()
+    if (address) {
+      return [address]
+    }
+
+    return []
+  }
+
+  public async personalSign (message: string): Promise<string> {
+    return this.signMessage(message)
   }
 
   public async registerUser (
@@ -1772,8 +1856,8 @@ class StarkwareProvider extends BasicProvider {
     return this._signerWallet.sendTransaction(populatedTx)
   }
 
-  public getAddress (): string {
-    return this._signerWallet.address
+  public getAddress = (): Promise<string> => {
+    return this._signerWallet.getAddress()
   }
 
   private async _callContract (data: string, txOpts: any = {}) {

@@ -115,7 +115,7 @@ describe('StarkwareProvider', () => {
     expect(result).toBeTruthy()
   })
   it('should resolve eth account request successfully', async () => {
-    const address = provider.getAddress()
+    const address = await provider.getAddress()
     const { result } = await provider.resolve({
       id: 1,
       jsonrpc: '2.0',
