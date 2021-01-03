@@ -39,9 +39,15 @@ describe('StarkwareWallet', () => {
     expect(account).toEqual(starkKey)
   })
   it('sign', async () => {
-    const signature = await starkWallet.sign('example')
-    expect(signature).toEqual(
-      '0xfb7ae61d6b2c34de46d17830eff6bc73888f560fa4f8ab0e0de50a6f0f8a131f43b69300b96b8e2bcd42efd172a6d531ba2b39a765596fe7e1b39cc37114c1ad1b'
+    const signature = await starkWallet.sign(
+      '0x02eb156da69980db458ab9a1950073d51edc5b2393a49a9de550375076d9c104'
+    )
+    expect(JSON.stringify(signature)).toEqual(
+      JSON.stringify({
+        r: '2fe9d3315452cef6d15dbeefcd57777311b2a2081f3cb2994df0270621bfa11',
+        s: '1da2b0d8a1f93c057ff4a69876fa4bc12bb23e2b80963e702fc5e3567df07ad',
+        recoveryParam: 0,
+      })
     )
   })
   it('signTransaction', async () => {

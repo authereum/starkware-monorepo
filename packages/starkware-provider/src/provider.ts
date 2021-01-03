@@ -10,6 +10,7 @@ import {
   quantizeAmount,
   Asset,
   getAssetId,
+  Signature,
 } from '@authereum/starkware-crypto'
 import BasicProvider, { IRpcConnection } from './BasicProvider'
 
@@ -1025,7 +1026,7 @@ class StarkwareProvider extends BasicProvider {
     return txhash
   }
 
-  public async transfer (input: TransferParams): Promise<string> {
+  public async transfer (input: TransferParams): Promise<Signature> {
     const {
       from,
       to,
@@ -1059,7 +1060,7 @@ class StarkwareProvider extends BasicProvider {
     return starkSignature
   }
 
-  public async transferEth (input: TransferEthParams): Promise<string> {
+  public async transferEth (input: TransferEthParams): Promise<Signature> {
     const starkKey = await this.getActiveAccount()
     const {
       vaultId,
@@ -1089,7 +1090,7 @@ class StarkwareProvider extends BasicProvider {
     })
   }
 
-  public async transferErc20 (input: TransferErc20Params): Promise<string> {
+  public async transferErc20 (input: TransferErc20Params): Promise<Signature> {
     const starkKey = await this.getActiveAccount()
     const {
       vaultId,
@@ -1121,7 +1122,9 @@ class StarkwareProvider extends BasicProvider {
     })
   }
 
-  public async transferErc721 (input: TransferErc721Params): Promise<string> {
+  public async transferErc721 (
+    input: TransferErc721Params
+  ): Promise<Signature> {
     const starkKey = await this.getActiveAccount()
     const {
       vaultId,
@@ -1151,7 +1154,7 @@ class StarkwareProvider extends BasicProvider {
     })
   }
 
-  public async createOrder (input: OrderParams): Promise<string> {
+  public async createOrder (input: OrderParams): Promise<Signature> {
     const { sell, buy, nonce, expirationTimestamp } = input
     const sellVaultId = sell.vaultId
     const buyVaultId = buy.vaultId
@@ -1787,7 +1790,7 @@ class StarkwareProvider extends BasicProvider {
     nonce: number,
     positionId: number,
     expirationTimestamp: number
-  ): Promise<string> {
+  ): Promise<Signature> {
     const msgHash = await this._controller.perpetualLimitOrder(
       assetIdSynthetic,
       assetIdCollateral,
@@ -1811,7 +1814,7 @@ class StarkwareProvider extends BasicProvider {
     nonce: number,
     expirationTimestamp: number,
     amount: number
-  ): Promise<string> {
+  ): Promise<Signature> {
     const msgHash = await this._controller.perpetualWithdrawal(
       assetIdCollateral,
       positionId,
@@ -1826,19 +1829,19 @@ class StarkwareProvider extends BasicProvider {
 
   // transaction and message signing
 
-  public async starkSignMessage (message: any) {
+  public async starkSignMessage (message: any): Promise<Signature> {
     return this._starkWallet.sign(message)
   }
 
-  public async signMessage (message: any) {
+  public async signMessage (message: any): Promise<string> {
     return this._signerWallet.signMessage(message)
   }
 
-  public async starkSignTransaction (tx: any) {
+  public async starkSignTransaction (tx: any): Promise<string> {
     return this._starkWallet.signTransaction(tx)
   }
 
-  public async signTransaction (tx: any) {
+  public async signTransaction (tx: any): Promise<string> {
     return this._signerWallet.signTransaction(tx)
   }
 

@@ -1,7 +1,20 @@
-import * as starkwareCrypto from '@authereum/starkware-crypto'
+import {
+  KeyPair,
+  privateKeyFromSignature,
+  getStarkPublicKey,
+  getKeyPair,
+  getKeyPairFromPath,
+  getAccountPath,
+  getXCoordinate,
+  sign,
+  ec,
+  Signature,
+} from '@authereum/starkware-crypto'
 import { sanitizeHex, isHexString } from 'enc-utils'
 import BN from 'bn.js'
-import { Wallet, providers } from 'ethers'
+import { Wallet, Signer, providers } from 'ethers'
+import { LedgerSigner } from '@authereum/ethersproject-hardware-wallets'
+import EthApp from '@ledgerhq/hw-app-eth'
 
 // -- TYPES --------------------------------------------- //
 
@@ -49,25 +62,31 @@ class MemoryStore {
 // -- StarkwareWallet --------------------------------------------- //
 
 export class StarkwareWallet {
+  private signer: LedgerSigner | undefined
   private accountMapping: StarkwareAccountMapping | undefined
-  private activeKeyPair: starkwareCrypto.KeyPair | undefined
+  private activeKeyPair: KeyPair | undefined
   private mnemonic: string = ''
   private privateKey: string = ''
   provider: providers.Provider
   private store: Store
   private accountMappingKey: string
+  private _layer: string = ''
+  private _application: string = ''
+  private _index: string = '0'
   public walletIndex: number = 0
 
   constructor (
-    mnemonicOrPrivateKey: string,
+    mnemonicOrPrivateKeyOrSigner: string | Signer | LedgerSigner,
     provider: string | providers.Provider,
     store: Store = new MemoryStore(),
     accountMappingKey: string = DEFAULT_ACCOUNT_MAPPING_KEY
   ) {
-    if (mnemonicOrPrivateKey.length > 66) {
-      this.mnemonic = mnemonicOrPrivateKey
+    if (mnemonicOrPrivateKeyOrSigner instanceof LedgerSigner) {
+      this.signer = mnemonicOrPrivateKeyOrSigner
+    } else if ((mnemonicOrPrivateKeyOrSigner as string).length > 66) {
+      this.mnemonic = mnemonicOrPrivateKeyOrSigner as string
     } else {
-      this.privateKey = sanitizeHex(mnemonicOrPrivateKey)
+      this.privateKey = sanitizeHex(mnemonicOrPrivateKeyOrSigner as string)
     }
 
     this.provider = getJsonRpcProvider(provider)
@@ -75,10 +94,35 @@ export class StarkwareWallet {
     this.accountMappingKey = accountMappingKey
   }
 
+  static fromLedger (
+    path: string = ETH_STANDARD_PATH,
+    provider: string | providers.Provider,
+    ethApp?: EthApp
+  ) {
+    const type = 'hid'
+    provider = getJsonRpcProvider(provider)
+    if (!path) {
+      path = ETH_STANDARD_PATH
+    }
+    const index = 0
+    const hdPath = `${path}/${index}`
+    const signer = new LedgerSigner(provider, type, hdPath, ethApp)
+    return new StarkwareWallet(signer, provider)
+  }
+
+  static fromSigner (
+    signer: Signer,
+    provider: string | providers.Provider,
+    store: Store,
+    accountMappingKey: string = DEFAULT_ACCOUNT_MAPPING_KEY
+  ) {
+    return new StarkwareWallet(signer, provider, store, accountMappingKey)
+  }
+
   static fromPrivateKey (
     privateKey: string,
     provider: string | providers.Provider,
-    store: Store,
+    store: Store = new MemoryStore(),
     accountMappingKey: string = DEFAULT_ACCOUNT_MAPPING_KEY
   ) {
     return new StarkwareWallet(privateKey, provider, store, accountMappingKey)
@@ -90,7 +134,7 @@ export class StarkwareWallet {
     store: Store = new MemoryStore(),
     accountMappingKey: string = DEFAULT_ACCOUNT_MAPPING_KEY
   ) {
-    const privateKey = starkwareCrypto.privateKeyFromSignature(signature)
+    const privateKey = privateKeyFromSignature(signature)
     return StarkwareWallet.fromPrivateKey(
       privateKey,
       provider,
@@ -110,12 +154,16 @@ export class StarkwareWallet {
   }
 
   public async getStarkPublicKey (path: string): Promise<string> {
+    if (this.signer) {
+      return this.signer.getStarkPublicKey(path)
+    }
+
     const keyPair = await this.getKeyPairFromPath(path)
-    const starkPublicKey = starkwareCrypto.getStarkPublicKey(keyPair)
+    const starkPublicKey = getStarkPublicKey(keyPair)
     return starkPublicKey
   }
 
-  public async getActiveKeyPair (): Promise<starkwareCrypto.KeyPair> {
+  public async getActiveKeyPair (): Promise<KeyPair> {
     await this.getAccountMapping()
     if (this.activeKeyPair) {
       return this.activeKeyPair
@@ -124,9 +172,8 @@ export class StarkwareWallet {
     }
   }
 
-  public getEthereumAddress (): string {
-    const wallet = this.getWallet()
-    return wallet.address
+  public getEthereumAddress (): Promise<string> {
+    return this.getAddress()
   }
 
   public async account (
@@ -134,22 +181,47 @@ export class StarkwareWallet {
     application: string,
     index: string
   ): Promise<string> {
-    const path = starkwareCrypto.getAccountPath(
+    this._layer = layer
+    this._application = application
+    this._index = index
+    if (!application) {
+      console.warn('application is undefined')
+    }
+    let path = await this.getAccountPath(layer, application, index)
+    return this.getStarkKey(path)
+  }
+
+  public async getAccountPath (
+    layer: string = this._layer,
+    application: string = this._application,
+    index: string = this._index
+  ): Promise<string> {
+    const path = getAccountPath(
       layer,
       application,
-      this.getEthereumAddress(),
+      await this.getEthereumAddress(),
       index
     )
 
-    return this.getStarkKey(path)
+    return path
   }
 
   public async getStarkKey (path: string): Promise<string> {
     const starkPublicKey = await this.getStarkPublicKey(path)
-    return sanitizeHex(starkwareCrypto.getXCoordinate(starkPublicKey))
+    return sanitizeHex(getXCoordinate(starkPublicKey))
   }
 
-  public async sign (message: string): Promise<string> {
+  public async sign (message: string): Promise<Signature> {
+    const path = await this.getAccountPath()
+    if (this.signer) {
+      return this.signer.starkSign(path, message)
+    }
+
+    const keyPair = await this.getKeyPairFromPath(path)
+    return sign(keyPair, message)
+  }
+
+  public async signWithEthereumKey (message: string): Promise<string> {
     const wallet = this.getWallet()
     const sig = await wallet.signMessage(message)
     return sig
@@ -186,12 +258,10 @@ export class StarkwareWallet {
 
   // -- Private ------------------------------------------------------- //
 
-  private async getKeyPairFromPath (
-    path: string
-  ): Promise<starkwareCrypto.KeyPair> {
+  private async getKeyPairFromPath (path: string): Promise<KeyPair> {
     const accountMapping = await this.getAccountMapping()
     if (this.privateKey) {
-      const activeKeyPair = starkwareCrypto.getKeyPair(this.privateKey)
+      const activeKeyPair = getKeyPair(this.privateKey)
       await this.setActiveKeyPair(path, activeKeyPair)
       return activeKeyPair
     }
@@ -202,22 +272,16 @@ export class StarkwareWallet {
 
     const match = accountMapping[path]
     if (match) {
-      return starkwareCrypto.ec.keyFromPrivate(match)
+      return ec.keyFromPrivate(match)
     }
 
-    const activeKeyPair = starkwareCrypto.getKeyPairFromPath(
-      this.mnemonic,
-      path
-    )
+    const activeKeyPair = getKeyPairFromPath(this.mnemonic, path)
 
     await this.setActiveKeyPair(path, activeKeyPair)
     return activeKeyPair
   }
 
-  private async setActiveKeyPair (
-    path: string,
-    activeKeyPair: starkwareCrypto.KeyPair
-  ) {
+  private async setActiveKeyPair (path: string, activeKeyPair: KeyPair) {
     const accountMapping = await this.getAccountMapping()
     accountMapping[path] = activeKeyPair.getPrivate('hex')
     this.accountMapping = accountMapping
@@ -236,14 +300,16 @@ export class StarkwareWallet {
 
     const paths = Object.keys(accountMapping)
     if (paths.length && !this.activeKeyPair) {
-      this.activeKeyPair = starkwareCrypto.ec.keyFromPrivate(
-        accountMapping[paths[0]]
-      )
+      this.activeKeyPair = ec.keyFromPrivate(accountMapping[paths[0]])
     }
     return accountMapping
   }
 
   private getWallet () {
+    if (this.signer) {
+      return this.signer
+    }
+
     if (this.privateKey) {
       return new Wallet(this.privateKey).connect(this.provider)
     }
