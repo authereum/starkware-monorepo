@@ -74,6 +74,7 @@ export class StarkwareWallet {
   private _application: string = ''
   private _index: string = '0'
   public walletIndex: number = 0
+  private _debug: boolean = false
 
   constructor (
     mnemonicOrPrivateKeyOrSigner: string | Signer | LedgerSigner,
@@ -92,6 +93,18 @@ export class StarkwareWallet {
     this.provider = getJsonRpcProvider(provider)
     this.store = store
     this.accountMappingKey = accountMappingKey
+  }
+
+  private _debugLog = (...args: any) => {
+    if (!this._debug) {
+      return
+    }
+
+    console.debug('[stark-wallet]', ...args)
+  }
+
+  setDebug (debug: boolean) {
+    this._debug = debug
   }
 
   static fromLedger (
@@ -146,14 +159,24 @@ export class StarkwareWallet {
   // -- Get / Set ----------------------------------------------------- //
 
   public setProvider (provider: string | providers.Provider): void {
+    this._debugLog('setProvider', provider)
     this.provider = getJsonRpcProvider(provider)
   }
 
+  public setPath (path: string): void {
+    this._debugLog('setPath', path)
+    if (this.signer) {
+      this.signer.setPath(path)
+    }
+  }
+
   public setWalletIndex (walletIndex: number): void {
+    this._debugLog('setWalletIndex', walletIndex)
     this.walletIndex = walletIndex
   }
 
   public async getStarkPublicKey (path: string): Promise<string> {
+    this._debugLog('getStarkPublicKey', path)
     if (this.signer) {
       return this.signer.getStarkPublicKey(path)
     }
@@ -164,6 +187,7 @@ export class StarkwareWallet {
   }
 
   public async getActiveKeyPair (): Promise<KeyPair> {
+    this._debugLog('getActiveKeyPair')
     await this.getAccountMapping()
     if (this.activeKeyPair) {
       return this.activeKeyPair
@@ -181,6 +205,7 @@ export class StarkwareWallet {
     application: string,
     index: string
   ): Promise<string> {
+    this._debugLog('account', layer, application, index)
     this._layer = layer
     this._application = application
     this._index = index
@@ -196,22 +221,21 @@ export class StarkwareWallet {
     application: string = this._application,
     index: string = this._index
   ): Promise<string> {
-    const path = getAccountPath(
-      layer,
-      application,
-      await this.getEthereumAddress(),
-      index
-    )
+    const ethAddress = await this.getEthereumAddress()
+    this._debugLog('getAccountPath', layer, application, index, ethAddress)
+    const path = getAccountPath(layer, application, ethAddress, index)
 
     return path
   }
 
   public async getStarkKey (path: string): Promise<string> {
+    this._debugLog('getStarkKey', path)
     const starkPublicKey = await this.getStarkPublicKey(path)
     return sanitizeHex(getXCoordinate(starkPublicKey))
   }
 
   public async sign (message: string): Promise<Signature> {
+    this._debugLog('sign', message)
     const path = await this.getAccountPath()
     if (this.signer) {
       return this.signer.starkSign(path, message)
@@ -259,6 +283,7 @@ export class StarkwareWallet {
   // -- Private ------------------------------------------------------- //
 
   private async getKeyPairFromPath (path: string): Promise<KeyPair> {
+    this._debugLog('getKeyPairFromPath', path)
     const accountMapping = await this.getAccountMapping()
     if (this.privateKey) {
       const activeKeyPair = getKeyPair(this.privateKey)

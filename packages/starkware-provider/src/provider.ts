@@ -354,6 +354,7 @@ class StarkwareProvider extends BasicProvider {
   private _starkWallet: StarkwareWallet
   private _signerWallet: ethers.Wallet
   private _controller: StarkwareController
+  private _debug: boolean = false
 
   public wc: WalletConnectClientWrapper
   public contractAddress: string
@@ -375,12 +376,31 @@ class StarkwareProvider extends BasicProvider {
     this.wc = new WalletConnectClientWrapper()
   }
 
+  private _debugLog = (...args: any) => {
+    if (!this._debug) {
+      return
+    }
+
+    console.debug('[stark-provider]', ...args)
+  }
+
   static fromWalletConnect (wc: WalletConnect) {
     return new StarkwareWalletConnectProvider(wc)
   }
 
+  setSigner (signerWallet: ethers.Wallet) {
+    this._debugLog('setSigner', signerWallet)
+    this._signerWallet = signerWallet
+  }
+
   setContractAddress (contractAddress: string) {
+    this._debugLog('setContractAddress', contractAddress)
     this.contractAddress = contractAddress
+  }
+
+  setDebug (debug: boolean) {
+    this._debug = debug
+    this._starkWallet.setDebug(debug)
   }
 
   public resolveResult = async (
@@ -388,6 +408,7 @@ class StarkwareProvider extends BasicProvider {
     params: any,
     txOpts: any = {}
   ): Promise<any> => {
+    this._debugLog('resolveResult', method, params)
     if (typeof method !== 'string') {
       // TODO: fix
       ;({ method, params } = method)
@@ -552,6 +573,7 @@ class StarkwareProvider extends BasicProvider {
   }
 
   public async resolve (payload: any, txOpts: any = {}): Promise<any> {
+    this._debugLog('resolve', payload)
     let { id, method, params } = payload
 
     try {
@@ -573,12 +595,14 @@ class StarkwareProvider extends BasicProvider {
     layer: string,
     application: string,
     index: string
-  ): Promise<string> {
+  ): Promise<string[]> {
+    this._debugLog('enable', layer, application, index)
     try {
       await this.open()
       const starkKey = await this.updateAccount(layer, application, index)
+      this._debugLog('enable starkkey', starkKey)
       this.emit('enable')
-      return starkKey
+      return this.requestAccounts()
     } catch (err) {
       await this.close()
       throw err
@@ -590,19 +614,24 @@ class StarkwareProvider extends BasicProvider {
     application: string,
     index: string
   ): Promise<string> {
-    const accountParams: AccountParams = { layer, application, index }
-    if (this.starkKey && matches(this._accountParams, accountParams)) {
-      return this.starkKey
+    this._debugLog('updateAccount', layer, application, index)
+    if (layer) {
+      const accountParams: AccountParams = { layer, application, index }
+      if (this.starkKey && matches(this._accountParams, accountParams)) {
+        return this.starkKey
+      }
     }
 
     return this.account(layer, application, index)
   }
 
   public async getActiveAccount (): Promise<string> {
+    this._debugLog('getActiveAccount')
     if (!this._accountParams) {
       throw new Error('No StarkKey available - please call provider.enable()')
     }
     if (this.starkKey) {
+      this._debugLog('getActiveAccount', 'this.starkKey')
       return this.starkKey
     }
 
@@ -615,13 +644,22 @@ class StarkwareProvider extends BasicProvider {
     application: string,
     index: string
   ): Promise<string> {
-    this._accountParams = { layer, application, index }
+    if (application) {
+      this._accountParams = { layer, application, index }
+    } else if (this._accountParams) {
+      layer = this._accountParams.layer
+      application = this._accountParams.application
+      index = this._accountParams.index
+    }
+
+    this._debugLog('account', layer, application, index)
     const starkKey = await this._starkWallet.account(layer, application, index)
     this.starkKey = starkKey
     return starkKey
   }
 
   public async requestAccounts (): Promise<string[]> {
+    this._debugLog('requestAccounts')
     const address = await this.getAddress()
     if (address) {
       return [address]
