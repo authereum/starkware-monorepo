@@ -42,7 +42,7 @@ describe('perpetual messages', () => {
       expect(messageHash).toBe(expectedMessageHash)
     }
   })
-  test.skip('getPerpetualTransferMsgHash', () => {
+  test('getPerpetualTransferMsgHash', () => {
     const transfer = precomputedMessages['transfer']
     for (const expectedMessageHash in transfer) {
       const messageData = transfer[expectedMessageHash]
