@@ -441,7 +441,7 @@ describe('StarkwareController', () => {
     )
     expect(encodedData).toBeTruthy()
   })
-  it.skip('registerToken', async () => {
+  it('registerToken', async () => {
     const a = '0x01'
     const b = '0x02'
     const encodedData = await controller.registerToken(a, b)
@@ -599,6 +599,46 @@ describe('StarkwareController', () => {
       vaultId,
       quantizedAmount
     )
+    expect(encodedData).toBeTruthy()
+  })
+  it('perpetualTransfer', async () => {
+    const encodedData = await controller.perpetualTransfer({
+      assetId: '1',
+      assetIdFee: '0',
+      receiverPublicKey: '1',
+      senderPositionId: '1',
+      receiverPositionId: '1',
+      feePositionId: '1',
+      nonce: '0',
+      amount: '1000',
+      maxAmountFee: '10',
+      expirationTimestamp: '100',
+    })
+    expect(encodedData).toBeTruthy()
+  })
+  it('perpetualLimitOrder', async () => {
+    const encodedData = await controller.perpetualLimitOrder({
+      assetIdSynthetic: '1',
+      assetIdCollateral: '1',
+      isBuyingSynthetic: true,
+      assetIdFee: '1',
+      amountSynthetic: '1',
+      amountCollateral: '1',
+      amountFee: '1',
+      nonce: '1',
+      positionId: '1',
+      expirationTimestamp: '1',
+    })
+    expect(encodedData).toBeTruthy()
+  })
+  it('perpetualWithdrawal', async () => {
+    const encodedData = await controller.perpetualWithdrawal({
+      assetIdCollateral: '1',
+      positionId: '10',
+      nonce: '0',
+      expirationTimestamp: '100',
+      amount: '1000',
+    })
     expect(encodedData).toBeTruthy()
   })
 })

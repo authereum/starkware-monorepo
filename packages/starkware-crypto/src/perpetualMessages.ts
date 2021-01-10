@@ -34,40 +34,40 @@ const CONDITIONAL_TRANSFER = 5
 const WITHDRAWAL = 6
 
 export function getPerpetualLimitOrderMsgHash (
-  assetIdSynthetic: number,
-  assetIdCollateral: number,
-  isBuyingSynthetic: number,
-  assetIdFee: number,
-  amountSynthetic: number,
-  amountCollateral: number,
-  amountFee: number,
-  nonce: number,
-  positionId: number,
-  expirationTimestamp: number,
+  assetIdSynthetic: string,
+  assetIdCollateral: string,
+  isBuyingSynthetic: boolean | number,
+  assetIdFee: string,
+  amountSynthetic: string,
+  amountCollateral: string,
+  amountFee: string,
+  nonce: string,
+  positionId: string,
+  expirationTimestamp: string,
   hash: any = pedersen
 ): string {
-  const assetIdSyntheticBn = new BN(assetIdSynthetic, 10)
-  const assetIdCollateralBn = new BN(assetIdCollateral, 10)
-  const assetIdFeeBn = new BN(assetIdFee, 10)
-  const amountFeeBn = new BN(amountFee, 10)
-  const nonceBn = new BN(nonce, 10)
-  const positionIdBn = new BN(positionId, 10)
-  const expirationTimestampBn = new BN(expirationTimestamp, 10)
+  const assetIdSyntheticBn = hexToBN(assetIdSynthetic)
+  const assetIdCollateralBn = hexToBN(assetIdCollateral)
+  const assetIdFeeBn = hexToBN(assetIdFee)
+  const amountFeeBn = hexToBN(amountFee)
+  const nonceBn = hexToBN(nonce)
+  const positionIdBn = hexToBN(positionId)
+  const expirationTimestampBn = hexToBN(expirationTimestamp)
 
   let assetIdSell: BN
   let assetIdBuy: BN
   let amountSell: BN
   let amountBuy: BN
   if (isBuyingSynthetic) {
-    assetIdSell = new BN(assetIdCollateral, 10)
-    assetIdBuy = new BN(assetIdSynthetic, 10)
-    amountSell = new BN(amountCollateral, 10)
-    amountBuy = new BN(amountSynthetic, 10)
+    assetIdSell = hexToBN(assetIdCollateral)
+    assetIdBuy = hexToBN(assetIdSynthetic)
+    amountSell = hexToBN(amountCollateral)
+    amountBuy = hexToBN(amountSynthetic)
   } else {
-    assetIdSell = new BN(assetIdSynthetic, 10)
-    assetIdBuy = new BN(assetIdCollateral, 10)
-    amountSell = new BN(amountSynthetic, 10)
-    amountBuy = new BN(amountCollateral, 10)
+    assetIdSell = hexToBN(assetIdSynthetic)
+    assetIdBuy = hexToBN(assetIdCollateral)
+    amountSell = hexToBN(amountSynthetic)
+    amountBuy = hexToBN(amountCollateral)
   }
   // 0 <= assetIdSynthetic < 2^128
   assertInRange(assetIdSyntheticBn, ZERO_BN, TWO_POW_128_BN, 'assetIdSynthetic')
@@ -93,7 +93,7 @@ export function getPerpetualLimitOrderMsgHash (
 
   let msg = hash([assetIdSell, assetIdBuy])
   msg = hash([msg, assetIdFeeBn])
-  let packedMsg0 = new BN(amountSell, 10)
+  let packedMsg0 = hexToBN(amountSell)
   packedMsg0 = packedMsg0.ushln(64).add(amountBuy)
   packedMsg0 = packedMsg0.ushln(64).add(amountFeeBn)
   packedMsg0 = packedMsg0.ushln(32).add(nonceBn)
@@ -108,18 +108,18 @@ export function getPerpetualLimitOrderMsgHash (
 }
 
 export function getPerpetualWithdrawalMsgHash (
-  assetIdCollateral: number,
-  positionId: number,
-  nonce: number,
-  expirationTimestamp: number,
-  amount: number,
+  assetIdCollateral: string,
+  positionId: string,
+  nonce: string,
+  expirationTimestamp: string,
+  amount: string,
   hash: any = pedersen
 ): string {
-  const assetIdCollateralBn = new BN(assetIdCollateral, 10)
-  const positionIdBn = new BN(positionId, 10)
-  const nonceBn = new BN(nonce, 10)
-  const amountBn = new BN(amount, 10)
-  const expirationTimestampBn = new BN(expirationTimestamp, 10)
+  const assetIdCollateralBn = hexToBN(assetIdCollateral)
+  const positionIdBn = hexToBN(positionId)
+  const nonceBn = hexToBN(nonce)
+  const amountBn = hexToBN(amount)
+  const expirationTimestampBn = hexToBN(expirationTimestamp)
 
   // 0 <= assetIdCollateral < 2^250
   assertInRange(
@@ -153,28 +153,28 @@ export function getPerpetualWithdrawalMsgHash (
 }
 
 export function getPerpetualTransferMsgHash (
-  assetId: number,
-  assetIdFee: number,
-  receiverPublicKey: number,
-  senderPositionId: number,
-  receiverPositionId: number,
-  srcFeePositionId: number,
-  nonce: number,
-  amount: number,
-  maxAmountFee: number,
-  expirationTimestamp: number,
+  assetId: string,
+  assetIdFee: string,
+  receiverPublicKey: string,
+  senderPositionId: string,
+  receiverPositionId: string,
+  srcFeePositionId: string,
+  nonce: string,
+  amount: string,
+  maxAmountFee: string,
+  expirationTimestamp: string,
   hash: any = pedersen
 ): string {
-  const assetIdBn = new BN(assetId, 10)
-  const assetIdFeeBn = new BN(assetIdFee, 10)
-  const receiverPublicKeyBn = new BN(receiverPublicKey, 10)
-  const senderPositionIdBn = new BN(senderPositionId, 10)
-  const receiverPositionIdBn = new BN(receiverPositionId, 10)
-  const srcFeePositionIdBn = new BN(srcFeePositionId, 10)
-  const nonceBn = new BN(nonce, 10)
-  const amountBn = new BN(amount, 10)
-  const maxAmountFeeBn = new BN(maxAmountFee, 10)
-  const expirationTimestampBn = new BN(expirationTimestamp, 10)
+  const assetIdBn = hexToBN(assetId)
+  const assetIdFeeBn = hexToBN(assetIdFee)
+  const receiverPublicKeyBn = hexToBN(receiverPublicKey)
+  const senderPositionIdBn = hexToBN(senderPositionId)
+  const receiverPositionIdBn = hexToBN(receiverPositionId)
+  const srcFeePositionIdBn = hexToBN(srcFeePositionId)
+  const nonceBn = hexToBN(nonce)
+  const amountBn = hexToBN(amount)
+  const maxAmountFeeBn = hexToBN(maxAmountFee)
+  const expirationTimestampBn = hexToBN(expirationTimestamp)
 
   // assert 0 <= amount < 2**64
   assertInRange(amountBn, ZERO_BN, TWO_POW_64_BN, 'amount')
@@ -233,30 +233,30 @@ export function getPerpetualTransferMsgHash (
 }
 
 export function getPerpetualConditionalTransferMsgHash (
-  assetId: number,
-  assetIdFee: number,
-  receiverPublicKey: number,
-  condition: number,
-  senderPositionId: number,
-  receiverPositionId: number,
-  srcFeePositionId: number,
-  nonce: number,
-  amount: number,
-  maxAmountFee: number,
-  expirationTimestamp: number,
+  assetId: string,
+  assetIdFee: string,
+  receiverPublicKey: string,
+  condition: string,
+  senderPositionId: string,
+  receiverPositionId: string,
+  srcFeePositionId: string,
+  nonce: string,
+  amount: string,
+  maxAmountFee: string,
+  expirationTimestamp: string,
   hash: any = pedersen
 ) {
-  const assetIdBn = new BN(assetId, 10)
-  const assetIdFeeBn = new BN(assetIdFee, 10)
-  const receiverPublicKeyBn = new BN(receiverPublicKey, 10)
-  const conditionBn = new BN(condition, 10)
-  const senderPositionIdBn = new BN(senderPositionId, 10)
-  const receiverPositionIdBn = new BN(receiverPositionId, 10)
-  const srcFeePositionIdBn = new BN(srcFeePositionId, 10)
-  const nonceBn = new BN(nonce, 10)
-  const amountBn = new BN(amount, 10)
-  const maxAmountFeeBn = new BN(maxAmountFee, 10)
-  const expirationTimestampBn = new BN(expirationTimestamp, 10)
+  const assetIdBn = hexToBN(assetId)
+  const assetIdFeeBn = hexToBN(assetIdFee)
+  const receiverPublicKeyBn = hexToBN(receiverPublicKey)
+  const conditionBn = hexToBN(condition)
+  const senderPositionIdBn = hexToBN(senderPositionId)
+  const receiverPositionIdBn = hexToBN(receiverPositionId)
+  const srcFeePositionIdBn = hexToBN(srcFeePositionId)
+  const nonceBn = hexToBN(nonce)
+  const amountBn = hexToBN(amount)
+  const maxAmountFeeBn = hexToBN(maxAmountFee)
+  const expirationTimestampBn = hexToBN(expirationTimestamp)
 
   // assert 0 <= amount < 2**64
   assertInRange(amountBn, ZERO_BN, TWO_POW_64_BN, 'amount')

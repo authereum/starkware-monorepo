@@ -51,7 +51,13 @@ export function hexToBN (value: string | number | BN): BN {
   if (typeof value === 'number') {
     return new BN(value, 10)
   } else if (typeof value === 'string') {
-    return new BN(removeHexPrefix(value), 16)
+    if (isHexPrefixed(value)) {
+      return new BN(removeHexPrefix(value), 16)
+    } else if (isHexString(value)) {
+      return new BN(value, 16)
+    } else {
+      return new BN(value, 10)
+    }
   }
 
   return value
@@ -63,6 +69,10 @@ export function isHexPrefixed (str: string): boolean {
 
 export function hasHexPrefix (str: string) {
   return (str || '').substring(0, 2) === '0x'
+}
+
+export function isHexString (str: string): boolean {
+  return /[a-fA-F0-9]+$/.test(str.replace(/\s+/gi, ''))
 }
 
 /* --------------------------- ELLIPTIC ---------------------------------- */

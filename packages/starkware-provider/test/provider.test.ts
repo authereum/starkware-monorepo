@@ -124,8 +124,81 @@ describe('StarkwareProvider', () => {
     })
     expect(result[0]).toBe(ethKey)
   })
-  it.skip('getEthKey', async () => {
+  it('getEthKey', async () => {
     const result = await provider.getEthKey(starkKey)
     expect(result).toBe(ethKey)
+  })
+  it.only('should resolve stark perpetual transfer request successfully', async () => {
+    const starkSignature = await provider.perpetualTransfer({
+      asset: {
+        type: 'ETH',
+        data: {
+          quantum: '10000000000',
+        },
+        amount: '1',
+      },
+      fee: {
+        type: 'ETH',
+        data: {
+          quantum: '10000000000',
+        },
+        maxAmount: '1',
+        positionId: '1',
+      },
+      sender: {
+        positionId: '1',
+      },
+      receiver: {
+        positionId: '1',
+        starkKey,
+      },
+      nonce: '1597237',
+      expirationTimestamp: '444396',
+    })
+    expect(starkSignature).toBeTruthy()
+  })
+  it('should resolve stark perpetual limit order request successfully', async () => {
+    const starkSignature = await provider.perpetualLimitOrder({
+      syntheticAsset: {
+        type: 'ETH',
+        data: {
+          quantum: '10000000000',
+        },
+      },
+      collateralAsset: {
+        type: 'ETH',
+        data: {
+          quantum: '10000000000',
+        },
+        amount: '1',
+      },
+      isBuyingSynthetic: false,
+      fee: {
+        type: 'ETH',
+        data: {
+          quantum: '10000000000',
+        },
+        amount: '1',
+      },
+      nonce: '159723',
+      positionId: '1',
+      expirationTimestamp: '444396',
+    })
+    expect(starkSignature).toBeTruthy()
+  })
+  it('should resolve stark perpetual withdrawal request successfully', async () => {
+    const starkSignature = await provider.perpetualWithdrawal({
+      collateralAsset: {
+        type: 'ETH',
+        data: {
+          quantum: '10000000000',
+        },
+        amount: '1',
+      },
+      nonce: '1597237',
+      positionId: '1',
+      expirationTimestamp: '444396',
+    })
+    expect(starkSignature).toBeTruthy()
   })
 })

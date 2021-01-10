@@ -114,6 +114,41 @@ export interface OrderParams {
   expirationTimestamp: string
 }
 
+export interface PerpetualTransferParams {
+  assetId: string
+  assetIdFee: string
+  receiverPublicKey: string
+  senderPositionId: string
+  receiverPositionId: string
+  feePositionId: string
+  nonce: string
+  amount: string
+  maxAmountFee: string
+  expirationTimestamp: string
+  condition?: string
+}
+
+export interface PerpetualLimitOrderParams {
+  assetIdSynthetic: string
+  assetIdCollateral: string
+  isBuyingSynthetic: boolean
+  assetIdFee: string
+  amountSynthetic: string
+  amountCollateral: string
+  amountFee: string
+  nonce: string
+  positionId: string
+  expirationTimestamp: string
+}
+
+export interface PerpetualWithdrawalParams {
+  assetIdCollateral: string
+  positionId: string
+  nonce: string
+  expirationTimestamp: string
+  amount: string
+}
+
 // -- StarkwareController --------------------------------------------- //
 
 export class StarkwareController {
@@ -894,45 +929,65 @@ export class StarkwareController {
     ])
   }
 
+  public async perpetualTransfer (
+    params: PerpetualTransferParams
+  ): Promise<string> {
+    if (params.condition) {
+      return starkwareCrypto.getPerpetualConditionalTransferMsgHash(
+        params.assetId,
+        params.assetIdFee,
+        params.receiverPublicKey,
+        params.condition,
+        params.senderPositionId,
+        params.receiverPositionId,
+        params.feePositionId,
+        params.nonce,
+        params.amount,
+        params.maxAmountFee,
+        params.expirationTimestamp
+      )
+    } else {
+      return starkwareCrypto.getPerpetualTransferMsgHash(
+        params.assetId,
+        params.assetIdFee,
+        params.receiverPublicKey,
+        params.senderPositionId,
+        params.receiverPositionId,
+        params.feePositionId,
+        params.nonce,
+        params.amount,
+        params.maxAmountFee,
+        params.expirationTimestamp
+      )
+    }
+  }
+
   public async perpetualLimitOrder (
-    assetIdSynthetic: number,
-    assetIdCollateral: number,
-    isBuyingSynthetic: number,
-    assetIdFee: number,
-    amountSynthetic: number,
-    amountCollateral: number,
-    amountFee: number,
-    nonce: number,
-    positionId: number,
-    expirationTimestamp: number
+    params: PerpetualLimitOrderParams
   ): Promise<string> {
     return starkwareCrypto.getPerpetualLimitOrderMsgHash(
-      assetIdSynthetic,
-      assetIdCollateral,
-      isBuyingSynthetic,
-      assetIdFee,
-      amountSynthetic,
-      amountCollateral,
-      amountFee,
-      nonce,
-      positionId,
-      expirationTimestamp
+      params.assetIdSynthetic,
+      params.assetIdCollateral,
+      params.isBuyingSynthetic,
+      params.assetIdFee,
+      params.amountSynthetic,
+      params.amountCollateral,
+      params.amountFee,
+      params.nonce,
+      params.positionId,
+      params.expirationTimestamp
     )
   }
 
   public async perpetualWithdrawal (
-    assetIdCollateral: number,
-    positionId: number,
-    nonce: number,
-    expirationTimestamp: number,
-    amount: number
+    params: PerpetualWithdrawalParams
   ): Promise<string> {
     return starkwareCrypto.getPerpetualWithdrawalMsgHash(
-      assetIdCollateral,
-      positionId,
-      nonce,
-      expirationTimestamp,
-      amount
+      params.assetIdCollateral,
+      params.positionId,
+      params.nonce,
+      params.expirationTimestamp,
+      params.amount
     )
   }
 
