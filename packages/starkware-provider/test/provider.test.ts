@@ -35,8 +35,8 @@ describe('StarkwareProvider', () => {
     expect(provider).toBeTruthy()
   })
   it('should enable successfully', async () => {
-    const result = await provider.enable(layer, application, index)
-    expect(result).toEqual(starkKey)
+    const accounts = await provider.enable(layer, application, index)
+    expect(accounts[0]).toEqual(ethKey)
   })
   it('should get account successfully', async () => {
     const account = await provider.account(layer, application, index)
@@ -128,7 +128,7 @@ describe('StarkwareProvider', () => {
     const result = await provider.getEthKey(starkKey)
     expect(result).toBe(ethKey)
   })
-  it.only('should resolve stark perpetual transfer request successfully', async () => {
+  it('should resolve stark perpetual transfer request successfully', async () => {
     const starkSignature = await provider.perpetualTransfer({
       asset: {
         type: 'ETH',
@@ -164,6 +164,7 @@ describe('StarkwareProvider', () => {
         data: {
           quantum: '10000000000',
         },
+        amount: '1',
       },
       collateralAsset: {
         type: 'ETH',

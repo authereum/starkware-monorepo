@@ -69,8 +69,8 @@ export function getPerpetualLimitOrderMsgHash (
     amountSell = hexToBN(amountSynthetic)
     amountBuy = hexToBN(amountCollateral)
   }
-  // 0 <= assetIdSynthetic < 2^128
-  assertInRange(assetIdSyntheticBn, ZERO_BN, TWO_POW_128_BN, 'assetIdSynthetic')
+  // 0 <= assetIdSynthetic < 2^250
+  assertInRange(assetIdSyntheticBn, ZERO_BN, TWO_POW_250_BN, 'assetIdSynthetic')
   // 0 <= assetIdCollateral < 2^250
   assertInRange(
     assetIdCollateralBn,
