@@ -164,6 +164,7 @@ function parseTokenInput (input: Asset | string) {
     if (isCompressedPublicKey(input)) {
       return getXCoordinate(input)
     }
+    console.debug('parseTokenInput', input)
     checkHexValue(input)
     return input
   }
@@ -585,8 +586,7 @@ export function getTransferMsgHash (
   condition: string | null = null
 ): string {
   assert(
-    hasHexPrefix(targetPublicKey) &&
-      (condition === null || hasHexPrefix(condition)),
+    hasHexPrefix(targetPublicKey) && (!condition || hasHexPrefix(condition)),
     MISSING_HEX_PREFIX
   )
 

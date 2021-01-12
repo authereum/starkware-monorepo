@@ -309,12 +309,25 @@ class WalletConnectClientWrapper extends EventEmitter {
 
 export class StarkwareWalletConnectProvider {
   _wc: any = null
+  private _debug: boolean = false
 
-  constructor (wc: any) {
+  constructor (wc: any, opts: any = {}) {
     this._wc = wc
+    if (opts && opts.debug) {
+      this._debug = true
+    }
+  }
+
+  private _debugLog = (...args: any) => {
+    if (!this._debug) {
+      return
+    }
+
+    console.debug('[stark-provider-wc]', ...args)
   }
 
   public async sendRequest (method: string, params: any = {}) {
+    this._debugLog('sendRequest', method, params)
     const customRequest: any = {
       id: Date.now(),
       jsonrpc: '2.0',
@@ -333,17 +346,24 @@ export class StarkwareWalletConnectProvider {
     }
   }
 
-  public async account (params: any) {
-    const { starkKey } = await this.sendRequest('stark_account', params)
+  public async account (layer: string, application: string, index: string) {
+    this._debugLog('account', layer, application, index)
+    const { starkKey } = await this.sendRequest('stark_account', {
+      layer,
+      application,
+      index,
+    })
     return starkKey
   }
 
   public async requestAccounts () {
+    this._debugLog('requestAccounts')
     const accounts = await this.sendRequest('eth_requestAccounts')
     return accounts
   }
 
   public async personalSign (msg: string) {
+    this._debugLog('personalSign', msg)
     let address: null | string = null
     if (this._wc?.connector) {
       // `walletconnect` module
@@ -360,28 +380,60 @@ export class StarkwareWalletConnectProvider {
   }
 
   public async registerUser (params: any) {
+    this._debugLog('registerUser', params)
     const { txhash } = await this.sendRequest('stark_register', params)
     return txhash
   }
 
   public async deposit (params: any) {
+    this._debugLog('deposit', params)
     const { txhash } = await this.sendRequest('stark_deposit', params)
     return txhash
   }
 
   public async withdraw (params: any) {
+    this._debugLog('withdraw', params)
     const { txhash } = await this.sendRequest('stark_withdraw', params)
     return txhash
   }
 
   public async transfer (params: any) {
+    this._debugLog('transfer', params)
     const { starkSignature } = await this.sendRequest('stark_transfer', params)
     return starkSignature
   }
 
   public async createOrder (params: any) {
+    this._debugLog('createOrder', params)
     const { starkSignature } = await this.sendRequest(
       'stark_createOrder',
+      params
+    )
+    return starkSignature
+  }
+
+  public async perpetualTransfer (params: any) {
+    this._debugLog('perpetualTransfer', params)
+    const { starkSignature } = await this.sendRequest(
+      'stark_perpetualTransfer',
+      params
+    )
+    return starkSignature
+  }
+
+  public async perpetualLimitOrder (params: any) {
+    this._debugLog('perpetualLimitOrder', params)
+    const { starkSignature } = await this.sendRequest(
+      'stark_perpetualLimitOrder',
+      params
+    )
+    return starkSignature
+  }
+
+  public async perpetualWithdrawal (params: any) {
+    this._debugLog('perpetualWithdrawal', params)
+    const { starkSignature } = await this.sendRequest(
+      'stark_perpetualWithdrawal',
       params
     )
     return starkSignature
@@ -520,11 +572,25 @@ class StarkwareProvider extends BasicProvider {
         return { txhash }
       }
       case 'stark_transfer': {
+        this._debugLog('stark_transfer', params)
         const starkSignature = await this.transfer(params)
+        this._debugLog('stark_transfer', 'signature', starkSignature)
         return { starkSignature }
       }
       case 'stark_createOrder': {
         const starkSignature = await this.createOrder(params)
+        return { starkSignature }
+      }
+      case 'stark_perpetualTransfer': {
+        const starkSignature = await this.perpetualTransfer(params)
+        return { starkSignature }
+      }
+      case 'stark_perpetualLimitOrder': {
+        const starkSignature = await this.perpetualLimitOrder(params)
+        return { starkSignature }
+      }
+      case 'stark_perpetualWithdrawal': {
+        const starkSignature = await this.perpetualWithdrawal(params)
         return { starkSignature }
       }
       case 'personal_sign': {
@@ -1135,6 +1201,7 @@ class StarkwareProvider extends BasicProvider {
       condition,
     })
 
+    this._debugLog('transfer', 'msgHash', msgHash)
     const starkSignature = await this._starkWallet.sign(msgHash)
     return starkSignature
   }
