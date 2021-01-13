@@ -606,8 +606,10 @@ class StarkwareProvider extends BasicProvider {
         return this.signTransaction(tx)
       }
       case 'eth_sendTransaction': {
-        const tx = params[1]
-        return this.sendTransaction(tx)
+        const tx = params[1] || params[0]
+        this._debugLog('eth_sendTransaction', tx)
+        const txRes = await this.sendTransaction(tx)
+        return txRes.hash
       }
       case 'eth_accounts': {
         const address = await this.getAddress()
@@ -776,6 +778,7 @@ class StarkwareProvider extends BasicProvider {
   }
 
   public async personalSign (message: string): Promise<string> {
+    this._debugLog('requestAccounts')
     return this.signMessage(message)
   }
 
@@ -2025,6 +2028,7 @@ class StarkwareProvider extends BasicProvider {
   }
 
   public async signMessage (message: any): Promise<string> {
+    this._debugLog('signMessage', message)
     return this._signerWallet.signMessage(message)
   }
 
@@ -2041,20 +2045,35 @@ class StarkwareProvider extends BasicProvider {
   }
 
   public async sendTransaction (unsignedTx: any): Promise<any> {
+    this._debugLog('sendTransaction', unsignedTx)
     if (unsignedTx.value) {
       if (!isHexString(unsignedTx.value)) {
         unsignedTx.value = sanitizeHex(numberToHex(unsignedTx.value))
       }
     }
+    if (unsignedTx.gas) {
+      unsignedTx.gasLimit = unsignedTx.gas
+      delete unsignedTx.gas
+    }
+    if (unsignedTx.from) {
+      // checksum
+      unsignedTx.from = ethers.utils.getAddress(unsignedTx.from)
+    }
     const populatedTx = await this._signerWallet.populateTransaction(unsignedTx)
+    this._debugLog(
+      'sendTransaction signerAddress',
+      await this._signerWallet.getAddress()
+    )
     return this._signerWallet.sendTransaction(populatedTx)
   }
 
   public getAddress = (): Promise<string> => {
+    this._debugLog('getAddress')
     return this._signerWallet.getAddress()
   }
 
   private async _callContract (data: string, txOpts: any = {}) {
+    this._debugLog('_callContract', data, txOpts)
     const unsignedTx = {
       to: this.contractAddress,
       data,
@@ -2067,6 +2086,7 @@ class StarkwareProvider extends BasicProvider {
   }
 
   private async _sendContractTransaction (data: string, txOpts: any = {}) {
+    this._debugLog('_sendContractTransaction', data, txOpts)
     const unsignedTx = {
       to: this.contractAddress,
       data,

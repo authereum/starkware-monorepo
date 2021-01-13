@@ -1,7 +1,7 @@
 {
   "name": "@authereum/starkware-wallet",
   "description": "Starkware Wallet Library",
-  "version": "1.3.0-beta.4",
+  "version": "1.3.0-beta.5",
   "author": "",
   "license": "Apache-2.0",
   "keywords": [

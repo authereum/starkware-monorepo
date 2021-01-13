@@ -197,6 +197,7 @@ export class StarkwareWallet {
   }
 
   public getEthereumAddress (): Promise<string> {
+    this._debugLog('getEthereumAddress')
     return this.getAddress()
   }
 
@@ -221,6 +222,7 @@ export class StarkwareWallet {
     application: string = this._application,
     index: string = this._index
   ): Promise<string> {
+    this._debugLog('getAccountPath')
     const ethAddress = await this.getEthereumAddress()
     this._debugLog('getAccountPath', layer, application, index, ethAddress)
     const path = getAccountPath(layer, application, ethAddress, index)
@@ -260,6 +262,7 @@ export class StarkwareWallet {
   public async sendTransaction (
     unsignedTx: any
   ): Promise<providers.TransactionResponse> {
+    this._debugLog('sendTransaction', unsignedTx)
     const wallet = this.getWallet()
     unsignedTx = Object.assign({}, unsignedTx)
     if (unsignedTx.value) {
@@ -276,7 +279,9 @@ export class StarkwareWallet {
   }
 
   public async getAddress (): Promise<string> {
+    this._debugLog('getAddress')
     const wallet = this.getWallet()
+    this._debugLog('getAddress wallet', wallet)
     return wallet.getAddress()
   }
 
@@ -332,13 +337,21 @@ export class StarkwareWallet {
 
   private getWallet () {
     if (this.signer) {
+      this._debugLog('getWallet this.signer')
       return this.signer
     }
 
     if (this.privateKey) {
-      return new Wallet(this.privateKey).connect(this.provider)
+      this._debugLog('getWallet this.privateKey')
+      this._debugLog('getWallet provider', this.provider)
+      try {
+        return new Wallet(this.privateKey).connect(this.provider)
+      } catch (err) {
+        return new Wallet(this.privateKey)
+      }
     }
 
+    this._debugLog('getWallet fromMnemonic')
     return Wallet.fromMnemonic(
       this.mnemonic,
       getPath(this.walletIndex)
