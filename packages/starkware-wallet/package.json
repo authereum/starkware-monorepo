@@ -41,11 +41,12 @@
     "prepare": "yarn lint && yarn build",
     "publish:beta": "npm publish --tag beta --access public",
     "publish:next": "npm publish --tag next --access public",
-    "publish:latest": "npm publish --tag latest --access public"
+    "publish:latest": "npm publish --tag latest --access public",
+    "sync": "lerna-sync-version"
   },
   "dependencies": {
     "@authereum/ethersproject-hardware-wallets": "5.0.11-beta.0",
-    "@authereum/starkware-crypto": "1.10.0-beta.4",
+    "@authereum/starkware-crypto": "1.10.0-beta.5",
     "@ledgerhq/hw-app-eth": "5.37.0",
     "bn.js": "^5.1.3",
     "enc-utils": "^2.2.3",

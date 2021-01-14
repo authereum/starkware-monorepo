@@ -131,9 +131,10 @@ describe('StarkwareProvider', () => {
   it('should resolve stark perpetual transfer request successfully', async () => {
     const starkSignature = await provider.perpetualTransfer({
       asset: {
-        type: 'ETH',
+        type: 'SYNTHETIC',
         data: {
-          quantum: '10000000000',
+          symbol: 'BTC',
+          resolution: '10',
         },
         amount: '1',
       },
@@ -160,9 +161,10 @@ describe('StarkwareProvider', () => {
   it('should resolve stark perpetual limit order request successfully', async () => {
     const starkSignature = await provider.perpetualLimitOrder({
       syntheticAsset: {
-        type: 'ETH',
+        type: 'SYNTHETIC',
         data: {
-          quantum: '10000000000',
+          symbol: 'BTC',
+          resolution: '10',
         },
         amount: '1',
       },

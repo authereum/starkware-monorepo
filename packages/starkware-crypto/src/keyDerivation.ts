@@ -1,6 +1,13 @@
 import { hdkey } from 'ethereumjs-wallet'
-import * as bip39 from 'bip39'
-import * as encUtils from 'enc-utils'
+import { mnemonicToSeedSync } from 'bip39'
+import {
+  hexToBinary,
+  binaryToNumber,
+  hexToBuffer,
+  removeHexPrefix,
+  sanitizeBytes,
+  numberToHex,
+} from 'enc-utils'
 import BN from 'bn.js'
 import hash from 'hash.js'
 import { ec, deserializeSignature } from './crypto'
@@ -12,9 +19,9 @@ import { ec, deserializeSignature } from './crypto'
  end represents the index of the last bit to cut from the hex string.
 */
 function getIntFromBits (hex: string, start: number, end?: number) {
-  const bin = encUtils.hexToBinary(hex)
+  const bin = hexToBinary(hex)
   const bits = bin.slice(start, end)
-  const i = encUtils.binaryToNumber(bits)
+  const i = binaryToNumber(bits)
   return i
 }
 
@@ -25,7 +32,7 @@ function getIntFromBits (hex: string, start: number, end?: number) {
  address.
 */
 export function getKeyPairFromPath (mnemonic: string, path: string) {
-  const seed = bip39.mnemonicToSeedSync(mnemonic)
+  const seed = mnemonicToSeedSync(mnemonic)
   const keySeed = hdkey
     .fromMasterSeed(seed)
     .derivePath(path)
@@ -100,10 +107,7 @@ function hashKeyWithIndex (key: string, index: number) {
     hash
       .sha256()
       .update(
-        encUtils.hexToBuffer(
-          encUtils.removeHexPrefix(key) +
-            encUtils.sanitizeBytes(encUtils.numberToHex(index), 2)
-        )
+        hexToBuffer(removeHexPrefix(key) + sanitizeBytes(numberToHex(index), 2))
       )
       .digest('hex'),
     16

@@ -1,7 +1,7 @@
 {
   "name": "@authereum/starkware-crypto",
   "description": "Starkware Crypto Library",
-  "version": "1.10.0-beta.4",
+  "version": "1.10.0-beta.5",
   "author": "",
   "license": "Apache-2.0",
   "keywords": [
@@ -41,7 +41,8 @@
     "prepare": "yarn lint && yarn build",
     "publish:beta": "npm publish --tag beta --access public",
     "publish:next": "npm publish --tag next --access public",
-    "publish:latest": "npm publish --tag latest --access public"
+    "publish:latest": "npm publish --tag latest --access public",
+    "sync": "lerna-sync-version"
   },
   "dependencies": {
     "bip39": "^3.0.2",

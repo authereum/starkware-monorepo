@@ -4,6 +4,7 @@ import {
   getEthAssetId,
   getErc20AssetId,
   getErc721AssetId,
+  getSyntheticAssetId,
 } from '../src'
 
 const precomputedAssets = require('./data/assets_precomputed.json')
@@ -52,5 +53,21 @@ describe('Asset ID helper methods', () => {
     expect(getErc721AssetId(tokenAddress, tokenId)).toEqual(
       '0x02b0ff0c09505bc40f9d1659becf16855a7b2298b010f8a54f4b05325885b40c'
     )
+  })
+})
+
+describe.only('Compute Synthetic asset ID', () => {
+  it('should compute SYNTHETIC asset ID correctly', () => {
+    const asset = {
+      type: 'SYNTHETIC',
+      data: {
+        symbol: 'BTC',
+        resolution: '10',
+      },
+    }
+    expect(getAssetId(asset)).toEqual('0x4254432d3130')
+  })
+  it('should compute getSyntheticAssetId asset ID correctly', () => {
+    expect(getSyntheticAssetId('BTC', '10')).toEqual('0x4254432d3130')
   })
 })

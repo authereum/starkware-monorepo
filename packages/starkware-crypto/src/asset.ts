@@ -1,12 +1,19 @@
 import assert from 'assert'
 import BN from 'bn.js'
-import * as encUtils from 'enc-utils'
+import {
+  removeHexPrefix,
+  hexToBuffer,
+  sanitizeHex,
+  utf8ToBuffer,
+} from 'enc-utils'
 import sha3 from 'js-sha3'
 
 export interface AssetData {
-  quantum?: string
-  tokenAddress?: string
-  tokenId?: string
+  quantum?: string // eth and erc20
+  tokenAddress?: string // erc20 and erc721
+  tokenId?: string // erc721
+  symbol?: string // synthetic
+  resolution?: string // synthetic
 }
 
 export interface Asset {
@@ -53,17 +60,17 @@ export function getAssetType (assetDict: Asset) {
 
   // Expected length is maintained to fix the length of the resulting asset info string in case of
   // leading zeroes (which might be omitted by the BN object).
-  let expectedLen = encUtils.removeHexPrefix(assetSelector).length
+  let expectedLen = removeHexPrefix(assetSelector).length
 
   // The asset info hex string is a packed message containing the hexadecimal representation of
   // the asset data.
-  let assetInfo = new BN(encUtils.removeHexPrefix(assetSelector), 16)
+  let assetInfo = new BN(removeHexPrefix(assetSelector), 16)
 
   if (assetDict.data.tokenAddress !== undefined) {
     // In the case there is a valid tokenAddress in the data, we append that to the asset info
     // (before the quantum).
     const tokenAddress = new BN(
-      encUtils.removeHexPrefix(assetDict.data.tokenAddress),
+      removeHexPrefix(assetDict.data.tokenAddress),
       16
     )
     assetInfo = assetInfo.mul(shiftBN)
@@ -79,7 +86,7 @@ export function getAssetType (assetDict: Asset) {
   assetInfo = assetInfo.add(quantum)
 
   let assetType = sha3.keccak_256(
-    encUtils.hexToBuffer(addLeadingZeroes(assetInfo.toJSON(), expectedLen))
+    hexToBuffer(addLeadingZeroes(assetInfo.toJSON(), expectedLen))
   )
 
   let assetTypeBN = new BN(assetType, 16)
@@ -89,23 +96,33 @@ export function getAssetType (assetDict: Asset) {
 }
 
 export function getAssetId (assetDict: Asset) {
-  const assetType = new BN(
-    encUtils.removeHexPrefix(getAssetType(assetDict)),
-    16
-  )
+  if (assetDict.type === 'SYNTHETIC') {
+    return (
+      '0x' +
+      new BN(
+        utf8ToBuffer(
+          `${assetDict.data.symbol}-${Buffer.from(
+            assetDict.data.resolution as string
+          ).toString('ascii')}`
+        )
+      ).toJSON()
+    )
+  }
+
+  const assetType = new BN(removeHexPrefix(getAssetType(assetDict)), 16)
   // For ETH and ERC20, the asset ID is simply the asset type.
   let assetId = assetType
   if (assetDict.type === 'ERC721') {
     let tokenId: string = assetDict.data.tokenId as string
     // ERC721 assets require a slightly different construction for asset info.
-    let assetInfo = new BN(encUtils.utf8ToBuffer('NFT:'), 16)
+    let assetInfo = new BN(utf8ToBuffer('NFT:'), 16)
     assetInfo = assetInfo.mul(shiftBN)
     assetInfo = assetInfo.add(assetType)
     assetInfo = assetInfo.mul(shiftBN)
     assetInfo = assetInfo.add(new BN(parseInt(tokenId), 16))
     const expectedLen = 136
     let assetIdHex = sha3.keccak_256(
-      encUtils.hexToBuffer(addLeadingZeroes(assetInfo.toJSON(), expectedLen))
+      hexToBuffer(addLeadingZeroes(assetInfo.toJSON(), expectedLen))
     )
     let assetIdBN = new BN(assetIdHex, 16)
     assetIdBN = assetIdBN.and(mask)
@@ -115,7 +132,7 @@ export function getAssetId (assetDict: Asset) {
   return '0x' + assetId.toJSON()
 }
 
-export function getEthAssetId (quantum: string) {
+export function getEthAssetId (quantum: string): string {
   const asset = {
     type: 'ETH',
     data: {
@@ -126,7 +143,10 @@ export function getEthAssetId (quantum: string) {
   return getAssetId(asset)
 }
 
-export function getErc20AssetId (tokenAddress: string, quantum: string) {
+export function getErc20AssetId (
+  tokenAddress: string,
+  quantum: string
+): string {
   const asset = {
     type: 'ERC20',
     data: {
@@ -138,12 +158,30 @@ export function getErc20AssetId (tokenAddress: string, quantum: string) {
   return getAssetId(asset)
 }
 
-export function getErc721AssetId (tokenAddress: string, tokenId: string) {
+export function getErc721AssetId (
+  tokenAddress: string,
+  tokenId: string
+): string {
   const asset = {
     type: 'ERC721',
     data: {
       tokenAddress,
       tokenId,
+    },
+  }
+
+  return getAssetId(asset)
+}
+
+export function getSyntheticAssetId (
+  symbol: string,
+  resolution: string
+): string {
+  const asset = {
+    type: 'SYNTHETIC',
+    data: {
+      symbol,
+      resolution,
     },
   }
 
@@ -165,10 +203,13 @@ export function getAssetSelector (assetDictType: string) {
     case 'ERC721':
       seed = 'ERC721Token(address,uint256)'
       break
+    case 'SYNTHETIC':
+      seed = 'SYNTHETIC()'
+      break
     default:
       throw new Error(`Unknown token type: ${assetDictType}`)
   }
-  return encUtils.sanitizeHex(sha3.keccak_256(seed).slice(0, 8))
+  return sanitizeHex(sha3.keccak_256(seed).slice(0, 8))
 }
 
 /*

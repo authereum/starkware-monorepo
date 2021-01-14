@@ -164,7 +164,6 @@ function parseTokenInput (input: Asset | string) {
     if (isCompressedPublicKey(input)) {
       return getXCoordinate(input)
     }
-    console.debug('parseTokenInput', input)
     checkHexValue(input)
     return input
   }
