@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events'
 import * as ethers from 'ethers'
 import { sanitizeHex, numberToHex, isHexString } from 'enc-utils'
-import WalletConnectClient from '@walletconnect/client'
 import WalletConnect from 'walletconnect'
 import StarkwareWallet from '@authereum/starkware-wallet'
 import StarkwareController from '@authereum/starkware-controller'
@@ -13,184 +12,40 @@ import {
   Signature,
 } from '@authereum/starkware-crypto'
 import BasicProvider, { IRpcConnection } from './BasicProvider'
-
-export interface AccountParams {
-  layer: string
-  application: string
-  index: string
-}
-
-export interface RegisterUserParams {
-  ethKey: string
-  operatorSignature: string
-}
-
-export interface DepositParams {
-  amount?: string
-  asset: Asset
-  vaultId: string
-}
-
-export interface DepositEthParams {
-  amount: string
-  quantum: string
-  vaultId: string
-}
-
-export interface DepositErc20Params {
-  amount: string
-  quantum: string
-  vaultId: string
-  tokenAddress: string
-}
-
-export interface DepositErc721Params {
-  tokenId: string
-  vaultId: string
-  tokenAddress: string
-}
-
-export interface DepositCancelParams {
-  asset: Asset
-  vaultId: string
-}
-
-export interface DepositParamsReclaimParams {
-  vaultId: string
-  asset: Asset
-}
-
-export interface WithdrawParams {
-  asset: Asset
-  recipient?: string
-}
-
-export interface WithdrawEthParams {
-  quantum: string
-  recipient?: string
-}
-
-export interface WithdrawErc20Params {
-  quantum: string
-  tokenAddress: string
-  recipient?: string
-}
-
-export interface WithdrawErc721Params {
-  tokenId: string
-  tokenAddress: string
-  recipient?: string
-}
-
-export interface WithdrawAndMintParams {
-  asset: Asset
-  mintingBlob: string
-}
-
-export interface EscapeParams {
-  amount: string
-  asset: Asset
-  vaultId: string
-}
-
-export interface TransferPartyParams {
-  starkKey: string
-  vaultId: string
-}
-
-export interface TransferParams {
-  from: TransferPartyParams
-  to: TransferPartyParams
-  asset: Asset
-  amount?: string
-  nonce: string
-  expirationTimestamp: string
-  condition?: string
-}
-
-export interface TransferEthParams {
-  vaultId: string
-  to: TransferPartyParams
-  quantum: string
-  amount: string
-  nonce: string
-  expirationTimestamp: string
-  condition?: string
-}
-
-export interface TransferErc20Params {
-  vaultId: string
-  to: TransferPartyParams
-  tokenAddress: string
-  quantum: string
-  amount: string
-  nonce: string
-  expirationTimestamp: string
-  condition?: string
-}
-
-export interface TransferErc721Params {
-  vaultId: string
-  to: TransferPartyParams
-  tokenAddress: string
-  tokenId: string
-  nonce: string
-  expirationTimestamp: string
-  condition?: string
-}
-
-export interface OrderAsset extends Asset {
-  vaultId: string
-  amount?: string
-}
-
-export interface OrderParams {
-  sell: OrderAsset
-  buy: OrderAsset
-  nonce: string
-  expirationTimestamp: string
-}
-
-export interface PerpetualAsset extends Asset {
-  amount?: string
-}
-
-export interface PerpetualTransferMessenger {
-  starkKey?: string
-  positionId: string
-}
-
-export interface PerpetualTransferFee extends Asset {
-  positionId: string
-  maxAmount?: string
-}
-
-export interface PerpetualTransferParams {
-  asset: PerpetualAsset
-  fee: PerpetualTransferFee
-  sender: PerpetualTransferMessenger
-  receiver: PerpetualTransferMessenger
-  nonce: string
-  expirationTimestamp: string
-  condition?: string
-}
-
-export interface PerpetualLimitOrderParams {
-  syntheticAsset: PerpetualAsset
-  collateralAsset: PerpetualAsset
-  isBuyingSynthetic: boolean
-  fee: PerpetualAsset
-  nonce: string
-  positionId: string
-  expirationTimestamp: string
-}
-
-export interface PerpetualWithdrawalParams {
-  collateralAsset: PerpetualAsset
-  positionId: string
-  nonce: string
-  expirationTimestamp: string
-}
+import {
+  StarkwareWalletConnectProvider,
+  WalletConnectClientWrapper,
+} from './connectors/StarkwareWalletConnectProvider'
+import AuthereumProvider from './connectors/AuthereumProvider'
+import {
+  AccountParams,
+  RegisterUserParams,
+  DepositParams,
+  DepositEthParams,
+  DepositErc20Params,
+  DepositErc721Params,
+  DepositCancelParams,
+  DepositParamsReclaimParams,
+  WithdrawParams,
+  WithdrawEthParams,
+  WithdrawErc20Params,
+  WithdrawErc721Params,
+  WithdrawAndMintParams,
+  EscapeParams,
+  TransferPartyParams,
+  TransferParams,
+  TransferEthParams,
+  TransferErc20Params,
+  TransferErc721Params,
+  OrderAsset,
+  OrderParams,
+  PerpetualAsset,
+  PerpetualTransferMessenger,
+  PerpetualTransferFee,
+  PerpetualTransferParams,
+  PerpetualLimitOrderParams,
+  PerpetualWithdrawalParams,
+} from './types'
 
 class Connection extends EventEmitter implements IRpcConnection {
   connected: boolean = true
@@ -217,227 +72,6 @@ function matches (a: any, b: any): boolean {
     if (a[key] !== b[key]) match = false
   })
   return match
-}
-
-class WalletConnectClientWrapper extends EventEmitter {
-  _wc: WalletConnectClient | null = null
-
-  constructor () {
-    super()
-    const session = this.getSession()
-    if (session) {
-      const walletConnector = new WalletConnectClient({ session })
-      this._wc = walletConnector
-      this._setupEvenEmitter()
-    }
-  }
-
-  private _setupEvenEmitter () {
-    // walletconnect doesn't have a way to unsubscribe from event emitter,
-    // so we use a custom event emitter as a workaround.
-    const events = [
-      'connect',
-      'disconnect',
-      'session_request',
-      'session_update',
-      'call_request',
-      'wc_sessionRequest',
-      'wc_sessionUpdate',
-      'error',
-      'transport_open',
-      'transport_close',
-    ]
-    for (const name of events) {
-      this._wc?.on(name, (...args: any[]) => this.emit(name, ...args))
-    }
-  }
-
-  public get connected (): boolean {
-    return !!this._wc?.connected
-  }
-
-  public async connect (connectUri: string) {
-    this._wc = new WalletConnectClient({
-      uri: connectUri,
-    })
-
-    if (!this._wc?.connected) {
-      await this.createSession()
-    }
-
-    this._setupEvenEmitter()
-  }
-
-  public createSession () {
-    return this._wc?.createSession()
-  }
-
-  public killSession () {
-    return this._wc?.killSession()
-  }
-
-  public approveSession (params: any) {
-    return this._wc?.approveSession(params)
-  }
-
-  public rejectSession (params: any) {
-    return this._wc?.approveSession(params)
-  }
-
-  public approveRequest (params: any) {
-    return this._wc?.approveRequest(params)
-  }
-
-  public rejectRequest (params: any) {
-    return this._wc?.rejectRequest(params)
-  }
-
-  public getSession () {
-    try {
-      // localStorage 'walletconnect' value is set by walletconnect library
-      const session = localStorage.getItem('walletconnect')
-      if (!session) {
-        return null
-      }
-
-      return JSON.parse(session)
-    } catch (err) {
-      return null
-    }
-  }
-}
-
-export class StarkwareWalletConnectProvider {
-  _wc: any = null
-  private _debug: boolean = false
-
-  constructor (wc: any, opts: any = {}) {
-    this._wc = wc
-    if (opts && opts.debug) {
-      this._debug = true
-    }
-  }
-
-  private _debugLog = (...args: any) => {
-    if (!this._debug) {
-      return
-    }
-
-    console.debug('[stark-provider-wc]', ...args)
-  }
-
-  public async sendRequest (method: string, params: any = {}) {
-    this._debugLog('sendRequest', method, params)
-    const customRequest: any = {
-      id: Date.now(),
-      jsonrpc: '2.0',
-      method,
-      params,
-    }
-
-    if (this._wc?.connector) {
-      // `walletconnect` module
-      return this._wc?.connector?.sendCustomRequest(customRequest)
-    } else if (this._wc?._wc) {
-      // blocknative
-      return this._wc?._wc?.sendCustomRequest(customRequest)
-    } else if (this._wc?.sendCustomRequest) {
-      return this._wc?.sendCustomRequest(customRequest)
-    }
-  }
-
-  public async account (layer: string, application: string, index: string) {
-    this._debugLog('account', layer, application, index)
-    const { starkKey } = await this.sendRequest('stark_account', {
-      layer,
-      application,
-      index,
-    })
-    return starkKey
-  }
-
-  public async requestAccounts () {
-    this._debugLog('requestAccounts')
-    const accounts = await this.sendRequest('eth_requestAccounts')
-    return accounts
-  }
-
-  public async personalSign (msg: string) {
-    this._debugLog('personalSign', msg)
-    let address: null | string = null
-    if (this._wc?.connector) {
-      // `walletconnect` module
-      address = this._wc?.connector?.accounts[0]
-    } else if (this._wc?._wc) {
-      // blocknative
-      address = this._wc?._wc?.accounts[0]
-    } else if (this._wc?.accounts) {
-      address = this._wc?.accounts[0]
-    }
-
-    const signature = await this.sendRequest('personal_sign', [msg, address])
-    return signature
-  }
-
-  public async registerUser (params: any) {
-    this._debugLog('registerUser', params)
-    const { txhash } = await this.sendRequest('stark_register', params)
-    return txhash
-  }
-
-  public async deposit (params: any) {
-    this._debugLog('deposit', params)
-    const { txhash } = await this.sendRequest('stark_deposit', params)
-    return txhash
-  }
-
-  public async withdraw (params: any) {
-    this._debugLog('withdraw', params)
-    const { txhash } = await this.sendRequest('stark_withdraw', params)
-    return txhash
-  }
-
-  public async transfer (params: any) {
-    this._debugLog('transfer', params)
-    const { starkSignature } = await this.sendRequest('stark_transfer', params)
-    return starkSignature
-  }
-
-  public async createOrder (params: any) {
-    this._debugLog('createOrder', params)
-    const { starkSignature } = await this.sendRequest(
-      'stark_createOrder',
-      params
-    )
-    return starkSignature
-  }
-
-  public async perpetualTransfer (params: any) {
-    this._debugLog('perpetualTransfer', params)
-    const { starkSignature } = await this.sendRequest(
-      'stark_perpetualTransfer',
-      params
-    )
-    return starkSignature
-  }
-
-  public async perpetualLimitOrder (params: any) {
-    this._debugLog('perpetualLimitOrder', params)
-    const { starkSignature } = await this.sendRequest(
-      'stark_perpetualLimitOrder',
-      params
-    )
-    return starkSignature
-  }
-
-  public async perpetualWithdrawal (params: any) {
-    this._debugLog('perpetualWithdrawal', params)
-    const { starkSignature } = await this.sendRequest(
-      'stark_perpetualWithdrawal',
-      params
-    )
-    return starkSignature
-  }
 }
 
 // -- StarkwareProvider ---------------------------------------------------- //
@@ -481,6 +115,10 @@ class StarkwareProvider extends BasicProvider {
     return new StarkwareWalletConnectProvider(wc)
   }
 
+  static fromAuthereum (authereumInstance: any) {
+    return new AuthereumProvider(authereumInstance)
+  }
+
   setSigner (signerWallet: ethers.Wallet) {
     this._debugLog('setSigner', signerWallet)
     this._signerWallet = signerWallet
@@ -514,6 +152,10 @@ class StarkwareProvider extends BasicProvider {
         return {
           starkKey,
         }
+      }
+      case 'stark_updateAccount': {
+        const { layer, application, index } = params
+        return this.updateAccount(layer, application, index)
       }
       case 'stark_register': {
         const txhash = await this.registerUser(params, txOpts)
