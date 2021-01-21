@@ -3,7 +3,7 @@ import * as ethers from 'ethers'
 import { sanitizeHex, numberToHex, isHexString } from 'enc-utils'
 import WalletConnect from 'walletconnect'
 import StarkwareWallet from '@authereum/starkware-wallet'
-import StarkwareController from '@authereum/starkware-controller'
+import StarkwareAbiEncoder from '@authereum/starkware-abi-encoder'
 import {
   getAssetType,
   quantizeAmount,
@@ -80,7 +80,7 @@ class StarkwareProvider extends BasicProvider {
   private _accountParams: AccountParams | undefined
   private _starkWallet: StarkwareWallet
   private _signerWallet: ethers.Wallet
-  private _controller: StarkwareController
+  private _abiEncoder: StarkwareAbiEncoder
   private _debug: boolean = false
 
   public wc: WalletConnectClientWrapper
@@ -99,7 +99,7 @@ class StarkwareProvider extends BasicProvider {
     this._starkWallet = starkWallet
     this._signerWallet = signerWallet
     this.contractAddress = contractAddress
-    this._controller = new StarkwareController()
+    this._abiEncoder = new StarkwareAbiEndoer()
     this.wc = new WalletConnectClientWrapper()
   }
 
@@ -442,7 +442,7 @@ class StarkwareProvider extends BasicProvider {
       throw new Error('StarkKey is already registered')
     }
 
-    const data = await this._controller.registerUser({
+    const data = await this._abiEncoder.registerUser({
       ethKey,
       starkKey,
       operatorSignature,
@@ -460,7 +460,7 @@ class StarkwareProvider extends BasicProvider {
     const assetType = getAssetType(asset)
     if (asset.type === 'ERC721') {
       const tokenId = asset.data.tokenId as string
-      const data = await this._controller.depositNft({
+      const data = await this._abiEncoder.depositNft({
         starkKey,
         assetType,
         vaultId,
@@ -483,7 +483,7 @@ class StarkwareProvider extends BasicProvider {
       )
     }
 
-    const data = await this._controller.deposit({
+    const data = await this._abiEncoder.deposit({
       starkKey,
       assetType,
       vaultId,
@@ -563,7 +563,7 @@ class StarkwareProvider extends BasicProvider {
     let { vaultId, asset } = input
     const starkKey = await this.getActiveAccount()
     const assetId = getAssetId(asset)
-    const data = await this._controller.depositCancel({
+    const data = await this._abiEncoder.depositCancel({
       starkKey,
       assetId,
       vaultId,
@@ -582,7 +582,7 @@ class StarkwareProvider extends BasicProvider {
 
     if (asset.type === 'ERC721') {
       const tokenId = asset.data.tokenId as string
-      const data = await this._controller.depositNftReclaim({
+      const data = await this._abiEncoder.depositNftReclaim({
         starkKey,
         assetType,
         vaultId,
@@ -593,7 +593,7 @@ class StarkwareProvider extends BasicProvider {
       return txhash
     }
 
-    const data = await this._controller.depositReclaim({
+    const data = await this._abiEncoder.depositReclaim({
       starkKey,
       assetType,
       vaultId,
@@ -613,7 +613,7 @@ class StarkwareProvider extends BasicProvider {
     if (asset.type === 'ERC721') {
       const tokenId = asset.data.tokenId as string
       if (recipient) {
-        const data = await this._controller.withdrawNftTo({
+        const data = await this._abiEncoder.withdrawNftTo({
           starkKey,
           assetType,
           tokenId,
@@ -623,7 +623,7 @@ class StarkwareProvider extends BasicProvider {
         const txhash = await this._sendContractTransaction(data, txOpts)
         return txhash
       } else {
-        const data = await this._controller.withdrawNft({
+        const data = await this._abiEncoder.withdrawNft({
           starkKey,
           assetType,
           tokenId,
@@ -635,7 +635,7 @@ class StarkwareProvider extends BasicProvider {
     }
 
     if (recipient) {
-      const data = await this._controller.withdrawTo({
+      const data = await this._abiEncoder.withdrawTo({
         starkKey,
         assetType,
         recipient,
@@ -644,7 +644,7 @@ class StarkwareProvider extends BasicProvider {
       const txhash = await this._sendContractTransaction(data, txOpts)
       return txhash
     } else {
-      const data = await this._controller.withdraw({
+      const data = await this._abiEncoder.withdraw({
         starkKey,
         assetType,
       })
@@ -723,7 +723,7 @@ class StarkwareProvider extends BasicProvider {
     const { asset, mintingBlob } = input
     const starkKey = await this.getActiveAccount()
     const assetType = getAssetType(asset)
-    const data = await this._controller.withdrawAndMint({
+    const data = await this._abiEncoder.withdrawAndMint({
       starkKey,
       assetType,
       mintingBlob,
@@ -740,7 +740,7 @@ class StarkwareProvider extends BasicProvider {
     throw new Error('not implemented')
     /*
     const starkKey = await this.getActiveAccount()
-    const data = await this._controller.fullWithdrawalRequest({
+    const data = await this._abiEncoder.fullWithdrawalRequest({
       starkKey,
       vaultId,
     })
@@ -756,7 +756,7 @@ class StarkwareProvider extends BasicProvider {
     txOpts: any = {}
   ): Promise<string> {
     const starkKey = await this.getActiveAccount()
-    const data = await this._controller.freezeRequest({
+    const data = await this._abiEncoder.freezeRequest({
       starkKey,
       vaultId,
       quantizedAmount,
@@ -780,7 +780,7 @@ class StarkwareProvider extends BasicProvider {
     txOpts: any = {}
   ): Promise<string> {
     const starkKey = await this.getActiveAccount()
-    const data = await this._controller.freezeRequestTrade(
+    const data = await this._abiEncoder.freezeRequestTrade(
       starkKeyA,
       starkKeyB,
       vaultIdA,
@@ -805,7 +805,7 @@ class StarkwareProvider extends BasicProvider {
       amount as string,
       asset.data.quantum as string
     )
-    const data = await this._controller.escape({
+    const data = await this._abiEncoder.escape({
       starkKey,
       vaultId,
       assetId,
@@ -835,7 +835,7 @@ class StarkwareProvider extends BasicProvider {
     const targetVaultId = to.vaultId
     const targetKey = input.to.starkKey
 
-    const msgHash = await this._controller.transfer({
+    const msgHash = await this._abiEncoder.transfer({
       quantizedAmount,
       nonce,
       senderVaultId,
@@ -960,7 +960,7 @@ class StarkwareProvider extends BasicProvider {
       buy.data.quantum as string
     )
 
-    const msgHash = await this._controller.createOrder({
+    const msgHash = await this._abiEncoder.createOrder({
       sellVaultId,
       buyVaultId,
       sellQuantizedAmount,
@@ -978,73 +978,73 @@ class StarkwareProvider extends BasicProvider {
   // stark 3.0 changes
 
   public async configurationHash (input: string, txOpts: any = {}) {
-    const data = await this._controller.configurationHash(input)
+    const data = await this._abiEncoder.configurationHash(input)
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.configurationHash,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.configurationHash,
       result
     )
   }
 
   public async globalConfigurationHash (txOpts: any = {}) {
-    const data = await this._controller.globalConfigurationHash()
+    const data = await this._abiEncoder.globalConfigurationHash()
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.globalConfigurationHash,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.globalConfigurationHash,
       result
     )
   }
 
   public async depositCancelDelay (txOpts: any = {}) {
-    const data = await this._controller.depositCancelDelay()
+    const data = await this._abiEncoder.depositCancelDelay()
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.depositCancelDelay,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.depositCancelDelay,
       result
     )
   }
 
   public async freezeGracePeriod (txOpts: any = {}) {
-    const data = await this._controller.freezeGracePeriod()
+    const data = await this._abiEncoder.freezeGracePeriod()
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.freezeGracePeriod,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.freezeGracePeriod,
       result
     )
   }
 
   public async mainGovernanceInfoTag (txOpts: any = {}) {
-    const data = await this._controller.mainGovernanceInfoTag()
+    const data = await this._abiEncoder.mainGovernanceInfoTag()
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.mainGovernanceInfoTag,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.mainGovernanceInfoTag,
       result
     )
   }
 
   public async maxVerifierCount (txOpts: any = {}) {
-    const data = await this._controller.maxVerifierCount()
+    const data = await this._abiEncoder.maxVerifierCount()
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.maxVerifierCount,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.maxVerifierCount,
       result
     )
   }
 
   public async unfreezeDelay (txOpts: any = {}) {
-    const data = await this._controller.unfreezeDelay()
+    const data = await this._abiEncoder.unfreezeDelay()
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.unfreezeDelay,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.unfreezeDelay,
       result
     )
   }
 
   public async verifierRemovalDelay (txOpts: any = {}) {
-    const data = await this._controller.verifierRemovalDelay()
+    const data = await this._abiEncoder.verifierRemovalDelay()
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.verifierRemovalDelay,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.verifierRemovalDelay,
       result
     )
   }
@@ -1053,12 +1053,12 @@ class StarkwareProvider extends BasicProvider {
     verifier: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.announceAvailabilityVerifierRemovalIntent(
+    const data = await this._abiEncoder.announceAvailabilityVerifierRemovalIntent(
       verifier
     )
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.announceVerifierRemovalIntent,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.announceVerifierRemovalIntent,
       result
     )
   }
@@ -1067,25 +1067,25 @@ class StarkwareProvider extends BasicProvider {
     verifier: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.announceVerifierRemovalIntent(verifier)
+    const data = await this._abiEncoder.announceVerifierRemovalIntent(verifier)
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
   public async getRegisteredAvailabilityVerifiers (txOpts: any = {}) {
-    const data = await this._controller.getRegisteredAvailabilityVerifiers()
+    const data = await this._abiEncoder.getRegisteredAvailabilityVerifiers()
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.getRegisteredAvailabilityVerifiers,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.getRegisteredAvailabilityVerifiers,
       result
     )
   }
 
   public async getRegisteredVerifiers (txOpts: any = {}) {
-    const data = await this._controller.getRegisteredVerifiers()
+    const data = await this._abiEncoder.getRegisteredVerifiers()
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.getRegisteredVerifiers,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.getRegisteredVerifiers,
       result
     )
   }
@@ -1094,52 +1094,52 @@ class StarkwareProvider extends BasicProvider {
     verifierAddress: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.isAvailabilityVerifier(verifierAddress)
+    const data = await this._abiEncoder.isAvailabilityVerifier(verifierAddress)
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.isAvailabilityVerifier,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.isAvailabilityVerifier,
       result
     )
   }
 
   public async isFrozen (txOpts: any = {}) {
-    const data = await this._controller.isFrozen()
+    const data = await this._abiEncoder.isFrozen()
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(this._controller.isFrozen, result)
+    return this._abiEncoder.parseReturnData(this._abiEncoder.isFrozen, result)
   }
 
   public async isVerifier (verifierAddress: string, txOpts: any = {}) {
-    const data = await this._controller.isVerifier(verifierAddress)
+    const data = await this._abiEncoder.isVerifier(verifierAddress)
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(this._controller.isVerifier, result)
+    return this._abiEncoder.parseReturnData(this._abiEncoder.isVerifier, result)
   }
 
   public async mainAcceptGovernance (txOpts: any = {}) {
-    const data = await this._controller.mainAcceptGovernance()
+    const data = await this._abiEncoder.mainAcceptGovernance()
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
   public async mainCancelNomination (txOpts: any = {}) {
-    const data = await this._controller.mainCancelNomination()
+    const data = await this._abiEncoder.mainCancelNomination()
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
   public async mainIsGovernor (testGovernor: string, txOpts: any = {}) {
-    const data = await this._controller.mainIsGovernor(testGovernor)
+    const data = await this._abiEncoder.mainIsGovernor(testGovernor)
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.mainIsGovernor,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.mainIsGovernor,
       result
     )
   }
 
   public async mainNominateNewGovernor (newGovernor: string, txOpts: any = {}) {
-    const data = await this._controller.mainNominateNewGovernor(newGovernor)
+    const data = await this._abiEncoder.mainNominateNewGovernor(newGovernor)
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.mainNominateNewGovernor,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.mainNominateNewGovernor,
       result
     )
   }
@@ -1148,7 +1148,7 @@ class StarkwareProvider extends BasicProvider {
     governorForRemoval: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.mainRemoveGovernor(governorForRemoval)
+    const data = await this._abiEncoder.mainRemoveGovernor(governorForRemoval)
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
@@ -1158,7 +1158,7 @@ class StarkwareProvider extends BasicProvider {
     identifier: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.registerAvailabilityVerifier(
+    const data = await this._abiEncoder.registerAvailabilityVerifier(
       verifier,
       identifier
     )
@@ -1171,34 +1171,34 @@ class StarkwareProvider extends BasicProvider {
     identifier: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.registerVerifier(verifier, identifier)
+    const data = await this._abiEncoder.registerVerifier(verifier, identifier)
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
   public async removeAvailabilityVerifier (verifier: string, txOpts: any = {}) {
-    const data = await this._controller.removeAvailabilityVerifier(verifier)
+    const data = await this._abiEncoder.removeAvailabilityVerifier(verifier)
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
   public async removeVerifier (verifier: string, txOpts: any = {}) {
-    const data = await this._controller.removeVerifier(verifier)
+    const data = await this._abiEncoder.removeVerifier(verifier)
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
   public async unFreeze (txOpts: any = {}) {
-    const data = await this._controller.unFreeze()
+    const data = await this._abiEncoder.unFreeze()
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
   public async getAssetInfo (assetType: string, txOpts: any = {}) {
-    const data = await this._controller.getAssetInfo(assetType)
+    const data = await this._abiEncoder.getAssetInfo(assetType)
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.getAssetInfo,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.getAssetInfo,
       result
     )
   }
@@ -1209,14 +1209,14 @@ class StarkwareProvider extends BasicProvider {
     vaultId: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.getCancellationRequest(
+    const data = await this._abiEncoder.getCancellationRequest(
       starkKey,
       assetId,
       vaultId
     )
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.getCancellationRequest,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.getCancellationRequest,
       result
     )
   }
@@ -1227,22 +1227,22 @@ class StarkwareProvider extends BasicProvider {
     vaultId: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.getDepositBalance(
+    const data = await this._abiEncoder.getDepositBalance(
       starkKey,
       assetId,
       vaultId
     )
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.getDepositBalance,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.getDepositBalance,
       result
     )
   }
 
   public async getEthKey (starkKey: string, txOpts: any = {}) {
-    const data = await this._controller.getEthKey(starkKey)
+    const data = await this._abiEncoder.getEthKey(starkKey)
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(this._controller.getEthKey, result)
+    return this._abiEncoder.parseReturnData(this._abiEncoder.getEthKey, result)
   }
 
   public async getFullWithdrawalRequest (
@@ -1250,13 +1250,13 @@ class StarkwareProvider extends BasicProvider {
     vaultId: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.getFullWithdrawalRequest(
+    const data = await this._abiEncoder.getFullWithdrawalRequest(
       starkKey,
       vaultId
     )
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.getFullWithdrawalRequest,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.getFullWithdrawalRequest,
       result
     )
   }
@@ -1267,29 +1267,29 @@ class StarkwareProvider extends BasicProvider {
     vaultId: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.getQuantizedDepositBalance(
+    const data = await this._abiEncoder.getQuantizedDepositBalance(
       starkKey,
       assetId,
       vaultId
     )
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.getQuantizedDepositBalance,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.getQuantizedDepositBalance,
       result
     )
   }
 
   public async getQuantum (presumedAssetType: string, txOpts: any = {}) {
-    const data = await this._controller.getQuantum(presumedAssetType)
+    const data = await this._abiEncoder.getQuantum(presumedAssetType)
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(this._controller.getQuantum, result)
+    return this._abiEncoder.parseReturnData(this._abiEncoder.getQuantum, result)
   }
 
   public async getSystemAssetType (txOpts: any = {}) {
-    const data = await this._controller.getSystemAssetType()
+    const data = await this._abiEncoder.getSystemAssetType()
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.getSystemAssetType,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.getSystemAssetType,
       result
     )
   }
@@ -1299,28 +1299,28 @@ class StarkwareProvider extends BasicProvider {
     assetId: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.getWithdrawalBalance(starkKey, assetId)
+    const data = await this._abiEncoder.getWithdrawalBalance(starkKey, assetId)
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.getWithdrawalBalance,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.getWithdrawalBalance,
       result
     )
   }
 
   public async isTokenAdmin (testedAdmin: string, txOpts: any = {}) {
-    const data = await this._controller.isTokenAdmin(testedAdmin)
+    const data = await this._abiEncoder.isTokenAdmin(testedAdmin)
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.isTokenAdmin,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.isTokenAdmin,
       result
     )
   }
 
   public async isUserAdmin (testedAdmin: string, txOpts: any = {}) {
-    const data = await this._controller.isUserAdmin(testedAdmin)
+    const data = await this._abiEncoder.isUserAdmin(testedAdmin)
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.isUserAdmin,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.isUserAdmin,
       result
     )
   }
@@ -1330,7 +1330,7 @@ class StarkwareProvider extends BasicProvider {
     assetInfo: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.registerSystemAssetType(
+    const data = await this._abiEncoder.registerSystemAssetType(
       assetType,
       assetInfo
     )
@@ -1344,94 +1344,94 @@ class StarkwareProvider extends BasicProvider {
     c?: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.registerToken(a, b)
+    const data = await this._abiEncoder.registerToken(a, b)
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
   public async registerTokenAdmin (newAdmin: string, txOpts: any = {}) {
-    const data = await this._controller.registerTokenAdmin(newAdmin)
+    const data = await this._abiEncoder.registerTokenAdmin(newAdmin)
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
   public async registerUserAdmin (newAdmin: string, txOpts: any = {}) {
-    const data = await this._controller.registerUserAdmin(newAdmin)
+    const data = await this._abiEncoder.registerUserAdmin(newAdmin)
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
   public async unregisterTokenAdmin (oldAdmin: string, txOpts: any = {}) {
-    const data = await this._controller.unregisterTokenAdmin(oldAdmin)
+    const data = await this._abiEncoder.unregisterTokenAdmin(oldAdmin)
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
   public async unregisterUserAdmin (oldAdmin: string, txOpts: any = {}) {
-    const data = await this._controller.unregisterUserAdmin(oldAdmin)
+    const data = await this._abiEncoder.unregisterUserAdmin(oldAdmin)
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
   public async getLastBatchId (txOpts: any = {}) {
-    const data = await this._controller.getLastBatchId()
+    const data = await this._abiEncoder.getLastBatchId()
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.getLastBatchId,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.getLastBatchId,
       result
     )
   }
 
   public async getOrderRoot (txOpts: any = {}) {
-    const data = await this._controller.getOrderRoot()
+    const data = await this._abiEncoder.getOrderRoot()
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.getOrderRoot,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.getOrderRoot,
       result
     )
   }
 
   public async getOrderTreeHeight (txOpts: any = {}) {
-    const data = await this._controller.getOrderTreeHeight()
+    const data = await this._abiEncoder.getOrderTreeHeight()
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.getOrderTreeHeight,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.getOrderTreeHeight,
       result
     )
   }
 
   public async getSequenceNumber (txOpts: any = {}) {
-    const data = await this._controller.getSequenceNumber()
+    const data = await this._abiEncoder.getSequenceNumber()
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.getSequenceNumber,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.getSequenceNumber,
       result
     )
   }
 
   public async getVaultRoot (txOpts: any = {}) {
-    const data = await this._controller.getVaultRoot()
+    const data = await this._abiEncoder.getVaultRoot()
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.getVaultRoot,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.getVaultRoot,
       result
     )
   }
 
   public async getVaultTreeHeight (txOpts: any = {}) {
-    const data = await this._controller.getVaultTreeHeight()
+    const data = await this._abiEncoder.getVaultTreeHeight()
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
   public async isOperator (testedOperator: string, txOpts: any = {}) {
-    const data = await this._controller.isOperator(testedOperator)
+    const data = await this._abiEncoder.isOperator(testedOperator)
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(this._controller.isOperator, result)
+    return this._abiEncoder.parseReturnData(this._abiEncoder.isOperator, result)
   }
 
   public async registerOperator (newOperator: string, txOpts: any = {}) {
-    const data = await this._controller.registerOperator(newOperator)
+    const data = await this._abiEncoder.registerOperator(newOperator)
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
@@ -1441,7 +1441,7 @@ class StarkwareProvider extends BasicProvider {
     configHash: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.setAssetConfiguration(
+    const data = await this._abiEncoder.setAssetConfiguration(
       assetId,
       configHash
     )
@@ -1450,13 +1450,13 @@ class StarkwareProvider extends BasicProvider {
   }
 
   public async setGlobalConfiguration (configHash: string, txOpts: any = {}) {
-    const data = await this._controller.setGlobalConfiguration(configHash)
+    const data = await this._abiEncoder.setGlobalConfiguration(configHash)
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
 
   public async unregisterOperator (removedOperator: string, txOpts: any = {}) {
-    const data = await this._controller.unregisterOperator(removedOperator)
+    const data = await this._abiEncoder.unregisterOperator(removedOperator)
     const txhash = await this._sendContractTransaction(data, txOpts)
     return txhash
   }
@@ -1466,7 +1466,7 @@ class StarkwareProvider extends BasicProvider {
     applicationData: string[],
     txOpts: any = {}
   ) {
-    const data = await this._controller.updateState(
+    const data = await this._abiEncoder.updateState(
       publicInput,
       applicationData
     )
@@ -1488,7 +1488,7 @@ class StarkwareProvider extends BasicProvider {
     signature: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.forcedTradeRequest(
+    const data = await this._abiEncoder.forcedTradeRequest(
       starkKeyA,
       starkKeyB,
       vaultIdA,
@@ -1511,7 +1511,7 @@ class StarkwareProvider extends BasicProvider {
     quantizedAmount: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.forcedWithdrawalRequest(
+    const data = await this._abiEncoder.forcedWithdrawalRequest(
       starkKey,
       vaultId,
       quantizedAmount
@@ -1533,7 +1533,7 @@ class StarkwareProvider extends BasicProvider {
     nonce: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.getForcedTradeRequest(
+    const data = await this._abiEncoder.getForcedTradeRequest(
       starkKeyA,
       starkKeyB,
       vaultIdA,
@@ -1546,8 +1546,8 @@ class StarkwareProvider extends BasicProvider {
       nonce
     )
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.getForcedTradeRequest,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.getForcedTradeRequest,
       result
     )
   }
@@ -1558,14 +1558,14 @@ class StarkwareProvider extends BasicProvider {
     quantizedAmount: string,
     txOpts: any = {}
   ) {
-    const data = await this._controller.getForcedWithdrawalRequest(
+    const data = await this._abiEncoder.getForcedWithdrawalRequest(
       starkKey,
       vaultId,
       quantizedAmount
     )
     const result = await this._callContract(data, txOpts)
-    return this._controller.parseReturnData(
-      this._controller.getForcedWithdrawalRequest,
+    return this._abiEncoder.parseReturnData(
+      this._abiEncoder.getForcedWithdrawalRequest,
       result
     )
   }
@@ -1591,7 +1591,7 @@ class StarkwareProvider extends BasicProvider {
     const feePositionId = fee.positionId as string
     const maxAmountFee = fee.maxAmount as string
 
-    const msgHash = await this._controller.perpetualTransfer({
+    const msgHash = await this._abiEncoder.perpetualTransfer({
       assetId,
       assetIdFee,
       receiverPublicKey,
@@ -1628,7 +1628,7 @@ class StarkwareProvider extends BasicProvider {
     const amountCollateral = collateralAsset.amount as string
     const amountFee = fee.amount as string
 
-    const msgHash = await this._controller.perpetualLimitOrder({
+    const msgHash = await this._abiEncoder.perpetualLimitOrder({
       assetIdSynthetic,
       assetIdCollateral,
       isBuyingSynthetic,
@@ -1651,7 +1651,7 @@ class StarkwareProvider extends BasicProvider {
     const { collateralAsset, positionId, nonce, expirationTimestamp } = params
     const assetIdCollateral = getAssetId(collateralAsset)
     const amount = collateralAsset.amount as string
-    const msgHash = await this._controller.perpetualWithdrawal({
+    const msgHash = await this._abiEncoder.perpetualWithdrawal({
       assetIdCollateral,
       positionId,
       nonce,

@@ -1,15 +1,15 @@
-# starkware-controller [![npm version](https://badge.fury.io/js/starkware-controller.svg)](https://badge.fury.io/js/starkware-controller)
+# starkware-abi-encoder [![npm version](https://badge.fury.io/js/starkware-abiEncoder.svg)](https://badge.fury.io/js/starkware-abiEncoder)
 
-> Starkware Controller Library
+> Starkware ABI Encoder Library
 
 ## Getting started
 
 ```js
-import StarkwareController from '@authereum/starkware-controller'
+import StarkwareAbiEncoder from '@authereum/starkware-abiEncoder'
 
-const controller = new StarkwareController()
+const abiEncoder = new StarkwareAbiEncoder()
 
-const encodedData = await controller.registerUser({
+const encodedData = await abiEncoder.registerUser({
   ethKey,
   starkKey,
   operatorSignature,
@@ -21,7 +21,7 @@ const encodedData = await controller.registerUser({
 Deposit calldata:
 
 ```js
-const encodedData = await controller.deposit({
+const encodedData = await abiEncoder.deposit({
   starkKey,
   assetType,
   vaultId,
@@ -31,7 +31,7 @@ const encodedData = await controller.deposit({
 Deposit NFT calldata:
 
 ```js
-const encodedData = await controller.depositNft({
+const encodedData = await abiEncoder.depositNft({
   starkKey,
   assetType,
   vaultId,
@@ -42,7 +42,7 @@ const encodedData = await controller.depositNft({
 Deposit cancel calldata:
 
 ```js
-const encodedData = await controller.depositCancel({
+const encodedData = await abiEncoder.depositCancel({
   starkKey,
   assetType,
   vaultId,
@@ -52,7 +52,7 @@ const encodedData = await controller.depositCancel({
 Withdraw calldata:
 
 ```js
-const encodedData = await controller.withdrawTo({
+const encodedData = await abiEncoder.withdrawTo({
   starkKey,
   assetType,
   recipient,
@@ -62,7 +62,7 @@ const encodedData = await controller.withdrawTo({
 Transfer message hash:
 
 ```js
-const messageHash = await controller.transfer({
+const messageHash = await abiEncoder.transfer({
   quantizedAmount,
   nonce,
   senderVaultId,
@@ -76,7 +76,7 @@ const messageHash = await controller.transfer({
 Limit order message hash:
 
 ```js
-const messageHash = await controller.createOrder({
+const messageHash = await abiEncoder.createOrder({
   sellVaultId,
   buyVaultId,
   sellQuantizedAmount,

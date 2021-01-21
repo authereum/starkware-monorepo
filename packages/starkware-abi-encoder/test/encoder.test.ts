@@ -1,6 +1,6 @@
-import StarkwareController from '../src'
+import StarkwareAbiEncoder from '../src'
 
-describe('StarkwareController', () => {
+describe('StarkwareAbiEncoder', () => {
   const contractAddress = '0x5FedCE831BD3Bdb71F938EC26f984c84f40dB477'
   const ethKey = '0xA7fB70d89B11E312300d543FA87EB265fC2195bF'
   const starkKey =
@@ -20,12 +20,12 @@ describe('StarkwareController', () => {
   const ethAssetId =
     '0x01142460171646987f20c714eda4b92812b22b811f56f27130937c267e29bd9e'
 
-  let controller: StarkwareController = new StarkwareController()
+  let encoder: StarkwareAbiEncoder = new StarkwareAbiEncoder()
   it('should initiate successfully', async () => {
-    expect(controller).toBeTruthy()
+    expect(encoder).toBeTruthy()
   })
   it('should return encoded call data for registerUser', async () => {
-    const encodedData = await controller.registerUser({
+    const encodedData = await encoder.registerUser({
       ethKey,
       starkKey,
       operatorSignature,
@@ -36,7 +36,7 @@ describe('StarkwareController', () => {
     )
   })
   it('should return encoded call data for deposit', async () => {
-    const encodedData = await controller.deposit({
+    const encodedData = await encoder.deposit({
       starkKey,
       assetType: ethAssetType,
       vaultId,
@@ -47,7 +47,7 @@ describe('StarkwareController', () => {
     )
   })
   it('should return encoded call data for depositCancel', async () => {
-    const encodedData = await controller.depositCancel({
+    const encodedData = await encoder.depositCancel({
       starkKey,
       assetId: ethAssetId,
       vaultId,
@@ -58,7 +58,7 @@ describe('StarkwareController', () => {
     )
   })
   it('should return encoded call data for depositReclaim', async () => {
-    const encodedData = await controller.depositReclaim({
+    const encodedData = await encoder.depositReclaim({
       starkKey,
       assetType: ethAssetType,
       vaultId,
@@ -69,7 +69,7 @@ describe('StarkwareController', () => {
     )
   })
   it('should return encoded call data for withdraw', async () => {
-    const encodedData = await controller.withdraw({
+    const encodedData = await encoder.withdraw({
       starkKey,
       assetType: ethAssetType,
     })
@@ -79,7 +79,7 @@ describe('StarkwareController', () => {
     )
   })
   it('should return encoded call data for withdrawTo', async () => {
-    const encodedData = await controller.withdrawTo({
+    const encodedData = await encoder.withdrawTo({
       starkKey,
       assetType: ethAssetType,
       recipient,
@@ -91,7 +91,7 @@ describe('StarkwareController', () => {
   })
   /*
   it('should return encoded call data for fullWithdrawalRequest', async () => {
-    const encodedData = await controller.fullWithdrawalRequest({
+    const encodedData = await encoder.fullWithdrawalRequest({
       starkKey,
       vaultId,
     })
@@ -103,7 +103,7 @@ describe('StarkwareController', () => {
   */
   /*
   it('should return encoded call data for freezeRequest', async () => {
-    const encodedData = await controller.freezeRequest({
+    const encodedData = await encoder.freezeRequest({
       starkKey,
       vaultId,
     })
@@ -114,7 +114,7 @@ describe('StarkwareController', () => {
   })
   */
   it('should return encoded call data for escape', async () => {
-    const encodedData = await controller.escape({
+    const encodedData = await encoder.escape({
       starkKey,
       vaultId,
       assetId: ethAssetId,
@@ -126,7 +126,7 @@ describe('StarkwareController', () => {
     )
   })
   it('should return encoded call data for depositNft', async () => {
-    const encodedData = await controller.depositNft({
+    const encodedData = await encoder.depositNft({
       starkKey,
       vaultId,
       assetType: nftAssetType,
@@ -138,7 +138,7 @@ describe('StarkwareController', () => {
     )
   })
   it('should return encoded call data for depositNftReclaim', async () => {
-    const encodedData = await controller.depositNftReclaim({
+    const encodedData = await encoder.depositNftReclaim({
       starkKey,
       vaultId,
       assetType: nftAssetType,
@@ -150,7 +150,7 @@ describe('StarkwareController', () => {
     )
   })
   it('should return encoded call data for withdrawAndMint', async () => {
-    const encodedData = await controller.withdrawAndMint({
+    const encodedData = await encoder.withdrawAndMint({
       starkKey,
       assetType: ethAssetType,
       mintingBlob: '0x00',
@@ -161,7 +161,7 @@ describe('StarkwareController', () => {
     )
   })
   it('should return encoded call data for withdrawNft', async () => {
-    const encodedData = await controller.withdrawNft({
+    const encodedData = await encoder.withdrawNft({
       starkKey,
       assetType: nftAssetType,
       tokenId,
@@ -172,7 +172,7 @@ describe('StarkwareController', () => {
     )
   })
   it('should return encoded call data for withdrawNftTo', async () => {
-    const encodedData = await controller.withdrawNftTo({
+    const encodedData = await encoder.withdrawNftTo({
       starkKey,
       assetType: nftAssetType,
       tokenId,
@@ -187,7 +187,7 @@ describe('StarkwareController', () => {
     const nonce = '1597237097'
     const expirationTimestamp = '444396'
 
-    const messageHash = await controller.transfer({
+    const messageHash = await encoder.transfer({
       quantizedAmount,
       nonce,
       senderVaultId: vaultId,
@@ -207,7 +207,7 @@ describe('StarkwareController', () => {
     const condition =
       '0x318ff6d26cf3175c77668cd6434ab34d31e59f806a6a7c06d08215bccb7eaf8'
 
-    const messageHash = await controller.transfer({
+    const messageHash = await encoder.transfer({
       quantizedAmount,
       nonce,
       senderVaultId: vaultId,
@@ -226,7 +226,7 @@ describe('StarkwareController', () => {
     const nonce = '1597237097'
     const expirationTimestamp = '444396'
 
-    const messageHash = await controller.createOrder({
+    const messageHash = await encoder.createOrder({
       sellVaultId: vaultId,
       buyVaultId: vaultId,
       sellQuantizedAmount: '10',
@@ -242,104 +242,104 @@ describe('StarkwareController', () => {
     )
   })
   it('getEthKey', async () => {
-    const encodedData = await controller.getEthKey(starkKey)
+    const encodedData = await encoder.getEthKey(starkKey)
     expect(encodedData).toBe(
       '0x1dbd1da70664f48f7a7e2800d402839f63945021623385f85b687abbcbaef31845abe111'
     )
   })
   it('configurationHash', async () => {
-    const encodedData = await controller.configurationHash('1')
+    const encodedData = await encoder.configurationHash('1')
     expect(encodedData).toBeTruthy()
   })
   it('globalConfigurationHash', async () => {
-    const encodedData = await controller.globalConfigurationHash()
+    const encodedData = await encoder.globalConfigurationHash()
     expect(encodedData).toBeTruthy()
   })
   it('globalConfigurationHash', async () => {
-    const encodedData = await controller.depositCancelDelay()
+    const encodedData = await encoder.depositCancelDelay()
     expect(encodedData).toBeTruthy()
   })
   it('freezeGracePeriod', async () => {
-    const encodedData = await controller.freezeGracePeriod()
+    const encodedData = await encoder.freezeGracePeriod()
     expect(encodedData).toBeTruthy()
   })
   it('mainGovernanceInfoTag', async () => {
-    const encodedData = await controller.mainGovernanceInfoTag()
+    const encodedData = await encoder.mainGovernanceInfoTag()
     expect(encodedData).toBeTruthy()
   })
   it('maxVerifierCount', async () => {
-    const encodedData = await controller.maxVerifierCount()
+    const encodedData = await encoder.maxVerifierCount()
     expect(encodedData).toBeTruthy()
   })
   it('unfreezeDelay', async () => {
-    const encodedData = await controller.unfreezeDelay()
+    const encodedData = await encoder.unfreezeDelay()
     expect(encodedData).toBeTruthy()
   })
   it('verifierRemovalDelay', async () => {
-    const encodedData = await controller.verifierRemovalDelay()
+    const encodedData = await encoder.verifierRemovalDelay()
     expect(encodedData).toBeTruthy()
   })
   it('announceAvailabilityVerifierRemovalIntent', async () => {
     const verifier = ethKey
-    const encodedData = await controller.announceAvailabilityVerifierRemovalIntent(
+    const encodedData = await encoder.announceAvailabilityVerifierRemovalIntent(
       verifier
     )
     expect(encodedData).toBeTruthy()
   })
   it('announceVerifierRemovalIntent', async () => {
     const verifier = ethKey
-    const encodedData = await controller.announceVerifierRemovalIntent(verifier)
+    const encodedData = await encoder.announceVerifierRemovalIntent(verifier)
     expect(encodedData).toBeTruthy()
   })
   it('getRegisteredAvailabilityVerifiers', async () => {
-    const encodedData = await controller.getRegisteredAvailabilityVerifiers()
+    const encodedData = await encoder.getRegisteredAvailabilityVerifiers()
     expect(encodedData).toBeTruthy()
   })
   it('getRegisteredVerifiers', async () => {
-    const encodedData = await controller.getRegisteredVerifiers()
+    const encodedData = await encoder.getRegisteredVerifiers()
     expect(encodedData).toBeTruthy()
   })
   it('isAvailabilityVerifier', async () => {
     const verifierAddress = ethKey
-    const encodedData = await controller.isAvailabilityVerifier(verifierAddress)
+    const encodedData = await encoder.isAvailabilityVerifier(verifierAddress)
     expect(encodedData).toBeTruthy()
   })
   it('isFrozen', async () => {
-    const encodedData = await controller.isFrozen()
+    const encodedData = await encoder.isFrozen()
     expect(encodedData).toBeTruthy()
   })
   it('isVerifier', async () => {
     const verifierAddress = ethKey
-    const encodedData = await controller.isVerifier(verifierAddress)
+    const encodedData = await encoder.isVerifier(verifierAddress)
     expect(encodedData).toBeTruthy()
   })
   it('mainAcceptGovernance', async () => {
-    const encodedData = await controller.mainAcceptGovernance()
+    const encodedData = await encoder.mainAcceptGovernance()
     expect(encodedData).toBeTruthy()
   })
   it('mainCancelNomination', async () => {
-    const encodedData = await controller.mainCancelNomination()
+    const encodedData = await encoder.mainCancelNomination()
     expect(encodedData).toBeTruthy()
   })
   it('mainIsGovernor', async () => {
     const testGovernor = ethKey
-    const encodedData = await controller.mainIsGovernor(testGovernor)
+    const encodedData = await encoder.mainIsGovernor(testGovernor)
     expect(encodedData).toBeTruthy()
   })
   it('mainNominateNewGovernor', async () => {
     const newGovernor = ethKey
-    const encodedData = await controller.mainNominateNewGovernor(newGovernor)
+    const encodedData = await encoder.mainNominateNewGovernor(newGovernor)
     expect(encodedData).toBeTruthy()
   })
   it('mainRemoveGovernor', async () => {
     const governorForRemoval = ethKey
-    const encodedData = await controller.mainRemoveGovernor(governorForRemoval)
+    const encodedData = await encoder.mainRemoveGovernor(governorForRemoval)
     expect(encodedData).toBeTruthy()
   })
   it('registerAvailabilityVerifier', async () => {
     const verifier = ethKey
     const identifier = 'abc'
-    const encodedData = await controller.registerAvailabilityVerifier(
+    const encodedData = await encoder.registerAvailabilityVerifier(
       verifier,
       identifier
     )
@@ -348,32 +348,32 @@ describe('StarkwareController', () => {
   it('registerVerifier', async () => {
     const verifier = ethKey
     const identifier = 'abc'
-    const encodedData = await controller.registerVerifier(verifier, identifier)
+    const encodedData = await encoder.registerVerifier(verifier, identifier)
     expect(encodedData).toBeTruthy()
   })
   it('removeAvailabilityVerifier', async () => {
     const verifier = ethKey
-    const encodedData = await controller.removeAvailabilityVerifier(verifier)
+    const encodedData = await encoder.removeAvailabilityVerifier(verifier)
     expect(encodedData).toBeTruthy()
   })
   it('removeVerifier', async () => {
     const verifier = ethKey
-    const encodedData = await controller.removeVerifier(verifier)
+    const encodedData = await encoder.removeVerifier(verifier)
     expect(encodedData).toBeTruthy()
   })
   it('unFreeze', async () => {
-    const encodedData = await controller.unFreeze()
+    const encodedData = await encoder.unFreeze()
     expect(encodedData).toBeTruthy()
   })
   it('getAssetInfo', async () => {
     const assetType = '0x00'
-    const encodedData = await controller.getAssetInfo(assetType)
+    const encodedData = await encoder.getAssetInfo(assetType)
     expect(encodedData).toBeTruthy()
   })
   it('getCancellationRequest', async () => {
     const assetId = '0x01'
     const vaultId = '0x02'
-    const encodedData = await controller.getCancellationRequest(
+    const encodedData = await encoder.getCancellationRequest(
       starkKey,
       assetId,
       vaultId
@@ -383,7 +383,7 @@ describe('StarkwareController', () => {
   it('getDepositBalance', async () => {
     const assetId = '0x01'
     const vaultId = '0x02'
-    const encodedData = await controller.getDepositBalance(
+    const encodedData = await encoder.getDepositBalance(
       starkKey,
       assetId,
       vaultId
@@ -392,7 +392,7 @@ describe('StarkwareController', () => {
   })
   it('getFullWithdrawalRequest', async () => {
     const vaultId = '0x02'
-    const encodedData = await controller.getFullWithdrawalRequest(
+    const encodedData = await encoder.getFullWithdrawalRequest(
       starkKey,
       vaultId
     )
@@ -401,7 +401,7 @@ describe('StarkwareController', () => {
   it('getQuantizedDepositBalance', async () => {
     const assetId = '0x01'
     const vaultId = '0x02'
-    const encodedData = await controller.getQuantizedDepositBalance(
+    const encodedData = await encoder.getQuantizedDepositBalance(
       starkKey,
       assetId,
       vaultId
@@ -410,32 +410,32 @@ describe('StarkwareController', () => {
   })
   it('getQuantum', async () => {
     const presumedAssetType = '0x01'
-    const encodedData = await controller.getQuantum(presumedAssetType)
+    const encodedData = await encoder.getQuantum(presumedAssetType)
     expect(encodedData).toBeTruthy()
   })
   it('getSystemAssetType', async () => {
-    const encodedData = await controller.getSystemAssetType()
+    const encodedData = await encoder.getSystemAssetType()
     expect(encodedData).toBeTruthy()
   })
   it('getWithdrawalBalance', async () => {
     const assetId = '0x02'
-    const encodedData = await controller.getWithdrawalBalance(starkKey, assetId)
+    const encodedData = await encoder.getWithdrawalBalance(starkKey, assetId)
     expect(encodedData).toBeTruthy()
   })
   it('isTokenAdmin', async () => {
     const testedAdmin = ethKey
-    const encodedData = await controller.isTokenAdmin(testedAdmin)
+    const encodedData = await encoder.isTokenAdmin(testedAdmin)
     expect(encodedData).toBeTruthy()
   })
   it('isUserAdmin', async () => {
     const testedAdmin = ethKey
-    const encodedData = await controller.isUserAdmin(testedAdmin)
+    const encodedData = await encoder.isUserAdmin(testedAdmin)
     expect(encodedData).toBeTruthy()
   })
   it('registerSystemAssetType', async () => {
     const assetType = '0x01'
     const assetInfo = '0x02'
-    const encodedData = await controller.registerSystemAssetType(
+    const encodedData = await encoder.registerSystemAssetType(
       assetType,
       assetInfo
     )
@@ -444,89 +444,83 @@ describe('StarkwareController', () => {
   it('registerToken', async () => {
     const a = '0x01'
     const b = '0x02'
-    const encodedData = await controller.registerToken(a, b)
+    const encodedData = await encoder.registerToken(a, b)
     expect(encodedData).toBeTruthy()
   })
   it('registerTokenAdmin', async () => {
     const newAdmin = ethKey
-    const encodedData = await controller.registerTokenAdmin(newAdmin)
+    const encodedData = await encoder.registerTokenAdmin(newAdmin)
     expect(encodedData).toBeTruthy()
   })
   it('registerUserAdmin', async () => {
     const newAdmin = ethKey
-    const encodedData = await controller.registerUserAdmin(newAdmin)
+    const encodedData = await encoder.registerUserAdmin(newAdmin)
     expect(encodedData).toBeTruthy()
   })
   it('unregisterTokenAdmin', async () => {
     const oldAdmin = ethKey
-    const encodedData = await controller.unregisterTokenAdmin(oldAdmin)
+    const encodedData = await encoder.unregisterTokenAdmin(oldAdmin)
     expect(encodedData).toBeTruthy()
   })
   it('unregisterUserAdmin', async () => {
     const oldAdmin = ethKey
-    const encodedData = await controller.unregisterUserAdmin(oldAdmin)
+    const encodedData = await encoder.unregisterUserAdmin(oldAdmin)
     expect(encodedData).toBeTruthy()
   })
   it('getLastBatchId', async () => {
-    const encodedData = await controller.getLastBatchId()
+    const encodedData = await encoder.getLastBatchId()
     expect(encodedData).toBeTruthy()
   })
   it('getOrderRoot', async () => {
-    const encodedData = await controller.getOrderRoot()
+    const encodedData = await encoder.getOrderRoot()
     expect(encodedData).toBeTruthy()
   })
   it('getOrderTreeHeight', async () => {
-    const encodedData = await controller.getOrderTreeHeight()
+    const encodedData = await encoder.getOrderTreeHeight()
     expect(encodedData).toBeTruthy()
   })
   it('getSequenceNumber', async () => {
-    const encodedData = await controller.getSequenceNumber()
+    const encodedData = await encoder.getSequenceNumber()
     expect(encodedData).toBeTruthy()
   })
   it('getVaultRoot', async () => {
-    const encodedData = await controller.getVaultRoot()
+    const encodedData = await encoder.getVaultRoot()
     expect(encodedData).toBeTruthy()
   })
   it('getVaultTreeHeight', async () => {
-    const encodedData = await controller.getVaultTreeHeight()
+    const encodedData = await encoder.getVaultTreeHeight()
     expect(encodedData).toBeTruthy()
   })
   it('isOperator', async () => {
     const testedOperator = ethKey
-    const encodedData = await controller.isOperator(testedOperator)
+    const encodedData = await encoder.isOperator(testedOperator)
     expect(encodedData).toBeTruthy()
   })
   it('registerOperator', async () => {
     const newOperator = ethKey
-    const encodedData = await controller.registerOperator(newOperator)
+    const encodedData = await encoder.registerOperator(newOperator)
     expect(encodedData).toBeTruthy()
   })
   it('setAssetConfiguration', async () => {
     const assetId = '0x01'
     const configHash = '0x' + Buffer.alloc(32).toString('hex')
-    const encodedData = await controller.setAssetConfiguration(
-      assetId,
-      configHash
-    )
+    const encodedData = await encoder.setAssetConfiguration(assetId, configHash)
     expect(encodedData).toBeTruthy()
   })
   it('setGlobalConfiguration', async () => {
     const configHash = '0x' + Buffer.alloc(32).toString('hex')
-    const encodedData = await controller.setGlobalConfiguration(configHash)
+    const encodedData = await encoder.setGlobalConfiguration(configHash)
     expect(encodedData).toBeTruthy()
   })
   it('unregisterOperator', async () => {
     const removedOperator = ethKey
-    const encodedData = await controller.unregisterOperator(removedOperator)
+    const encodedData = await encoder.unregisterOperator(removedOperator)
     expect(encodedData).toBeTruthy()
   })
   it('updateState', async () => {
     const publicInput = []
     const applicationData = []
-    const encodedData = await controller.updateState(
-      publicInput,
-      applicationData
-    )
+    const encodedData = await encoder.updateState(publicInput, applicationData)
     expect(encodedData).toBeTruthy()
   })
   it('forcedTradeRequest', async () => {
@@ -541,7 +535,7 @@ describe('StarkwareController', () => {
     const aIsBuyingSynthetic = false
     const nonce = '0x01'
     const signature = '0x01'
-    const encodedData = await controller.forcedTradeRequest(
+    const encodedData = await encoder.forcedTradeRequest(
       starkKeyA,
       starkKeyB,
       vaultIdA,
@@ -559,7 +553,7 @@ describe('StarkwareController', () => {
   it('forcedWithdrawalRequest', async () => {
     const vaultId = '0x1'
     const quantizedAmount = '0x2'
-    const encodedData = await controller.forcedWithdrawalRequest(
+    const encodedData = await encoder.forcedWithdrawalRequest(
       starkKey,
       vaultId,
       quantizedAmount
@@ -577,7 +571,7 @@ describe('StarkwareController', () => {
     const amountSynthetic = '0x01'
     const aIsBuyingSynthetic = false
     const nonce = '0x01'
-    const encodedData = await controller.getForcedTradeRequest(
+    const encodedData = await encoder.getForcedTradeRequest(
       starkKeyA,
       starkKeyB,
       vaultIdA,
@@ -594,7 +588,7 @@ describe('StarkwareController', () => {
   it('getForcedWithdrawalRequest', async () => {
     const vaultId = '0x1'
     const quantizedAmount = '0x2'
-    const encodedData = await controller.getForcedWithdrawalRequest(
+    const encodedData = await encoder.getForcedWithdrawalRequest(
       starkKey,
       vaultId,
       quantizedAmount
@@ -602,7 +596,7 @@ describe('StarkwareController', () => {
     expect(encodedData).toBeTruthy()
   })
   it('perpetualTransfer', async () => {
-    const encodedData = await controller.perpetualTransfer({
+    const encodedData = await encoder.perpetualTransfer({
       assetId: '1',
       assetIdFee: '0',
       receiverPublicKey: '1',
@@ -617,7 +611,7 @@ describe('StarkwareController', () => {
     expect(encodedData).toBeTruthy()
   })
   it('perpetualLimitOrder', async () => {
-    const encodedData = await controller.perpetualLimitOrder({
+    const encodedData = await encoder.perpetualLimitOrder({
       assetIdSynthetic: '1',
       assetIdCollateral: '1',
       isBuyingSynthetic: true,
@@ -632,7 +626,7 @@ describe('StarkwareController', () => {
     expect(encodedData).toBeTruthy()
   })
   it('perpetualWithdrawal', async () => {
-    const encodedData = await controller.perpetualWithdrawal({
+    const encodedData = await encoder.perpetualWithdrawal({
       assetIdCollateral: '1',
       positionId: '10',
       nonce: '0',

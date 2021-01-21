@@ -149,9 +149,9 @@ export interface PerpetualWithdrawalParams {
   amount: string
 }
 
-// -- StarkwareController --------------------------------------------- //
+// -- StarkwareAbiEncoder --------------------------------------------- //
 
-export class StarkwareController {
+export class StarkwareAbiEncoder {
   private _encoder: ethers.utils.Interface
 
   constructor () {
@@ -1031,4 +1031,4 @@ export class StarkwareController {
   }
 }
 
-export default StarkwareController
+export default StarkwareAbiEncoder

@@ -6,13 +6,13 @@
 
 ## Packages
 
-| Library | Current Version | Description |
-| ------- | --------------- | ----------- |
-| [starkware-controller](packages/starkware-controller) | [![npm version](https://badge.fury.io/js/starkware-controller.svg)](https://badge.fury.io/js/starkware-controller) | Starkware controller library |
-| [starkware-crypto](packages/starkware-crypto) | [![npm version](https://badge.fury.io/js/starkware-crypto.svg)](https://badge.fury.io/js/starkware-crypto) | Starkware crypto library |
-| [starkware-provider](packages/starkware-provider) | [![npm version](https://badge.fury.io/js/starkware-provider.svg)](https://badge.fury.io/js/starkware-provider) | Starkware Web3 provider |
-| [starkware-types](packages/starkware-types) | [![npm version](https://badge.fury.io/js/starkware-types.svg)](https://badge.fury.io/js/starkware-types) | Starkware typings |
-| [starkware-wallet](packages/starkware-wallet) | [![npm version](https://badge.fury.io/js/starkware-wallet.svg)](https://badge.fury.io/js/starkware-wallet) | Starkware wallet library |
+| Library                                                 | Current Version                                                                                                            | Description                   |
+| -------                                                 | ---------------                                                                                                            | -----------                   |
+| [starkware-abi-encoder](packages/starkware-abi-encoder) | [![npm version](https://badge.fury.io/js/starkware-abi-encoder.svg)](https://badge.fury.io/js/starkware-abi-encoder) | Starkware abi encoder library |
+| [starkware-crypto](packages/starkware-crypto)           | [![npm version](https://badge.fury.io/js/starkware-crypto.svg)](https://badge.fury.io/js/starkware-crypto)            | Starkware crypto library      |
+| [starkware-provider](packages/starkware-provider)       | [![npm version](https://badge.fury.io/js/starkware-provider.svg)](https://badge.fury.io/js/starkware-provider)    | Starkware Web3 provider       |
+| [starkware-types](packages/starkware-types)             | [![npm version](https://badge.fury.io/js/starkware-types.svg)](https://badge.fury.io/js/starkware-types)             | Starkware typings             |
+| [starkware-wallet](packages/starkware-wallet)           | [![npm version](https://badge.fury.io/js/starkware-wallet.svg)](https://badge.fury.io/js/starkware-wallet)            | Starkware wallet library      |
 
 ## License
 
