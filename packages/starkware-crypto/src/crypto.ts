@@ -458,6 +458,20 @@ export function serializeMessage (
   return sanitizeHex(serialized.toString(16))
 }
 
+// solidity:
+// uint256(keccak256(abi.encodePacked(factRegistryAddress, condTransferFact))) & MASK_250
+export function getConditionHash (
+  conditionalTransferAddress: string,
+  conditionalTransferFact: string
+) {
+  const h = solidityKeccak(
+    ['address', 'bytes32'],
+    [conditionalTransferAddress, conditionalTransferFact]
+  )
+  const bn = hexToBN(h.toString('hex'))
+  return sanitizeHex(bn.and(MASK_250_BITS_BN).toString('hex'))
+}
+
 export function formatMessage (
   instruction: 'transfer' | 'conditionalTransfer' | 'order',
   vault0: string,

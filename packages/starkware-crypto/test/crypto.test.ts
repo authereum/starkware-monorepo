@@ -714,4 +714,21 @@ describe('utils', () => {
     const quantizedAmount = starkwareCrypto.quantizeAmount('420000', '1000')
     expect(quantizedAmount).toBe('420')
   })
+  it('should generate condition hash', () => {
+    const conditionalTransferAddress =
+      '0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1'
+    const conditionalTransferFact =
+      '0xe1629b9dda060bb30c7908346f6af189c16773fa148d3366701fbaa35d54f3c8'
+    const conditionHash = starkwareCrypto.getConditionHash(
+      conditionalTransferAddress,
+      conditionalTransferFact
+    )
+    expect(conditionHash).toBe(
+      encUtils.sanitizeHex(
+        new BN(
+          '972492899975411437369422452795878108749026817450782709657050700663161134107'
+        ).toString(16)
+      )
+    )
+  })
 })
