@@ -99,7 +99,7 @@ class StarkwareProvider extends BasicProvider {
     this._starkWallet = starkWallet
     this._signerWallet = signerWallet
     this.contractAddress = contractAddress
-    this._abiEncoder = new StarkwareAbiEndoer()
+    this._abiEncoder = new StarkwareAbiEncoder()
     this.wc = new WalletConnectClientWrapper()
   }
 

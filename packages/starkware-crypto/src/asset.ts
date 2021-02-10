@@ -14,6 +14,7 @@ export interface AssetData {
   tokenId?: string // erc721
   symbol?: string // synthetic
   resolution?: string // synthetic
+  blob?: string // mintable erc20 and erc721
 }
 
 export interface Asset {
@@ -33,6 +34,18 @@ const shiftBN = new BN(
 // Used to mask the 251 least signifcant bits given by Keccack256 to produce the final asset ID.
 const mask = new BN(
   '3ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+  16
+)
+
+// Used to mask the 240 least signifcant bits given by Keccack256 to produce the final asset ID
+// (for mintable assets).
+const mask240 = new BN(
+  'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+  16
+)
+
+const maskMintabilityBit = new BN(
+  '400000000000000000000000000000000000000000000000000000000000000',
   16
 )
 
@@ -118,6 +131,28 @@ export function getAssetId (assetDict: Asset) {
     let assetIdBN = new BN(assetIdHex, 16)
     assetIdBN = assetIdBN.and(mask)
     return '0x' + assetIdBN.toJSON()
+  } else if (
+    assetDict.type === 'MINTABLE_ERC721' ||
+    assetDict.type === 'MINTABLE_ERC20'
+  ) {
+    let assetInfo = new BN(utf8ToBuffer('MINTABLE:'), 16)
+    // ExpectedLen is equal to the length (in hex characters) of the appended strings:
+    //   'MINTABLE:' (18 characters), 'assetType' (64 characters), 'blobHash' (64 characters).
+    // Where assetType and blobHash are each padded with 0's to account for 64 hex characters
+    // each.
+    // We use this in order to pad the final assetInfo string with leading zeros in case the
+    // calculation discarded them in the process.
+    const expectedLen = 18 + 64 + 64
+    assetInfo = assetInfo.ushln(256).add(assetType)
+    const blobHash = blobToBlobHash(assetDict.data.blob as string)
+    assetInfo = assetInfo.ushln(256).add(new BN(removeHexPrefix(blobHash), 16))
+    let assetIdHex = sha3.keccak_256(
+      hexToBuffer(addLeadingZeroes(assetInfo.toJSON(), expectedLen))
+    )
+    let assetIdBn = new BN(assetIdHex, 16)
+    assetIdBn = assetIdBn.and(mask240)
+    assetIdBn = assetIdBn.or(maskMintabilityBit)
+    return '0x' + assetIdBn.toJSON()
   }
 
   return '0x' + assetId.toJSON()
@@ -186,6 +221,12 @@ export function getAssetSelector (assetDictType: string) {
     case 'ERC721':
       seed = 'ERC721Token(address,uint256)'
       break
+    case 'MINTABLE_ERC20':
+      seed = 'MintableERC20Token(address)'
+      break
+    case 'MINTABLE_ERC721':
+      seed = 'MintableERC721Token(address,uint256)'
+      break
     case 'SYNTH':
       throw new Error('Synthetic assets do not have a selector')
     default:
@@ -204,4 +245,8 @@ export function addLeadingZeroes (hexStr: string, expectedLen: number) {
     res = '0' + res
   }
   return res
+}
+
+export function blobToBlobHash (blob: Buffer | string): string {
+  return '0x' + sha3.keccak_256(blob)
 }
