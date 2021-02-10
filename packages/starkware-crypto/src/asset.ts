@@ -96,17 +96,8 @@ export function getAssetType (assetDict: Asset) {
 }
 
 export function getAssetId (assetDict: Asset) {
-  if (assetDict.type === 'SYNTHETIC') {
-    return (
-      '0x' +
-      new BN(
-        utf8ToBuffer(
-          `${assetDict.data.symbol}-${Buffer.from(
-            assetDict.data.resolution as string
-          ).toString('ascii')}`
-        )
-      ).toJSON()
-    )
+  if (assetDict.type === 'SYNTH') {
+    return getSyntheticAssetId(assetDict)
   }
 
   const assetType = new BN(removeHexPrefix(getAssetType(assetDict)), 16)
@@ -130,6 +121,13 @@ export function getAssetId (assetDict: Asset) {
   }
 
   return '0x' + assetId.toJSON()
+}
+
+export function getSyntheticAssetId (assetDict: Asset) {
+  const assetIdString = assetDict.data.symbol + '-' + assetDict.data.resolution
+  let assetIdBn = new BN(utf8ToBuffer(assetIdString), 15)
+  let assetId = assetIdBn.toJSON() + '0'.repeat(32)
+  return '0x' + assetId.slice(0, 30)
 }
 
 export function getEthAssetId (quantum: string): string {
@@ -173,21 +171,6 @@ export function getErc721AssetId (
   return getAssetId(asset)
 }
 
-export function getSyntheticAssetId (
-  symbol: string,
-  resolution: string
-): string {
-  const asset = {
-    type: 'SYNTHETIC',
-    data: {
-      symbol,
-      resolution,
-    },
-  }
-
-  return getAssetId(asset)
-}
-
 /*
  Computes the given asset's unique selector based on its type.
 */
@@ -203,9 +186,8 @@ export function getAssetSelector (assetDictType: string) {
     case 'ERC721':
       seed = 'ERC721Token(address,uint256)'
       break
-    case 'SYNTHETIC':
-      seed = 'SYNTHETIC()'
-      break
+    case 'SYNTH':
+      throw new Error('Synthetic assets do not have a selector')
     default:
       throw new Error(`Unknown token type: ${assetDictType}`)
   }

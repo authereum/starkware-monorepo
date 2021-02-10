@@ -55,19 +55,3 @@ describe('Asset ID helper methods', () => {
     )
   })
 })
-
-describe.only('Compute Synthetic asset ID', () => {
-  it('should compute SYNTHETIC asset ID correctly', () => {
-    const asset = {
-      type: 'SYNTHETIC',
-      data: {
-        symbol: 'BTC',
-        resolution: '10',
-      },
-    }
-    expect(getAssetId(asset)).toEqual('0x4254432d3130')
-  })
-  it('should compute getSyntheticAssetId asset ID correctly', () => {
-    expect(getSyntheticAssetId('BTC', '10')).toEqual('0x4254432d3130')
-  })
-})

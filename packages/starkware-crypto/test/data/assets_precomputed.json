@@ -25,6 +25,13 @@
         "tokenId": "4100",
         "tokenAddress": "0xB18ed4768F87b0fFAb83408014f1caF066b91380"
       }
+    },
+    "0x4254432d3800000000000000000000": {
+      "type": "SYNTH",
+      "data": {
+        "symbol": "BTC",
+        "resolution": "8"
+      }
     }
   },
   "assetType": {
