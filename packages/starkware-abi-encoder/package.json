@@ -45,7 +45,7 @@
     "sync": "lerna-sync-version"
   },
   "dependencies": {
-    "@authereum/starkware-crypto": "1.10.0-beta.6",
+    "@authereum/starkware-crypto": "1.10.0-beta.7",
     "@babel/core": "^7.12.3",
     "enc-utils": "^2.2.2",
     "ethers": "^5.0.19"

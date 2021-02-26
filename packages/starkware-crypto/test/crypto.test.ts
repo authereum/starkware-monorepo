@@ -58,6 +58,11 @@ describe('starkware-crypto', () => {
     expect(starkPublicKey).toEqual(PUBLIC_KEY_COMPRESSED)
   })
 
+  it('match getStarkKey to x coordinate', () => {
+    const starkKey = starkwareCrypto.getStarkKey(keyPair)
+    expect(starkKey).toEqual(X_COORDINATE)
+  })
+
   it('match x coordinate', () => {
     const x = starkwareCrypto.getXCoordinate(PUBLIC_KEY_COMPRESSED)
     expect(x).toEqual(X_COORDINATE)

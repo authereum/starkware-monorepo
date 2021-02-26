@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "@authereum/starkware-abi-encoder": "1.8.0-beta.6",
-    "@authereum/starkware-crypto": "1.10.0-beta.6",
+    "@authereum/starkware-crypto": "1.10.0-beta.7",
     "@authereum/starkware-wallet": "1.3.0-beta.6",
     "@babel/core": "7.12.3",
     "@walletconnect/client": "1.3.1",

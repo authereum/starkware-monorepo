@@ -247,7 +247,8 @@ export function getStarkPublicKey (keyPair: KeyPair): string {
 }
 
 export function getStarkKey (keyPair: KeyPair): string {
-  return sanitizeBytes((keyPair as any).pub.getX().toString(16), 2)
+  const pubKey = getPublic(keyPair, true)
+  return getXCoordinate(pubKey)
 }
 
 export function getXCoordinate (publicKey: string): string {
