@@ -4,9 +4,9 @@ import {
   WithdrawParams,
   TransferParams,
   OrderParams,
-  PerpetualTransferParams,
-  PerpetualLimitOrderParams,
-  PerpetualWithdrawalParams,
+  TransferWithFeesParams,
+  LimitOrderWithFeesParams,
+  WithdrawWithFeesParams,
 } from '../types'
 import { Signature } from '@authereum/starkware-crypto'
 
@@ -105,20 +105,20 @@ export default class AuthereumProvider {
     return this._starkProvider.createOrder(input)
   }
 
-  public async perpetualTransfer (
-    params: PerpetualTransferParams
+  public async transferWithFees (
+    params: TransferWithFeesParams
   ): Promise<Signature> {
     throw new Error('authereum: not implemented')
   }
 
-  public async perpetualLimitOrder (
-    params: PerpetualLimitOrderParams
+  public async limitOrderWithFees (
+    params: LimitOrderWithFeesParams
   ): Promise<Signature> {
     throw new Error('authereum: not implemented')
   }
 
-  public async perpetualWithdrawal (
-    params: PerpetualWithdrawalParams
+  public async withdrawWithFees (
+    params: WithdrawWithFeesParams
   ): Promise<Signature> {
     throw new Error('authereum: not implemented')
   }

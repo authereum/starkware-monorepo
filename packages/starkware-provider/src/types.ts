@@ -141,27 +141,27 @@ export interface PerpetualAsset extends Asset {
   amount?: string
 }
 
-export interface PerpetualTransferMessenger {
+export interface TransferWithFeesMessenger {
   starkKey?: string
   positionId: string
 }
 
-export interface PerpetualTransferFee extends Asset {
+export interface TransferWithFeesFee extends Asset {
   positionId: string
   maxAmount?: string
 }
 
-export interface PerpetualTransferParams {
+export interface TransferWithFeesParams {
   asset: PerpetualAsset
-  fee: PerpetualTransferFee
-  sender: PerpetualTransferMessenger
-  receiver: PerpetualTransferMessenger
+  fee: TransferWithFeesFee
+  sender: TransferWithFeesMessenger
+  receiver: TransferWithFeesMessenger
   nonce: string
   expirationTimestamp: string
   condition?: string
 }
 
-export interface PerpetualLimitOrderParams {
+export interface LimitOrderWithFeesParams {
   syntheticAsset: PerpetualAsset
   collateralAsset: PerpetualAsset
   isBuyingSynthetic: boolean
@@ -171,7 +171,7 @@ export interface PerpetualLimitOrderParams {
   expirationTimestamp: string
 }
 
-export interface PerpetualWithdrawalParams {
+export interface WithdrawWithFeesParams {
   collateralAsset: PerpetualAsset
   positionId: string
   nonce: string

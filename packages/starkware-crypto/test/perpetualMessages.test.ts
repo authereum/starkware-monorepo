@@ -1,8 +1,8 @@
 import {
-  getPerpetualLimitOrderMsgHash,
-  getPerpetualWithdrawalMsgHash,
-  getPerpetualTransferMsgHash,
-  getPerpetualConditionalTransferMsgHash,
+  getLimitOrderWithFeesMsgHash,
+  getWithdrawWithFeesMsgHash,
+  getTransferWithFeesMsgHash,
+  getConditionalTransferWithFeesMsgHash,
 } from '../src'
 import precomputedMessages from './data/perpetual_messages_precomputed.json'
 
@@ -11,7 +11,7 @@ describe('perpetual messages', () => {
     const orders = precomputedMessages['limit_order']
     for (const expectedMessageHash in orders) {
       const messageData = orders[expectedMessageHash]
-      const messageHash = getPerpetualLimitOrderMsgHash(
+      const messageHash = getLimitOrderWithFeesMsgHash(
         messageData.assetIdSynthetic,
         messageData.assetIdCollateral,
         messageData.isBuyingSynthetic,
@@ -27,11 +27,11 @@ describe('perpetual messages', () => {
       expect(messageHash).toBe(expectedMessageHash)
     }
   })
-  test('getPerpetualWithdrawalMessage', () => {
+  test('getWithdrawWithFeesMessage', () => {
     const withdrawals = precomputedMessages['withdrawal']
     for (const expectedMessageHash in withdrawals) {
       const messageData = withdrawals[expectedMessageHash]
-      const messageHash = getPerpetualWithdrawalMsgHash(
+      const messageHash = getWithdrawWithFeesMsgHash(
         messageData.assetIdCollateral,
         messageData.positionId,
         messageData.nonce,
@@ -42,11 +42,11 @@ describe('perpetual messages', () => {
       expect(messageHash).toBe(expectedMessageHash)
     }
   })
-  test('getPerpetualTransferMsgHash', () => {
+  test('getTransferWithFeesMsgHash', () => {
     const transfer = precomputedMessages['transfer']
     for (const expectedMessageHash in transfer) {
       const messageData = transfer[expectedMessageHash]
-      const messageHash = getPerpetualTransferMsgHash(
+      const messageHash = getTransferWithFeesMsgHash(
         messageData.assetId,
         messageData.assetIdFee,
         messageData.receiverPublicKey,
@@ -62,11 +62,11 @@ describe('perpetual messages', () => {
       expect(messageHash).toBe(expectedMessageHash)
     }
   })
-  test('getPerpetualConditionalTransferMsgHash', () => {
+  test('getConditionalTransferWithFeesMsgHash', () => {
     const transfer = precomputedMessages['conditional_transfer']
     for (const expectedMessageHash in transfer) {
       const messageData = transfer[expectedMessageHash]
-      const messageHash = getPerpetualConditionalTransferMsgHash(
+      const messageHash = getConditionalTransferWithFeesMsgHash(
         messageData.assetId,
         messageData.assetIdFee,
         messageData.receiverPublicKey,

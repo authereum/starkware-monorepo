@@ -33,7 +33,7 @@ const TRANSFER = 4
 const CONDITIONAL_TRANSFER = 5
 const WITHDRAWAL = 6
 
-export function getPerpetualLimitOrderMsgHash (
+export function getLimitOrderWithFeesMsgHash (
   assetIdSynthetic: string,
   assetIdCollateral: string,
   isBuyingSynthetic: boolean | number,
@@ -107,7 +107,7 @@ export function getPerpetualLimitOrderMsgHash (
   return sanitizeHex(hash([msg, packedMsg1]))
 }
 
-export function getPerpetualWithdrawalMsgHash (
+export function getWithdrawWithFeesMsgHash (
   assetIdCollateral: string,
   positionId: string,
   nonce: string,
@@ -152,7 +152,7 @@ export function getPerpetualWithdrawalMsgHash (
   return sanitizeHex(hash([assetIdCollateral, packedMsg]))
 }
 
-export function getPerpetualTransferMsgHash (
+export function getTransferWithFeesMsgHash (
   assetId: string,
   assetIdFee: string,
   receiverPublicKey: string,
@@ -232,7 +232,7 @@ export function getPerpetualTransferMsgHash (
   return sanitizeHex(hash([msg, packedMsg1]))
 }
 
-export function getPerpetualConditionalTransferMsgHash (
+export function getConditionalTransferWithFeesMsgHash (
   assetId: string,
   assetIdFee: string,
   receiverPublicKey: string,

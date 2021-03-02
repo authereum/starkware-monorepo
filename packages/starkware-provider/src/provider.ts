@@ -40,11 +40,11 @@ import {
   OrderAsset,
   OrderParams,
   PerpetualAsset,
-  PerpetualTransferMessenger,
-  PerpetualTransferFee,
-  PerpetualTransferParams,
-  PerpetualLimitOrderParams,
-  PerpetualWithdrawalParams,
+  TransferWithFeesMessenger,
+  TransferWithFeesFee,
+  TransferWithFeesParams,
+  LimitOrderWithFeesParams,
+  WithdrawWithFeesParams,
 } from './types'
 
 class Connection extends EventEmitter implements IRpcConnection {
@@ -223,16 +223,16 @@ class StarkwareProvider extends BasicProvider {
         const starkSignature = await this.createOrder(params)
         return { starkSignature }
       }
-      case 'stark_perpetualTransfer': {
-        const starkSignature = await this.perpetualTransfer(params)
+      case 'stark_transferWithFees': {
+        const starkSignature = await this.transferWithFees(params)
         return { starkSignature }
       }
-      case 'stark_perpetualLimitOrder': {
-        const starkSignature = await this.perpetualLimitOrder(params)
+      case 'stark_limitOrderWithFees': {
+        const starkSignature = await this.limitOrderWithFees(params)
         return { starkSignature }
       }
-      case 'stark_perpetualWithdrawal': {
-        const starkSignature = await this.perpetualWithdrawal(params)
+      case 'stark_withdrawWithFees': {
+        const starkSignature = await this.withdrawWithFees(params)
         return { starkSignature }
       }
       case 'personal_sign': {
@@ -1570,8 +1570,8 @@ class StarkwareProvider extends BasicProvider {
     )
   }
 
-  public async perpetualTransfer (
-    params: PerpetualTransferParams
+  public async transferWithFees (
+    params: TransferWithFeesParams
   ): Promise<Signature> {
     const {
       asset,
@@ -1591,7 +1591,7 @@ class StarkwareProvider extends BasicProvider {
     const feePositionId = fee.positionId as string
     const maxAmountFee = fee.maxAmount as string
 
-    const msgHash = await this._abiEncoder.perpetualTransfer({
+    const msgHash = await this._abiEncoder.transferWithFees({
       assetId,
       assetIdFee,
       receiverPublicKey,
@@ -1609,8 +1609,8 @@ class StarkwareProvider extends BasicProvider {
     return starkSignature
   }
 
-  public async perpetualLimitOrder (
-    params: PerpetualLimitOrderParams
+  public async limitOrderWithFees (
+    params: LimitOrderWithFeesParams
   ): Promise<Signature> {
     const {
       syntheticAsset,
@@ -1628,7 +1628,7 @@ class StarkwareProvider extends BasicProvider {
     const amountCollateral = collateralAsset.amount as string
     const amountFee = fee.amount as string
 
-    const msgHash = await this._abiEncoder.perpetualLimitOrder({
+    const msgHash = await this._abiEncoder.limitOrderWithFees({
       assetIdSynthetic,
       assetIdCollateral,
       isBuyingSynthetic,
@@ -1645,13 +1645,13 @@ class StarkwareProvider extends BasicProvider {
     return starkSignature
   }
 
-  public async perpetualWithdrawal (
-    params: PerpetualWithdrawalParams
+  public async withdrawWithFees (
+    params: WithdrawWithFeesParams
   ): Promise<Signature> {
     const { collateralAsset, positionId, nonce, expirationTimestamp } = params
     const assetIdCollateral = getAssetId(collateralAsset)
     const amount = collateralAsset.amount as string
-    const msgHash = await this._abiEncoder.perpetualWithdrawal({
+    const msgHash = await this._abiEncoder.withdrawWithFees({
       assetIdCollateral,
       positionId,
       nonce,

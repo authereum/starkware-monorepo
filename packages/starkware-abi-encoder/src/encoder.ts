@@ -114,7 +114,7 @@ export interface OrderParams {
   expirationTimestamp: string
 }
 
-export interface PerpetualTransferParams {
+export interface TransferWithFeesParams {
   assetId: string
   assetIdFee: string
   receiverPublicKey: string
@@ -128,7 +128,7 @@ export interface PerpetualTransferParams {
   condition?: string
 }
 
-export interface PerpetualLimitOrderParams {
+export interface LimitOrderWithFeesParams {
   assetIdSynthetic: string
   assetIdCollateral: string
   isBuyingSynthetic: boolean
@@ -141,7 +141,7 @@ export interface PerpetualLimitOrderParams {
   expirationTimestamp: string
 }
 
-export interface PerpetualWithdrawalParams {
+export interface WithdrawWithFeesParams {
   assetIdCollateral: string
   positionId: string
   nonce: string
@@ -929,11 +929,11 @@ export class StarkwareAbiEncoder {
     ])
   }
 
-  public async perpetualTransfer (
-    params: PerpetualTransferParams
+  public async transferWithFees (
+    params: TransferWithFeesParams
   ): Promise<string> {
     if (params.condition) {
-      return starkwareCrypto.getPerpetualConditionalTransferMsgHash(
+      return starkwareCrypto.getConditionalTransferWithFeesMsgHash(
         params.assetId,
         params.assetIdFee,
         params.receiverPublicKey,
@@ -947,7 +947,7 @@ export class StarkwareAbiEncoder {
         params.expirationTimestamp
       )
     } else {
-      return starkwareCrypto.getPerpetualTransferMsgHash(
+      return starkwareCrypto.getTransferWithFeesMsgHash(
         params.assetId,
         params.assetIdFee,
         params.receiverPublicKey,
@@ -962,10 +962,10 @@ export class StarkwareAbiEncoder {
     }
   }
 
-  public async perpetualLimitOrder (
-    params: PerpetualLimitOrderParams
+  public async limitOrderWithFees (
+    params: LimitOrderWithFeesParams
   ): Promise<string> {
-    return starkwareCrypto.getPerpetualLimitOrderMsgHash(
+    return starkwareCrypto.getLimitOrderWithFeesMsgHash(
       params.assetIdSynthetic,
       params.assetIdCollateral,
       params.isBuyingSynthetic,
@@ -979,10 +979,10 @@ export class StarkwareAbiEncoder {
     )
   }
 
-  public async perpetualWithdrawal (
-    params: PerpetualWithdrawalParams
+  public async withdrawWithFees (
+    params: WithdrawWithFeesParams
   ): Promise<string> {
-    return starkwareCrypto.getPerpetualWithdrawalMsgHash(
+    return starkwareCrypto.getWithdrawWithFeesMsgHash(
       params.assetIdCollateral,
       params.positionId,
       params.nonce,

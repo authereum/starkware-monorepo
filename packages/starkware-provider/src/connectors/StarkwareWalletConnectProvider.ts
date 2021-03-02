@@ -127,28 +127,28 @@ export class StarkwareWalletConnectProvider {
     return starkSignature
   }
 
-  public async perpetualTransfer (params: any) {
-    this._debugLog('perpetualTransfer', params)
+  public async transferWithFees (params: any) {
+    this._debugLog('transferWithFees', params)
     const { starkSignature } = await this.sendRequest(
-      'stark_perpetualTransfer',
+      'stark_transferWithFees',
       params
     )
     return starkSignature
   }
 
-  public async perpetualLimitOrder (params: any) {
-    this._debugLog('perpetualLimitOrder', params)
+  public async limitOrderWithFees (params: any) {
+    this._debugLog('limitOrderWithFees', params)
     const { starkSignature } = await this.sendRequest(
-      'stark_perpetualLimitOrder',
+      'stark_limitOrderWithFees',
       params
     )
     return starkSignature
   }
 
-  public async perpetualWithdrawal (params: any) {
-    this._debugLog('perpetualWithdrawal', params)
+  public async withdrawWithFees (params: any) {
+    this._debugLog('withdrawWithFees', params)
     const { starkSignature } = await this.sendRequest(
-      'stark_perpetualWithdrawal',
+      'stark_withdrawWithFees',
       params
     )
     return starkSignature

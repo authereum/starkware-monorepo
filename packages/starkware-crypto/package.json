@@ -1,7 +1,7 @@
 {
   "name": "@authereum/starkware-crypto",
   "description": "Starkware Crypto Library",
-  "version": "1.10.0-beta.7",
+  "version": "1.10.0-beta.8",
   "author": "",
   "license": "Apache-2.0",
   "keywords": [

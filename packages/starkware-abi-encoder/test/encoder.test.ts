@@ -595,8 +595,8 @@ describe('StarkwareAbiEncoder', () => {
     )
     expect(encodedData).toBeTruthy()
   })
-  it('perpetualTransfer', async () => {
-    const encodedData = await encoder.perpetualTransfer({
+  it('transferWithFees', async () => {
+    const encodedData = await encoder.transferWithFees({
       assetId: '1',
       assetIdFee: '0',
       receiverPublicKey: '1',
@@ -610,8 +610,8 @@ describe('StarkwareAbiEncoder', () => {
     })
     expect(encodedData).toBeTruthy()
   })
-  it('perpetualLimitOrder', async () => {
-    const encodedData = await encoder.perpetualLimitOrder({
+  it('limitOrderWithFees', async () => {
+    const encodedData = await encoder.limitOrderWithFees({
       assetIdSynthetic: '1',
       assetIdCollateral: '1',
       isBuyingSynthetic: true,
@@ -625,8 +625,8 @@ describe('StarkwareAbiEncoder', () => {
     })
     expect(encodedData).toBeTruthy()
   })
-  it('perpetualWithdrawal', async () => {
-    const encodedData = await encoder.perpetualWithdrawal({
+  it('withdrawWithFees', async () => {
+    const encodedData = await encoder.withdrawWithFees({
       assetIdCollateral: '1',
       positionId: '10',
       nonce: '0',

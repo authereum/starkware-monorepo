@@ -129,7 +129,7 @@ describe('StarkwareProvider', () => {
     expect(result).toBe(ethKey)
   })
   it('should resolve stark perpetual transfer request successfully', async () => {
-    const starkSignature = await provider.perpetualTransfer({
+    const starkSignature = await provider.transferWithFees({
       asset: {
         type: 'SYNTHETIC',
         data: {
@@ -159,7 +159,7 @@ describe('StarkwareProvider', () => {
     expect(starkSignature).toBeTruthy()
   })
   it('should resolve stark perpetual limit order request successfully', async () => {
-    const starkSignature = await provider.perpetualLimitOrder({
+    const starkSignature = await provider.limitOrderWithFees({
       syntheticAsset: {
         type: 'SYNTHETIC',
         data: {
@@ -190,7 +190,7 @@ describe('StarkwareProvider', () => {
     expect(starkSignature).toBeTruthy()
   })
   it('should resolve stark perpetual withdrawal request successfully', async () => {
-    const starkSignature = await provider.perpetualWithdrawal({
+    const starkSignature = await provider.withdrawWithFees({
       collateralAsset: {
         type: 'ETH',
         data: {
