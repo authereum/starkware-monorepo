@@ -718,7 +718,7 @@ export const serializeSignature = RSV.serializeSignature
 
 export const deserializeSignature = RSV.deserializeSignature
 
-export const REGISTRATION_PREFIX = 'UserRegistration'
+export const REGISTRATION_PREFIX = 'UserRegistration:'
 
 export function createUserRegistrationSig (
   address: string,
